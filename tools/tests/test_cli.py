@@ -70,3 +70,22 @@ def test_cli_defaults_to_cwd(tmp_path, capsys, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert main(["check"]) == 0
     assert capsys.readouterr().out.strip() == "ok: 0 skills"
+
+
+def test_cli_hidden_skill_folder_is_a_finding(tmp_path, capsys):
+    add_valid(tmp_path)
+    add_skill(tmp_path, ".k8s-aks-hidden", VALID)
+    add_skill(tmp_path, "_k8s-aks-draft", VALID)
+    (tmp_path / "skills" / "_helpers").mkdir()
+    assert main(["check", "--repo", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "skills/.k8s-aks-hidden: skill folders must not start with . or _" in out
+    assert "skills/_k8s-aks-draft: skill folders must not start with . or _" in out
+    assert "_helpers" not in out
+
+
+def test_cli_reports_test_folder_without_a_skill(tmp_path, capsys):
+    add_valid(tmp_path)
+    (tmp_path / "tests" / "k8s-gone-skill" / "a").mkdir(parents=True)
+    assert main(["check", "--repo", str(tmp_path)]) == 1
+    assert "tests/k8s-gone-skill: test folder has no matching skill" in capsys.readouterr().out

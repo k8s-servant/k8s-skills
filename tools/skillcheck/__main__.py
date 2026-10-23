@@ -10,12 +10,12 @@ import sys
 from pathlib import Path
 
 from tools.skillcheck.commands import check_commands, load_allowlist
-from tools.skillcheck.discovery import skill_dirs
+from tools.skillcheck.discovery import hidden_skill_dirs, skill_dirs
 from tools.skillcheck.findings import Finding
 from tools.skillcheck.frontmatter import check_frontmatter
 from tools.skillcheck.manifests import ManifestError, check_manifests, write_manifests
 from tools.skillcheck.package import package_skills
-from tools.skillcheck.scenarios import check_scenarios
+from tools.skillcheck.scenarios import check_orphan_tests, check_scenarios
 from tools.skillcheck.structure import check_structure
 
 
@@ -46,6 +46,12 @@ def run_check(repo: Path) -> int:
     found: list[Finding] = []
     for skill_dir in skills:
         found += _check_skill(repo, skill_dir, allowlist)
+    # Fail closed on skills the checks above skip but a recursive installer would find.
+    found += [
+        Finding(d.relative_to(repo), None, "skill folders must not start with . or _")
+        for d in hidden_skill_dirs(repo)
+    ]
+    found += check_orphan_tests(repo)
     # Deduplicate: a file that cannot be parsed is reported by several checks alike.
     unique = sorted(set(found), key=lambda f: (str(f.path), f.line or 0, f.message))
     for finding in unique:

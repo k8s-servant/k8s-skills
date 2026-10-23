@@ -38,6 +38,23 @@ def _h2_titles(text: str) -> list[str]:
     ]
 
 
+def check_orphan_tests(repo: Path) -> list[Finding]:
+    """Report `tests/<name>/` folders with no `skills/<name>/`, left behind by a rename.
+
+    Files in `tests/` (the kit) and `.`/`_` folders are not scenario folders.
+    """
+    tests_dir = repo / "tests"
+    if not tests_dir.is_dir():
+        return []
+    return [
+        Finding(folder.relative_to(repo), None, "test folder has no matching skill")
+        for folder in sorted(tests_dir.iterdir())
+        if folder.is_dir()
+        and not folder.name.startswith((".", "_"))
+        and not (repo / "skills" / folder.name).is_dir()
+    ]
+
+
 def check_scenarios(repo: Path, skill_dir: Path) -> list[Finding]:
     """Check the scenarios of one skill under `tests/<skill>/`.
 

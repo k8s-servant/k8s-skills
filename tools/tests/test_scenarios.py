@@ -101,3 +101,23 @@ def test_expected_sections(tmp_path):
         "sections must be: Prompt, Cause, Evidence, Acceptable fixes, Wrong answers"
     ]
     assert found[0].path == Path("tests/k8s-pod-crashloop/one/expected.md")
+
+
+def test_test_folder_without_a_skill_is_a_finding(tmp_path):
+    from tools.skillcheck.scenarios import check_orphan_tests
+
+    skill(tmp_path, "k8s-pod-crashloop")
+    make_case(tmp_path, "k8s-pod-crashloop", "a")
+    make_case(tmp_path, "k8s-old-skill", "a")
+    (tmp_path / "tests" / "lib.sh").write_text("# kit file\n", encoding="utf-8")
+    (tmp_path / "tests" / "__pycache__").mkdir()
+    found = check_orphan_tests(tmp_path)
+    assert [(str(f.path), f.message) for f in found] == [
+        ("tests/k8s-old-skill", "test folder has no matching skill")
+    ]
+
+
+def test_no_tests_folder_means_no_orphans(tmp_path):
+    from tools.skillcheck.scenarios import check_orphan_tests
+
+    assert check_orphan_tests(tmp_path) == []
