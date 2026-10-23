@@ -1,0 +1,42 @@
+name: Skill problem
+description: A skill led an agent the wrong way, missed a cause, or is out of date.
+title: "fix(skills): "
+labels: ["skill-quality", "triage"]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      placeholder: k8s-workload-troubleshooting
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What the agent concluded or proposed, and why it was wrong. Use placeholders such as my-namespace and my-app, never real names, hosts or Secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the real cause was
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent and model
+      placeholder: Claude Code / Codex / Copilot / Cursor / Gemini CLI, and the model
+  - type: input
+    id: versions
+    attributes:
+      label: Kubernetes and component versions
+      placeholder: Kubernetes 1.37, ...
+  - type: checkboxes
+    id: no-private-data
+    attributes:
+      label: Public issue
+      options:
+        - label: I removed real cluster names, hosts, tokens and other private data.
+          required: true
