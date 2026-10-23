@@ -238,9 +238,10 @@ docs/design.md (this file)
   deliberate obfuscation; CONTRIBUTING lists the known limits.
 - **Proposed fix blocks are exempt from every command rule except the Secret ban and the
   `# Undo:` line**, since a human reads and runs them.
-- **Running the agent read-only is a recommendation in the README** (a kubeconfig bound to
-  the `view` ClusterRole), not something the repository can enforce. The skills themselves
-  still only propose fixes.
+- **How users run their agent is their own decision and risk.** The README warns that the
+  skills' read-only design is not a 100% guarantee and that the Kubernetes RBAC of the
+  agent's credentials is what actually limits it. The skills themselves still only propose
+  fixes.
 - **Every test case's `expected.md` starts with a Prompt section**: the symptom the user
   gives the agent, with no hint of the cause.
 - Gemini CLI and per-skill Claude Code installs follow the tools' documentation but are

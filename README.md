@@ -19,43 +19,14 @@ The agent investigates; fixes are proposed, never run.
   `> Proposed fix: review before running. The agent does not run this.`, with an
   `# Undo:` line. A human reviews it and runs it.
 
-This is a guardrail against honest mistakes in the skills, not a sandbox. The guarantee
-you can rely on is the one you set up yourself, in the next section.
+## Your agent, your decision
 
-## Run your agent read-only (recommended)
-
-Run the agent with credentials that cannot change anything. Then no instruction, in a
-skill or anywhere else, can modify the cluster. This is the guarantee to rely on; the
-read-only design of the skills is a layer on top of it.
-
-Create a ServiceAccount bound to the built-in ClusterRole `view` (it cannot read Secrets
-and cannot change anything), and build a kubeconfig that uses its token. These commands
-create objects, so run them yourself, once, as a cluster admin, and replace the
-placeholders:
-
-```bash
-# Example setup, run by you (not by the agent). Creates a ServiceAccount and a binding.
-kubectl create serviceaccount agent-readonly -n my-namespace
-kubectl create clusterrolebinding agent-readonly-view \
-  --clusterrole=view --serviceaccount=my-namespace:agent-readonly
-
-# Short-lived token (here 8 hours) and a kubeconfig that uses it.
-TOKEN=$(kubectl create token agent-readonly -n my-namespace --duration=8h)
-kubectl config set-cluster my-cluster --server=https://my-cluster.example.com:6443 \
-  --certificate-authority=ca.crt --embed-certs=true --kubeconfig=agent.kubeconfig
-kubectl config set-credentials agent-readonly --token="$TOKEN" --kubeconfig=agent.kubeconfig
-kubectl config set-context agent-readonly --cluster=my-cluster --user=agent-readonly \
-  --kubeconfig=agent.kubeconfig
-kubectl config use-context agent-readonly --kubeconfig=agent.kubeconfig
-```
-
-Start the agent with `KUBECONFIG=agent.kubeconfig`. The token expires on its own; create
-a new one when you need it. The API server may cap how long a token can live, so the
-token you get can be shorter than `--duration` asks for. Treat `agent.kubeconfig` as a
-credential and do not commit it.
-
-`ca.crt` is the cluster's CA certificate. You can take it from your own kubeconfig:
-`kubectl config view --raw --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 -d > ca.crt`.
+How you run your agent, and with which permissions, is your decision and your risk. The
+skills are written and checked to be read-only, but that is not a 100% guarantee: an
+agent can misread a skill or act on its own. What actually limits an agent is the
+Kubernetes RBAC of the credentials you give it. If you want a hard limit, run the agent
+with a read-only identity, for example one bound to the built-in `view` ClusterRole
+(see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
