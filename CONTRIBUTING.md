@@ -132,3 +132,8 @@ A skill is merged only when:
   `plugin.json`) are generated. After adding or renaming a skill run
   `python -m tools.skillcheck manifests --write` and commit the result.
 - To try the release zips: `python -m tools.skillcheck package --out dist`.
+- To release, merge the release PR that release-please keeps open. It is opened with a
+  GitHub App token so the required checks run on it. If the Release run fails at the
+  token step, check the `RELEASE_APP_CLIENT_ID` variable and the
+  `RELEASE_APP_PRIVATE_KEY` secret, and that the App is still installed on the
+  repository.
