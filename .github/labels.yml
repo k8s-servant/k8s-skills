@@ -1,0 +1,59 @@
+# Source of truth for repository labels, synced by .github/workflows/labels.yml.
+# Labels missing from this file are deleted on sync, so keep the ones other tools add.
+- name: type/bug
+  color: d73a4a
+  description: Something isn't working
+- name: type/feature
+  color: a2eeef
+  description: New capability or improvement
+- name: type/docs
+  color: 0075ca
+  description: Documentation
+- name: type/chore
+  color: ededed
+  description: Maintenance, refactoring, tooling
+- name: type/security
+  color: b60205
+  description: Security hardening (report vulnerabilities privately)
+- name: new-skill
+  color: 0e8a16
+  description: Request or proposal for a new skill
+- name: skill-quality
+  color: fbca04
+  description: A skill led an agent the wrong way or is out of date
+- name: area/skills
+  color: c5def5
+  description: Skill content under skills/
+- name: area/checker
+  color: c5def5
+  description: tools/skillcheck and the allow-list
+- name: area/test-kit
+  color: c5def5
+  description: kind test kit and scenarios under tests/
+- name: area/ci
+  color: c5def5
+  description: Workflows, releases and repository automation
+- name: area/python
+  color: c5def5
+  description: Python dependencies
+- name: triage
+  color: fef2c0
+  description: Needs a first look from a maintainer
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+- name: help wanted
+  color: 008672
+  description: Extra attention is welcome
+- name: breaking-change
+  color: b60205
+  description: Changes behaviour users rely on
+- name: dependencies
+  color: 0366d6
+  description: Dependency updates (Dependabot)
+- name: "autorelease: pending"
+  color: ededed
+  description: Release PR not yet released (release-please)
+- name: "autorelease: tagged"
+  color: ededed
+  description: Released (release-please)

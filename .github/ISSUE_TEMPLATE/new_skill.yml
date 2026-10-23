@@ -1,0 +1,36 @@
+name: New skill
+description: Propose a skill for a Kubernetes component or tool that is not covered yet.
+title: "feat(skills): "
+labels: ["new-skill", "triage"]
+body:
+  - type: input
+    id: subject
+    attributes:
+      label: Component or area
+      description: For example Flux, Argo CD, cert-manager, Gateway API, EKS.
+    validations:
+      required: true
+  - type: textarea
+    id: symptoms
+    attributes:
+      label: Problems the skill should help investigate
+      description: The symptoms a user would describe to an agent, one per line.
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Upstream documentation
+      description: Links to the official docs the skill would be checked against, with the version.
+  - type: textarea
+    id: commands
+    attributes:
+      label: Read-only commands it needs
+      description: CLI commands the investigation would use (e.g. `flux get kustomizations -A`). New tool commands are added to the allow-list in the same PR.
+  - type: checkboxes
+    id: readonly
+    attributes:
+      label: Read-only
+      options:
+        - label: The investigation needs only read access; fixes would be proposed, never run by the agent.
+          required: true
