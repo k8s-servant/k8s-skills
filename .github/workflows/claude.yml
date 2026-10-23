@@ -3,9 +3,13 @@ name: Claude
 # Runs Claude when a maintainer mentions @claude in an issue, a PR comment or a review.
 # Only the owner, members and collaborators can trigger it: anyone else's comment is
 # untrusted input, and running a model on it with repository access is a
-# prompt-injection risk.
+# prompt-injection risk. The action also checks that the actor has write access.
+# Fork PRs are refused: the action would check out their code and hand it to a model
+# holding a write token.
 on:
-  issue_comment:
+  # zizmor: issue_comment is gated below on a trusted author and a same-repository PR,
+  # and nothing from the event reaches a shell.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
     types: [created]
   pull_request_review_comment:
     types: [created]
@@ -20,11 +24,16 @@ jobs:
   claude:
     if: >-
       (
-        (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+        (
+          github.event_name == 'issue_comment' ||
+          (github.event_name == 'pull_request_review_comment' &&
+            github.event.pull_request.head.repo.full_name == github.repository)
+        ) &&
         contains(github.event.comment.body, '@claude') &&
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
       ) || (
         github.event_name == 'pull_request_review' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
         contains(github.event.review.body, '@claude') &&
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)
       ) || (
@@ -41,6 +50,18 @@ jobs:
       id-token: write
       actions: read
     steps:
+      # issue_comment does not carry the PR head repository, so ask the API.
+      - name: Refuse fork PRs
+        if: github.event.issue.pull_request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          fork=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json isCrossRepository --jq .isCrossRepository)
+          if [ "$fork" != "false" ]; then
+            echo "::error::PR #$PR is from a fork; @claude does not run on fork PRs."
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
