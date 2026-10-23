@@ -1,0 +1,64 @@
+name: Claude review
+
+# Automatic Claude review on every non-draft PR from a branch in this repository.
+# Fork PRs are skipped: they get no secrets, and running a model on untrusted code
+# with write access is a prompt-injection risk. Maintainers can still ask for a review
+# on a fork PR by commenting "@claude review".
+# Bot PRs (release-please, Dependabot) are skipped too: they are generated, and the
+# action refuses to run for non-human actors.
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: anthropics/claude-code-action@374f254f5efaf968abfe15d399fd90972e8138b9 # v1.0.251
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request. Follow the conventions in AGENTS.md and
+            CONTRIBUTING.md when they exist. Focus, in order:
+
+            1. **Read-only guarantee.** Flag any write command outside a marked
+               "Proposed fix" block, any access to Secrets, and any change to the
+               command allow-list that is not justified.
+            2. **Accuracy against upstream docs.** Every skill has a Sources section
+               and the sources are relevant; claims and flags match the upstream docs.
+            3. **Agent-neutral wording, no site data.** No agent-specific phrasing and
+               no real cluster names, registries, hostnames or company names.
+            4. **Scenario quality.** The break matches real life and the Prompt gives
+               no hint of the cause.
+            5. **CI and manifests.** Workflows stay pinned and minimal, and the
+               generated manifests are in sync with the skills.
+
+            Use inline comments for specific lines and one short summary comment.
+            Skip praise and style nits that linters already enforce. If nothing is
+            wrong, say so in one sentence.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

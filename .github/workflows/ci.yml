@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check --output-format=github .
+      - run: ruff format --check .
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: pytest
+
+  skills:
+    # The skill checker and the generated install manifests must agree with the skills.
+    name: skills
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m tools.skillcheck check
+      - run: python -m tools.skillcheck manifests --check
+
+  shell:
+    name: shell
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: shellcheck the test kit and scenarios
+        run: shellcheck tests/*.sh tests/*/*/*.sh
+
+  markdown:
+    name: markdown
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      MARKDOWNLINT_CLI2_VERSION: 0.24.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npx --yes "markdownlint-cli2@${MARKDOWNLINT_CLI2_VERSION}"
+
+  plugin:
+    # `claude plugin validate` needs no API key: it only checks the manifests.
+    name: plugin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLAUDE_CODE_VERSION: 2.1.309
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npx --yes "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" plugin validate .
+
+  links:
+    name: links
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --scheme https --exclude-path docs/superpowers '**/*.md'
+          fail: true
+
+  result:
+    # The one check the branch ruleset requires, so jobs can be added or renamed freely.
+    name: CI result
+    if: always()
+    needs: [lint, test, skills, shell, markdown, plugin, links]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: All jobs succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: ${RESULTS}"
+          for r in ${RESULTS}; do [ "$r" = success ] || exit 1; done

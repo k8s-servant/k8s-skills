@@ -1,0 +1,17 @@
+# Pragmatic markdown lint: catches broken structure, not prose style.
+config:
+  default: true
+  MD013: false # line length
+  MD033: false # inline HTML
+  MD041: false # first line heading
+  MD034: false # bare URLs and addresses
+  MD060: false # table pipe spacing
+  MD032: false # blank lines around lists
+  MD040: false # fenced code language
+globs:
+  - "**/*.md"
+ignores:
+  - ".venv/**"
+  - "node_modules/**"
+  - "docs/superpowers/**"
+  - ".superpowers/**"

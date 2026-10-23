@@ -14,6 +14,7 @@ from tools.skillcheck.discovery import skill_dirs
 from tools.skillcheck.findings import Finding
 from tools.skillcheck.frontmatter import check_frontmatter
 from tools.skillcheck.manifests import ManifestError, check_manifests, write_manifests
+from tools.skillcheck.package import package_skills
 from tools.skillcheck.scenarios import check_scenarios
 from tools.skillcheck.structure import check_structure
 
@@ -66,7 +67,14 @@ def main(argv: list[str] | None = None) -> int:
     mode = manifests.add_mutually_exclusive_group(required=True)
     mode.add_argument("--write", action="store_true", help="write the files")
     mode.add_argument("--check", action="store_true", help="fail if a file is stale")
+    package = sub.add_parser("package", help="zip every skill for a release")
+    package.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root")
+    package.add_argument("--out", type=Path, required=True, help="output directory")
     args = parser.parse_args(argv)
+    if args.command == "package":
+        zips = package_skills(args.repo.resolve(), args.out)
+        print(f"packaged {len(zips)} skills into {args.out}")
+        return 0
     if args.command == "manifests":
         repo = args.repo.resolve()
         try:
