@@ -45,6 +45,8 @@ Investigation commands may use only what is on the allow-list in
 - Allow-listed commands and flags only, with literal placeholders such as `my-namespace`.
   No `$VAR` and no `<placeholder>`.
 - No `;`, `&&` or redirects. Pipes only to the listed filters, with the listed flags.
+- No flags that block or read local files: `-w`/`--watch`, `-f`/`--follow`,
+  `-f`/`--filename`, `-k`/`--kustomize`, or `-o` formats ending in `-file`.
 - Scripts in `scripts/` may contain only allow-listed commands.
 - Never read Secrets: no `get`, `describe` or listing of `secret` or `secrets` in any form.
 - Fenced blocks need a language (` ```bash `). Indented (4-space) code blocks are rejected.
@@ -75,7 +77,6 @@ It is a guardrail against honest authoring mistakes, not a sandbox. Known limits
 
 - A fix block may use any shell, so `sh -c`, `eval` or nested quoting can hide a Secret name.
 - `$[` arithmetic and backslash tricks in prose.
-- `kubectl get -f https://...` reads a remote manifest.
 - Glob patterns such as `secre[t]s`.
 - yq `load()`.
 - `-v=9` logging.

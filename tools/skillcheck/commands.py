@@ -15,9 +15,8 @@ command name or a flag, so mentions such as "the `kubectl` binary" are not findi
 Known limits (this is a guardrail against honest mistakes, not a sandbox; human review
 covers deliberate obfuscation): a fix block may use any shell, so `sh -c`, `eval` or
 nested quoting can hide a Secret name; `$[` arithmetic; backslash tricks in prose;
-`kubectl get -f https://...` reads a remote manifest; glob patterns such as `secre[t]s`;
-yq `load()`; `-v=9` logging; a prose command whose second word is not a kubectl
-command name (fenced blocks are still checked in full).
+glob patterns such as `secre[t]s`; yq `load()`; `-v=9` logging; a prose command whose
+second word is not a kubectl command name (fenced blocks are still checked in full).
 """
 
 import re
@@ -44,7 +43,12 @@ VARIABLE_START = re.compile(r"[A-Za-z_{0-9@*#?!$-]")
 # Short kubectl flag letters after the subcommand: those that take a value (the rest of
 # the cluster is that value) and plain switches. Any other letter is a finding.
 SHORT_VALUE = set("nolcLv")
-SHORT_BOOL = set("ARpwfh")
+SHORT_BOOL = set("ARph")
+# Flags that make kubectl wait forever (watch, follow) or read local files (manifests,
+# kustomize folders). An agent that runs them hangs or reads outside the cluster.
+BLOCKING_SHORT = set("wfk")
+BLOCKING_LONG = {"--watch", "--watch-only", "--follow", "--filename", "--kustomize"}
+BLOCKING_MESSAGE = "flag would block or read local files: "
 # Short flag letters of each filter that take a value.
 FILTER_VALUE_LETTERS = {
     "grep": "eABC",
@@ -379,6 +383,12 @@ def _is_flag(token: str) -> bool:
     return token.startswith("-") and token != "-"
 
 
+def _output_problems(value: str) -> list[str]:
+    """Reject `-o` formats that read a template from a local file (`jsonpath-file=...`)."""
+    fmt = value.split("=", 1)[0]
+    return [f"{BLOCKING_MESSAGE}-o {fmt}"] if fmt.endswith("-file") else []
+
+
 def _check_flags(args: list[str], allowlist: dict) -> list[str]:
     """Check the flags of a kubectl command after its subcommand.
 
@@ -391,20 +401,30 @@ def _check_flags(args: list[str], allowlist: dict) -> list[str]:
     for i, token in enumerate(args):
         if token == "--":
             break
+        following = "".join(args[i + 1 : i + 2])
         if token.startswith("--"):
             name = token.split("=", 1)[0]
             if name in every and name not in allowed:
                 problems.append("global flag not allowed")
+            if name in BLOCKING_LONG:
+                problems.append(BLOCKING_MESSAGE + name)
+            if name == "--output":
+                problems += _output_problems(token.split("=", 1)[1] if "=" in token else following)
             if name == "--raw":
                 value = token.split("=", 1)[1] if "=" in token else "".join(args[i + 1 : i + 2])
                 if "%" in value:
                     problems.append("percent-encoding in a --raw path is not allowed")
         elif _is_flag(token) and not token[1:].isdigit():
-            for letter in token[1:]:
+            for pos, letter in enumerate(token[1:], start=2):
                 flag = f"-{letter}"
                 if flag in every and flag not in allowed:
                     problems.append("global flag not allowed")
                     break
+                if letter in BLOCKING_SHORT:
+                    problems.append(BLOCKING_MESSAGE + flag)
+                    break
+                if letter == "o":
+                    problems += _output_problems(token[pos:].removeprefix("=") or following)
                 if letter in SHORT_VALUE:
                     break
                 if letter not in SHORT_BOOL:

@@ -279,7 +279,7 @@ def fails(tmp_path, body, expect=None, **kw):
         ("kubectl get pods --client-certificate=/tmp/c", "global flag"),
         ("kubectl get pods --tls-server-name=x", "global flag"),
         ("kubectl get pods --certificate-authority=/tmp/c", "global flag"),
-        ("kubectl get pods -fs https://x", "global flag"),
+        ("kubectl get pods -fs https://x", "flag would block or read local files"),
         ("kubectl get pods -Z", "flag not allowed"),
         ("kubectl -v 6 -s https://x get pods", "global flag"),
         ("kubectl get pods | sed -n p", "allow-listed filter"),
@@ -312,7 +312,8 @@ def test_review_bypass_probes(tmp_path, line, expect):
         "kubectl -n my-namespace get pods",
         "kubectl --namespace my-namespace get pods",
         "kubectl --namespace=my-namespace get pods -A -ojson",
-        "kubectl logs my-app -n my-namespace --since 1h --tail=20 -f -c main",
+        "kubectl logs my-app -n my-namespace --since 1h --tail=20 -c main",
+        "kubectl get pods -o go-template='{{.metadata.name}}'",
         "kubectl get pods --request-timeout=5s -v 4",
         "kubectl get pods -A | grep -v -E 'Running|Completed' | wc -l",
         "kubectl get pods | grep -A 2 -i error",
@@ -615,3 +616,29 @@ def test_unicode_line_separators_do_not_shift_lines(tmp_path, sep):
     plain = f"x{sep}y\n\n```bash\nkubectl get pods\nkubectl delete x\n```\n"
     found = run(tmp_path / "b", refs={"r.md": plain})
     assert [f.line for f in found] == [5]
+
+
+@pytest.mark.parametrize(
+    ("line", "flag"),
+    [
+        ("kubectl get pods -w", "-w"),
+        ("kubectl get pods -Aw", "-w"),
+        ("kubectl get pods --watch", "--watch"),
+        ("kubectl get pods --watch-only", "--watch-only"),
+        ("kubectl get pods --watch=true", "--watch"),
+        ("kubectl logs my-app -f", "-f"),
+        ("kubectl logs my-app --follow", "--follow"),
+        ("kubectl get -f pod.yaml", "-f"),
+        ("kubectl describe --filename=pod.yaml", "--filename"),
+        ("kubectl get -k ./overlay", "-k"),
+        ("kubectl get --kustomize ./overlay", "--kustomize"),
+        ("kubectl get pods -o go-template-file=t.tmpl", "-o go-template-file"),
+        ("kubectl get pods -ojsonpath-file=t.txt", "-o jsonpath-file"),
+        ("kubectl get pods -o=template-file=t.tmpl", "-o template-file"),
+        ("kubectl get pods --output jsonpath-file=t.txt", "-o jsonpath-file"),
+        ("kubectl get pods --output=go-template-file=t", "-o go-template-file"),
+    ],
+)
+def test_blocking_and_file_reading_flags_fail(tmp_path, line, flag):
+    found = messages(run(tmp_path, bash(line)))
+    assert f"flag would block or read local files: {flag}" in found, (line, found)
