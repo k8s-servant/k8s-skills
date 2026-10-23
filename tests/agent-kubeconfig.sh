@@ -36,6 +36,11 @@ metadata:
   namespace: kube-system
 YAML
 
+# Remove every binding an earlier run made, so this run's scope is exactly what it asks
+# for (a namespace-only agent must not keep cluster-wide access from a previous case).
+kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader --ignore-not-found >&2
+kubectl delete rolebindings --all-namespaces --field-selector metadata.name=skill-agent-view --ignore-not-found >&2
+
 if [[ -n "$namespace" ]]; then
   kubectl apply -f - >&2 <<YAML
 apiVersion: rbac.authorization.k8s.io/v1

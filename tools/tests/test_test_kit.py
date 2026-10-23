@@ -24,6 +24,10 @@ esac
 """
 FAKE_KIND = """#!/usr/bin/env bash
 echo "kind $*" >> "$FAKE_LOG"
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "--config" ]]; then cat "$2" >> "$FAKE_LOG"; fi
+  shift
+done
 """
 
 
@@ -194,3 +198,55 @@ def test_run_works_without_agent_scope_on_old_bash(tmp_path):
     result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
     assert result.returncode == 0, result.stderr
     assert "kind: ClusterRoleBinding" in applied(tmp_path)
+
+
+def test_cluster_up_with_workers(tmp_path):
+    repo = make_repo(tmp_path)
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--workers", "1"])
+    assert result.returncode == 0, result.stderr
+    log = "\n".join(calls(tmp_path))
+    assert log.count("role: worker") == 1
+    assert log.count("role: control-plane") == 1
+    assert "disableDefaultCNI" not in log
+
+
+def test_cluster_up_with_cni_and_workers(tmp_path):
+    repo = make_repo(tmp_path)
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "calico", "--workers", "2"])
+    assert result.returncode == 0, result.stderr
+    log = "\n".join(calls(tmp_path))
+    assert log.count("role: worker") == 2
+    assert "disableDefaultCNI: true" in log
+
+
+def test_cluster_up_rejects_bad_workers(tmp_path):
+    repo = make_repo(tmp_path)
+    for value in ("0", "x", ""):
+        result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--workers", value])
+        assert result.returncode == 64, (value, result.stderr)
+
+
+def test_agent_kubeconfig_removes_earlier_bindings(tmp_path):
+    """A namespace-only run after a cluster-wide one must not keep cluster-wide access."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    for args in ([], ["--namespace", "my-namespace"]):
+        (tmp_path / "calls.log").unlink(missing_ok=True)
+        result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh", *args])
+        assert result.returncode == 0, result.stderr
+        log = calls(tmp_path)
+        cleanup = [
+            (
+                "kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader"
+                " --ignore-not-found"
+            ),
+            (
+                "kubectl delete rolebindings --all-namespaces"
+                " --field-selector metadata.name=skill-agent-view --ignore-not-found"
+            ),
+        ]
+        for line in cleanup:
+            assert line in log, (args, log)
+        # The cleanup runs before the bindings for this run are applied.
+        applies = [i for i, c in enumerate(log) if c == "kubectl apply -f -"]
+        assert max(log.index(line) for line in cleanup) < applies[-1], (args, log)

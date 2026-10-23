@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Create or delete the throwaway kind cluster used by the scenario tests.
 #
-# Usage: tests/cluster.sh up [--cni calico] | down
+# Usage: tests/cluster.sh up [--cni calico] [--workers N] | down
 # Only the cluster named k8s-skills-test is ever created or deleted here.
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
@@ -12,31 +12,45 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/cluster.sh up [--cni calico] | down" >&2
+  echo "usage: tests/cluster.sh up [--cni calico] [--workers N] | down" >&2
   exit 64
 }
 
 up() {
-  local cni="" config=""
-  if [[ "${1:-}" == "--cni" ]]; then
-    cni="${2:-}"
-    [[ "$cni" == "calico" ]] || usage
-  elif [[ $# -gt 0 ]]; then
-    usage
-  fi
+  local cni="" workers=0 config=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --cni)
+        cni="${2:-}"
+        [[ "$cni" == "calico" ]] || usage
+        shift 2
+        ;;
+      --workers)
+        workers="${2:-}"
+        [[ "$workers" =~ ^[1-9][0-9]*$ ]] || usage
+        shift 2
+        ;;
+      *) usage ;;
+    esac
+  done
 
   mkdir -p "$REPO_ROOT/.kube"
   local args=(create cluster --name "$CLUSTER_NAME" --image "$KIND_NODE_IMAGE" --kubeconfig "$KUBECONFIG")
 
-  if [[ "$cni" == "calico" ]]; then
-    # NetworkPolicy scenarios need a CNI that enforces policies; kind's default does not.
+  if [[ -n "$cni" || "$workers" -gt 0 ]]; then
     config="$(mktemp)"
-    cat > "$config" <<'YAML'
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-networking:
-  disableDefaultCNI: true
-YAML
+    printf 'kind: Cluster\napiVersion: kind.x-k8s.io/v1alpha4\n' > "$config"
+    if [[ "$cni" == "calico" ]]; then
+      # NetworkPolicy scenarios need a CNI that enforces policies; kind's default does not.
+      printf 'networking:\n  disableDefaultCNI: true\n' >> "$config"
+    fi
+    if [[ "$workers" -gt 0 ]]; then
+      # Node scenarios break a worker; the control plane must keep running.
+      printf 'nodes:\n  - role: control-plane\n' >> "$config"
+      for ((i = 0; i < workers; i++)); do
+        printf '  - role: worker\n' >> "$config"
+      done
+    fi
     args+=(--config "$config")
   fi
 

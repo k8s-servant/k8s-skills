@@ -105,7 +105,7 @@ one namespace sees, put an `agent-scope` file in the case folder with the namesp
 on its first line. The agent then gets `view` in that namespace only, and no node access.
 
 ```bash
-tests/cluster.sh up                       # create the cluster (add --cni calico for NetworkPolicy cases)
+tests/cluster.sh up                       # create the cluster (--cni calico for NetworkPolicy cases, --workers N for node cases)
 tests/run.sh <skill> <case>               # set up and break the scenario, print the prompt and KUBECONFIG
 # Give the agent the prompt and the printed KUBECONFIG, then compare its answer with expected.md.
 tests/run.sh --cleanup <skill> <case>     # undo the scenario
