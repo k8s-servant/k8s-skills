@@ -1,0 +1,36 @@
+# Changelog
+
+## 0.1.0 (2026-10-23)
+
+
+### Features
+
+* **check:** check skill structure and scenarios ([8be464d](https://github.com/k8s-servant/k8s-skills/commit/8be464d367958954962e1d9f71a795ec0f807487))
+* **check:** enforce the read-only command allow-list ([5e9b627](https://github.com/k8s-servant/k8s-skills/commit/5e9b627aa613eb2b368d145a9e8418f6bf6b2ea9))
+* **check:** validate skill frontmatter ([7c860b8](https://github.com/k8s-servant/k8s-skills/commit/7c860b873d7bb02822974acec568ba0102e6fb2e))
+* generate install manifests for Claude Code and Gemini CLI ([590ea82](https://github.com/k8s-servant/k8s-skills/commit/590ea820ee95a932ab944e8a72250e78e04f2726))
+* **skills:** add k8s-workload-troubleshooting ([3af884d](https://github.com/k8s-servant/k8s-skills/commit/3af884d20bd5a0eec75c52e257ad615668cfa240))
+
+
+### Bug fixes
+
+* add a marketplace description ([e97ff8f](https://github.com/k8s-servant/k8s-skills/commit/e97ff8f7506ca50753423da88af879fb118b1256))
+* **check:** close allow-list bypasses found in review ([275bedf](https://github.com/k8s-servant/k8s-skills/commit/275bedfbc0374a3f85f87bcf293e9731aee843d6))
+* **check:** close fence, continuation and fix-block bypasses ([a4a06f7](https://github.com/k8s-servant/k8s-skills/commit/a4a06f7a03a0a32db8ff98a4aa83c6e5df6ff8ba))
+* **check:** link-check nested references ([05886b2](https://github.com/k8s-servant/k8s-skills/commit/05886b2b4a031ac5ec428a4bbd4c903cbee7990e))
+* **check:** reject blocking and file-reading kubectl flags ([a3049df](https://github.com/k8s-servant/k8s-skills/commit/a3049dfb09ba1fca28c42aa125c4c897e79ec9c4))
+* **check:** report hidden skill folders and test folders without a skill ([3b0f755](https://github.com/k8s-servant/k8s-skills/commit/3b0f755da1659c8d45d5a12e08ba5f285a43f2b1))
+* **check:** stop flagging prose mentions of kubectl ([ecf5bf3](https://github.com/k8s-servant/k8s-skills/commit/ecf5bf3fdc0f3efbaead1bf11f10dfc0e492b87e))
+* **ci:** install dependencies before packaging release zips ([a5aedd6](https://github.com/k8s-servant/k8s-skills/commit/a5aedd67e8e7813641d79e4acbb43f79bc56e414))
+* **package:** leave dotfiles and __pycache__ out of release zips ([635badc](https://github.com/k8s-servant/k8s-skills/commit/635badc0f995b7e06061a922d24b00df1beb3915))
+* report broken skills instead of crashing in manifests ([a294ac8](https://github.com/k8s-servant/k8s-skills/commit/a294ac81655782b024fe9bf8e423c779dd38a3da))
+* **skills:** read the real progress deadline and tidy workload scenarios ([1681ffe](https://github.com/k8s-servant/k8s-skills/commit/1681ffeedf97cf282faa2d402c7853e40908a781))
+
+
+### Documentation
+
+* add README, contributing guide and agent guidance ([5a5bb12](https://github.com/k8s-servant/k8s-skills/commit/5a5bb12b1afd0383a9a249295743d64bf6986b59))
+* bring the design in line with what shipped ([c102e2a](https://github.com/k8s-servant/k8s-skills/commit/c102e2afc9443291a81b633918f299a605abfde7))
+* **ci:** drop the promise of on-demand reviews for fork PRs ([b31b3e9](https://github.com/k8s-servant/k8s-skills/commit/b31b3e9042dfd4d22b69d6ba109863419c872986))
+* flag unverified install paths, explain ca.crt and rename the templates ([8431aee](https://github.com/k8s-servant/k8s-skills/commit/8431aeea70795ce8196fd69a8cca82bf21f62d65))
+* leave agent permissions to the user and point to RBAC ([b9d95e7](https://github.com/k8s-servant/k8s-skills/commit/b9d95e7b33611fd714514df991131ae54dcb643c))
