@@ -1,0 +1,8 @@
+# Tooling config only: this repository ships skills, not a Python package.
+[tool.pytest.ini_options]
+testpaths = ["tools/tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
