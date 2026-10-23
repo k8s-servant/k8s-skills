@@ -48,15 +48,16 @@ of them.
 | Path | One skill | All skills |
 |---|---|---|
 | Vercel `skills` CLI | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting` | `npx skills add k8s-servant/k8s-skills` |
-| GitHub CLI (preview) | `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting` | `gh skill install k8s-servant/k8s-skills` |
-| Claude Code | `/plugin install k8s-workload-troubleshooting@k8s-skills` (not yet verified\*) | `/plugin install k8s-skills@k8s-skills` |
-| Gemini CLI (not yet verified\*) | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-workload-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
+| GitHub CLI (preview) | `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting` | `gh skill install k8s-servant/k8s-skills --all` |
+| Claude Code | `/plugin install k8s-workload-troubleshooting@k8s-skills` | `/plugin install k8s-skills@k8s-skills` |
+| Gemini CLI | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-workload-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
 | Codex | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting -a codex` | `npx skills add k8s-servant/k8s-skills -a codex` |
 | Manual copy | copy `skills/k8s-workload-troubleshooting/` | copy `skills/*` |
-| claude.ai / API | upload `k8s-workload-troubleshooting.zip` from a release | upload each zip |
+| claude.ai / API (not yet verified\*) | upload `k8s-workload-troubleshooting.zip` from a release | upload each zip |
 
 \* Not yet verified: these paths follow the tools' documentation but have not been
-confirmed by a real install. Please open an issue if one does not work for you.
+confirmed by a real install. Please open an issue if one does not work for you. The
+other paths were installed from the v0.1.0 release.
 
 Notes per path:
 
@@ -64,12 +65,17 @@ Notes per path:
 - **Vercel `skills` CLI:** it sends anonymous usage telemetry. Set `DISABLE_TELEMETRY=1`
   to turn it off.
 - **GitHub CLI:** `gh skill` is a preview feature. Pin a release with
-  `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting@vX.Y.Z`.
+  `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting@vX.Y.Z`. Without
+  a skill name or `--all`, it asks which skills to install, or only lists them when it
+  is not run in a terminal.
 - **Codex:** there is no Codex plugin marketplace file in this repository yet, so Codex
   uses the Vercel CLI with `-a codex`.
+- **Gemini CLI:** `gemini skills install` installs for your user by default
+  (`--scope workspace` for the current project). The extension installs every skill.
 - **Manual copy:** put the folder into `.agents/skills`, `.claude/skills`,
   `.github/skills` or `.cursor/skills` (in a project, or in your home directory for all
-  projects).
+  projects). `.github/skills` and `.cursor/skills` are not yet verified\*. Gemini CLI
+  reads project skills only in a folder you have trusted.
 - **claude.ai and the API:** each GitHub release has one zip per skill. Upload it in the
   skills settings, or through the API.
 
