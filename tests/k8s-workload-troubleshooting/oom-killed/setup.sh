@@ -5,4 +5,9 @@ set -euo pipefail
 source "$(dirname "$0")/../../lib.sh"
 require_test_cluster
 
-kubectl create namespace my-namespace
+kubectl apply -f - <<'YAML'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-namespace
+YAML

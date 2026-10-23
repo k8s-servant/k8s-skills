@@ -19,6 +19,8 @@ code 0. `httpGet.path` defaults to `/`.
 
 ## Investigate
 
+Use the workload's real selector in place of `app=my-app` (SKILL.md, step 1).
+
 ```bash
 kubectl get pods -n my-namespace -l app=my-app
 kubectl describe pod my-pod -n my-namespace
@@ -53,8 +55,9 @@ The `Unhealthy` event message says how the probe failed:
   probe is the documented answer for slow starts.
 
 A pod that is `Running`, `0/1` ready, with zero restarts and readiness `Unhealthy`
-events, is a readiness problem, not a Service problem: a not-ready pod is never a ready
-endpoint. The Service's EndpointSlice still lists the pod's address, with the condition
+events, is a readiness problem, not a Service problem: a not-ready pod is not a ready endpoint,
+so Services do not send it traffic (the exception is a Service with
+`publishNotReadyAddresses: true`, which ignores readiness). The Service's EndpointSlice still lists the pod's address, with the condition
 `ready: false`; the `ENDPOINTS` column of `kubectl get endpointslices` shows that address
 anyway, so read the conditions. If the pods are Ready and traffic still does not arrive,
 continue with `k8s-network-troubleshooting`.

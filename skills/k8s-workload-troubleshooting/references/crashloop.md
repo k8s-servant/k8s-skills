@@ -13,6 +13,8 @@ The pod's `restartPolicy` decides whether a container is restarted at all: `Alwa
 
 ## Investigate
 
+Use the workload's real selector in place of `app=my-app` (SKILL.md, step 1).
+
 ```bash
 kubectl get pods -n my-namespace -l app=my-app
 kubectl describe pod my-pod -n my-namespace

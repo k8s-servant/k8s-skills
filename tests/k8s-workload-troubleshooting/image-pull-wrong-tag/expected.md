@@ -13,11 +13,11 @@ The Deployment's new pod template uses the image `nginx:1.299-alpine`, a tag tha
 - The new pod is in `ErrImagePull` or `ImagePullBackOff` (`kubectl get pods`), while the old pod of the previous ReplicaSet keeps running.
 - The pod's events (`kubectl describe pod` or `kubectl events`) show `Failed` pulling `nginx:1.299-alpine` with a "not found" style error, and `BackOff` pulling the image.
 - `kubectl rollout status` waits or reports the deadline; after 120 seconds the Deployment's `Progressing` condition is `False` with reason `ProgressDeadlineExceeded`.
-- `kubectl rollout history` (or the ReplicaSets) shows the previous revision used `nginx:1.29-alpine`.
+- `kubectl rollout history` (or the ReplicaSets) shows the previous revision used `nginx:1.29-alpine` (pinned by digest, `nginx:1.29-alpine@sha256:...`).
 
 ## Acceptable fixes
 
-- Set the image back to an existing tag, such as `nginx:1.29-alpine` (proposed, with an undo).
+- Set the image back to an existing tag, such as the previous `nginx:1.29-alpine` (proposed, with an undo).
 - Roll back to the previous revision with `kubectl rollout undo` (proposed, with an undo).
 - Fix the tag in the source the Deployment is applied from (manifest, Helm values, GitOps repo) and redeploy.
 

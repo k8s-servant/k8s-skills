@@ -5,9 +5,11 @@
 set -euo pipefail
 # shellcheck source=../../lib.sh disable=SC1091
 source "$(dirname "$0")/../../lib.sh"
+# shellcheck source=../../versions.env disable=SC1091
+source "$(dirname "$0")/../../versions.env"
 require_test_cluster
 
-kubectl apply -f - <<'YAML'
+kubectl apply -f - <<YAML
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -31,7 +33,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: nginx:1.29-alpine
+          image: ${NGINX_IMAGE}  # nginx:1.29-alpine, pinned in tests/versions.env
           ports:
             - containerPort: 80
 YAML

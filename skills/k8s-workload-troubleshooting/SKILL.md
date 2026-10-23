@@ -56,6 +56,11 @@ kubectl get pods -n my-namespace -o wide
 kubectl get pods -n my-namespace -l app=my-app
 ```
 
+`app=my-app` is an example label. Take the real selector from the workload, with
+`kubectl get deployment my-app -n my-namespace -o jsonpath='{.spec.selector.matchLabels}'`
+or the `Selector:` line of `kubectl describe deployment my-app -n my-namespace`, and use
+it wherever a command here says `-l app=my-app`.
+
 **2. Describe the failing pod.** Read the container `State` and `Last State` (reason and
 exit code), `Restart Count`, `Limits` and `Requests`, the probes, the pod `Conditions`
 and the `Events` at the bottom.
@@ -82,7 +87,10 @@ kubectl describe deployment my-app -n my-namespace
 kubectl rollout status deployment/my-app -n my-namespace --timeout=10s
 kubectl rollout history deployment/my-app -n my-namespace
 kubectl get replicasets -n my-namespace -l app=my-app
+kubectl get deployment my-app -n my-namespace -o jsonpath='{.spec.progressDeadlineSeconds}'
 ```
+
+`describe deployment` does not print the progress deadline; the last command reads it.
 
 For a StatefulSet or DaemonSet use the same `describe`, `rollout status` and `rollout
 history` commands with `statefulset/my-app` or `daemonset/my-app`. For a Job:
@@ -136,12 +144,14 @@ What the common findings mean (Kubernetes 1.37):
 - **`Reason: Error` with another exit code**: the app exited by itself. The logs of the
   previous container say why (missing config, bad argument, failed dependency).
 - **`Running` but `READY 0/1`, no restarts, `Unhealthy` "Readiness probe failed"
-  events**: the readiness probe fails, so the pod is not added to any Service's
-  endpoints and gets no traffic. The container is not restarted.
+  events**: the readiness probe fails, so the pod is not a ready endpoint of its Services
+  and gets no traffic (unless a Service sets `publishNotReadyAddresses: true`). The
+  container is not restarted.
 - **Restarts with `Unhealthy` "Liveness probe failed" (or startup probe) events**: the
   kubelet kills the container after `failureThreshold` failures in a row and restarts it.
 - **Deployment condition `Progressing=False`, reason `ProgressDeadlineExceeded`**: the
-  new ReplicaSet made no progress for `progressDeadlineSeconds` (default 600). Kubernetes
+  new ReplicaSet made no progress for the Deployment's `progressDeadlineSeconds` (read it
+  from the spec; 600 is only the default when unset). Kubernetes
   only reports this; it does not roll back. The new ReplicaSet's pods show the real
   cause (image pull, crash, readiness, quota).
 - **Job condition `Failed`, reason `BackoffLimitExceeded`**: pods failed more times than
@@ -166,7 +176,7 @@ spec):
 
 ```bash
 kubectl set image deployment/my-app app=registry.example.com/my-app:1.4.2 -n my-namespace
-# Undo: kubectl rollout undo deployment/my-app -n my-namespace
+# Undo: kubectl set image deployment/my-app app=registry.example.com/my-app:1.4.3 -n my-namespace
 ```
 
 Roll a stuck Deployment back to the previous revision:
@@ -209,6 +219,8 @@ Checked against the Kubernetes 1.37 documentation:
   probe fields, defaults, HTTP success range.
 - [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/):
   OOM kills, CPU throttling, `FailedScheduling`, `OOMKilled` with exit code 137.
+- [EndpointSlices](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/):
+  endpoint `ready` condition, `publishNotReadyAddresses`.
 - [Images](https://kubernetes.io/docs/concepts/containers/images/): `ImagePullBackOff`,
   pull back-off, image pull policy.
 - [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/):

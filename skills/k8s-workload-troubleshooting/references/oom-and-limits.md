@@ -15,6 +15,8 @@ Requests and limits do different jobs:
 
 ## Investigate
 
+Use the workload's real selector in place of `app=my-app` (SKILL.md, step 1).
+
 ```bash
 kubectl get pods -n my-namespace -l app=my-app
 kubectl describe pod my-pod -n my-namespace

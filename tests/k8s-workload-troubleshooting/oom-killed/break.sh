@@ -5,9 +5,11 @@
 set -euo pipefail
 # shellcheck source=../../lib.sh disable=SC1091
 source "$(dirname "$0")/../../lib.sh"
+# shellcheck source=../../versions.env disable=SC1091
+source "$(dirname "$0")/../../versions.env"
 require_test_cluster
 
-kubectl apply -f - <<'YAML'
+kubectl apply -f - <<YAML
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +27,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: busybox:1.37
+          image: ${BUSYBOX_IMAGE}  # busybox:1.37, pinned in tests/versions.env
           # Stand-in for an application that loads a large cache at start-up:
           # busybox tail keeps the whole newline-free input in memory.
           command: ["sh", "-c", "echo loading cache; head -c 100m /dev/zero | tail; echo ready; sleep 3600"]

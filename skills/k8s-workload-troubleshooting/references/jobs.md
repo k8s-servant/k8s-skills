@@ -66,9 +66,16 @@ source the Job or CronJob is deployed from, then run a new Job (a CronJob starts
 its next scheduled time). Raise `backoffLimit` or `activeDeadlineSeconds` only
 when the failures are expected and transient.
 
+When the Job failed only because `activeDeadlineSeconds` is too short for work that is
+healthy but slow, raise it in the CronJob's job template so the next run gets more time:
+
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
-kubectl patch cronjob my-app -n my-namespace -p '{"spec": {"suspend": false}}'
-# Undo: kubectl patch cronjob my-app -n my-namespace -p '{"spec": {"suspend": true}}'
+kubectl patch cronjob my-app -n my-namespace -p '{"spec": {"jobTemplate": {"spec": {"activeDeadlineSeconds": 1800}}}}'
+# Undo: kubectl patch cronjob my-app -n my-namespace -p '{"spec": {"jobTemplate": {"spec": {"activeDeadlineSeconds": 600}}}}'
 ```
+
+If the CronJob is suspended on purpose, do not propose un-suspending it without saying
+that, when it has no `startingDeadlineSeconds`, the missed Jobs are scheduled
+immediately after `suspend` changes back to false.

@@ -6,8 +6,9 @@ ready, the rollout stalls. Common causes listed by the Kubernetes docs: insuffic
 quota, readiness probe failures, image pull errors, insufficient permissions, limit
 ranges, and application runtime misconfiguration.
 
-`progressDeadlineSeconds` (default 600) is how long the Deployment controller waits for
-progress. After that it sets the condition `Progressing` to `False` with reason
+The Deployment's `progressDeadlineSeconds` is how long the Deployment controller waits for
+progress. Read it from the spec; 600 is only the default when the field is unset, and
+`describe deployment` does not print it. After that it sets the condition `Progressing` to `False` with reason
 `ProgressDeadlineExceeded`, and `kubectl rollout status` exits non-zero with
 `deployment "my-app" exceeded its progress deadline`. Kubernetes takes **no other
 action**: it does not roll back, and the controller keeps retrying. The condition can
@@ -20,6 +21,8 @@ condition with reason `FailedCreate` means the ReplicaSet could not create pods 
 kubectl rollout status deployment/my-app -n my-namespace --timeout=10s
 kubectl describe deployment my-app -n my-namespace
 kubectl get deployment my-app -n my-namespace -o jsonpath='{.status.conditions}'
+kubectl get deployment my-app -n my-namespace -o jsonpath='{.spec.progressDeadlineSeconds}'
+kubectl get deployment my-app -n my-namespace -o jsonpath='{.spec.selector.matchLabels}'
 kubectl rollout history deployment/my-app -n my-namespace
 kubectl rollout history deployment/my-app -n my-namespace --revision=2
 kubectl get replicasets -n my-namespace -l app=my-app -o wide
@@ -27,7 +30,7 @@ kubectl describe replicaset my-app-5d8f7c9b6 -n my-namespace
 kubectl get pods -n my-namespace -l app=my-app
 ```
 
-Replace `my-app-5d8f7c9b6` with the name of the newest ReplicaSet (the `NewReplicaSet`
+Use the Deployment's real selector in place of `app=my-app`. Replace `my-app-5d8f7c9b6` with the name of the newest ReplicaSet (the `NewReplicaSet`
 line of `describe deployment`).
 
 ## Read the results
