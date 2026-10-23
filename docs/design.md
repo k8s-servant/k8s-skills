@@ -1,6 +1,7 @@
 # k8s-skills: design
 
-Status: draft, 2026-10-23. Becomes the first commit of `k8s-servant/k8s-skills` once approved.
+Status: approved 2026-10-23. See [Changed during implementation](#changed-during-implementation)
+for where the build differs from the first draft.
 
 ## Intent
 
@@ -137,7 +138,7 @@ out of the first release and listed in the README as not yet supported.
 | `npx skills add k8s-servant/k8s-skills` (Vercel `skills` CLI, many agents) | the `skills/` layout |
 | `gh skill install k8s-servant/k8s-skills [skill]` (Copilot, preview) | the `skills/` layout |
 | Claude Code plugin: `/plugin marketplace add k8s-servant/k8s-skills`, then `/plugin install k8s-skills@k8s-skills` (all) or `/plugin install k8s-network-troubleshooting@k8s-skills` (one) | `.claude-plugin/marketplace.json`: a bundle entry plus one entry per skill, each with `source: "./"` and `skills: ["./skills/<name>"]` (a root-source entry that lists skills loads only those, per the plugin reference) |
-| Codex plugin | root `plugin.json` (portable agent-plugins schema) + `.agents/plugins/marketplace.json`; Codex loads the root `skills/` folder |
+| Codex: `npx skills add k8s-servant/k8s-skills -a codex` | the `skills/` layout; no Codex marketplace file yet (root `plugin.json`, portable agent-plugins schema, is kept for one) |
 | Gemini CLI: `gemini skills install <git-url>` or `gemini extensions install <github-url>` | `gemini-extension.json`; extensions load the root `skills/` folder |
 | Manual copy into `.agents/skills`, `.claude/skills`, `.github/skills`, `.cursor/skills` | documented in the README |
 | claude.ai / Claude API | a zip per skill attached to each GitHub release |
@@ -157,7 +158,7 @@ Every path supports a single skill as well as the whole set:
 | GitHub CLI | `gh skill install k8s-servant/k8s-skills k8s-network-troubleshooting` | `gh skill install k8s-servant/k8s-skills` |
 | Claude Code | `/plugin install k8s-network-troubleshooting@k8s-skills` | `/plugin install k8s-skills@k8s-skills` |
 | Gemini CLI | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-network-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
-| Codex | `npx skills add k8s-servant/k8s-skills -s k8s-network-troubleshooting -a codex` (a per-skill Codex plugin would need copied files) | the Codex plugin |
+| Codex | `npx skills add k8s-servant/k8s-skills -s k8s-network-troubleshooting -a codex` | `npx skills add k8s-servant/k8s-skills -a codex` |
 | Manual copy | copy `skills/k8s-network-troubleshooting/` | copy `skills/*` |
 | claude.ai / API | upload `k8s-network-troubleshooting.zip` from the release | upload each zip |
 
@@ -217,13 +218,33 @@ provider docs and, when a contributor has an account, a real cluster; their PR s
 ```
 skills/<name>/SKILL.md, references/, scripts/
 tests/<skill>/<case>/setup.sh, break.sh, expected.md, cleanup.sh
-.claude-plugin/marketplace.json (+ plugin manifest)
-.codex-plugin/plugin.json (+ marketplace file)
+.claude-plugin/marketplace.json
+plugin.json (portable agent-plugins manifest)
 gemini-extension.json
 .github/workflows/ (ci, release-please, release zips)
 README.md, CONTRIBUTING.md (skill template + checklist), AGENTS.md, SECURITY.md, LICENSE
 docs/design.md (this file)
 ```
+
+## Changed during implementation
+
+- **Codex** installs through the Vercel CLI: `npx skills add k8s-servant/k8s-skills -a codex`
+  (one skill with `-s <name>`, or all). There is no Codex marketplace file until it is
+  confirmed that Codex accepts the repository root as a plugin source; the root
+  `plugin.json` is kept for that. No `.codex-plugin/` or `.agents/plugins/` folder exists.
+- **Markdown is parsed with markdown-it-py** (CommonMark), so what counts as a code block
+  follows a real renderer's rules instead of hand-written parsing.
+- **The checker is a guardrail for honest mistakes, not a sandbox.** Human review covers
+  deliberate obfuscation; CONTRIBUTING lists the known limits.
+- **Proposed fix blocks are exempt from every command rule except the Secret ban and the
+  `# Undo:` line**, since a human reads and runs them.
+- **Running the agent read-only is a recommendation in the README** (a kubeconfig bound to
+  the `view` ClusterRole), not something the repository can enforce. The skills themselves
+  still only propose fixes.
+- **Every test case's `expected.md` starts with a Prompt section**: the symptom the user
+  gives the agent, with no hint of the cause.
+- Gemini CLI and per-skill Claude Code installs follow the tools' documentation but are
+  marked "not yet verified" in the README until a real install confirms them.
 
 ## Repository creation
 
