@@ -18,6 +18,7 @@
   ],
   "packages": {
     ".": {
+      "initial-version": "0.1.0",
       "package-name": "k8s-skills",
       "extra-files": [
         { "type": "json", "path": "plugin.json", "jsonpath": "$.version" },

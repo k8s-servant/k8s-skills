@@ -1,0 +1,31 @@
+name: Bug in tooling
+description: Something is wrong with the checker, the test kit, CI or the install manifests.
+title: "fix: "
+labels: ["type/bug", "triage"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Checker (tools/skillcheck, allow-list)
+        - Test kit (tests/)
+        - Install manifests or release zips
+        - CI or workflows
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the command you ran and its output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true

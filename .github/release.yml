@@ -1,0 +1,21 @@
+# Categories for GitHub-generated release notes; release-please writes CHANGELOG.md itself.
+changelog:
+  exclude:
+    labels: ["autorelease: pending", "autorelease: tagged"]
+  categories:
+    - title: Breaking changes
+      labels: ["breaking-change"]
+    - title: New skills
+      labels: ["new-skill"]
+    - title: Features
+      labels: ["type/feature"]
+    - title: Bug fixes
+      labels: ["type/bug", "skill-quality"]
+    - title: Security
+      labels: ["type/security"]
+    - title: Documentation
+      labels: ["type/docs"]
+    - title: Dependencies
+      labels: ["dependencies"]
+    - title: Other changes
+      labels: ["*"]
