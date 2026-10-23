@@ -16,6 +16,7 @@ REFUSAL = f"refusing to run: current context is not {CONTEXT}"
 
 FAKE_KUBECTL = """#!/usr/bin/env bash
 echo "kubectl $*" >> "$FAKE_LOG"
+if [[ "$1 $2 $3" == "apply -f -" ]]; then cat >> "$FAKE_STDIN"; fi
 case "$1 $2" in
   "config current-context") echo "${FAKE_CONTEXT:-}" ;;
   "create token") echo "fake-token" ;;
@@ -45,6 +46,7 @@ def run(tmp_path: Path, repo: Path, args: list[str], context: str = CONTEXT, **e
         **os.environ,
         "PATH": f"{tmp_path / 'bin'}{os.pathsep}{os.environ['PATH']}",
         "FAKE_LOG": str(tmp_path / "calls.log"),
+        "FAKE_STDIN": str(tmp_path / "applied.yaml"),
         "FAKE_CONTEXT": context,
         **env,
     }
@@ -114,3 +116,81 @@ def test_run_prints_prompt(tmp_path):
     assert "secret text" not in result.stdout
     assert f"KUBECONFIG={repo}/.kube/agent" in result.stdout
     assert result.stderr.index("ran setup.sh") < result.stderr.index("ran break.sh")
+
+
+def applied(tmp_path: Path) -> str:
+    """The YAML the scripts piped into `kubectl apply -f -`."""
+    path = tmp_path / "applied.yaml"
+    return path.read_text() if path.exists() else ""
+
+
+def test_agent_kubeconfig_cluster_scope(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh"])
+    assert result.returncode == 0, result.stderr
+    yaml_text = applied(tmp_path)
+    assert "kind: ClusterRoleBinding" in yaml_text
+    assert "name: view" in yaml_text
+    assert "name: skill-agent-node-reader" in yaml_text
+    assert "- nodes" in yaml_text
+
+
+def test_agent_kubeconfig_namespace_scope(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh", "--namespace", "my-namespace"])
+    assert result.returncode == 0, result.stderr
+    yaml_text = applied(tmp_path)
+    assert "kind: RoleBinding" in yaml_text
+    assert "namespace: my-namespace" in yaml_text
+    assert "ClusterRoleBinding" not in yaml_text
+    assert "nodes" not in yaml_text
+
+
+def test_agent_kubeconfig_rejects_bad_arguments(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    for args in (["--namespace"], ["--bogus"]):
+        result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh", *args])
+        assert result.returncode == 64, (args, result.stderr)
+        assert "usage:" in result.stderr
+
+
+def test_run_uses_agent_scope(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    case = repo / "tests" / "k8s-demo-skill" / "case-one"
+    case.mkdir(parents=True)
+    for name in ("setup.sh", "break.sh", "cleanup.sh"):
+        script = case / name
+        script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        script.chmod(0o755)
+    (case / "expected.md").write_text("## Prompt\n\nIs it broken?\n", encoding="utf-8")
+    (case / "agent-scope").write_text("my-namespace\n", encoding="utf-8")
+    result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
+    assert result.returncode == 0, result.stderr
+    yaml_text = applied(tmp_path)
+    assert "kind: RoleBinding" in yaml_text
+    assert "namespace: my-namespace" in yaml_text
+    assert "ClusterRoleBinding" not in yaml_text
+
+
+def test_run_works_without_agent_scope_on_old_bash(tmp_path):
+    """macOS ships bash 3.2, where an empty array under `set -u` is an error."""
+    system_bash = Path("/bin/bash")
+    if not system_bash.exists():
+        return
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    (tmp_path / "bin" / "bash").symlink_to(system_bash)
+    case = repo / "tests" / "k8s-demo-skill" / "case-one"
+    case.mkdir(parents=True)
+    for name in ("setup.sh", "break.sh", "cleanup.sh"):
+        script = case / name
+        script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        script.chmod(0o755)
+    (case / "expected.md").write_text("## Prompt\n\nIs it broken?\n", encoding="utf-8")
+    result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
+    assert result.returncode == 0, result.stderr
+    assert "kind: ClusterRoleBinding" in applied(tmp_path)
