@@ -5,13 +5,25 @@ cluster is to allow-list what they may tell the agent to run. This check reads e
 fenced code block and every line of prose in SKILL.md and references/**/*.md, and every
 line of scripts/**, and rejects anything that is not an allow-listed read-only command.
 The check fails closed: whatever it cannot positively recognise as safe is a finding.
+
+Markdown is parsed with markdown-it-py (CommonMark), so what counts as a code block is
+decided by a real renderer's rules, not ours. Proposed fixes are exempt from everything
+except the Secret ban and the `# Undo:` line.
+
+Known limits (this is a guardrail against honest mistakes, not a sandbox; human review
+covers deliberate obfuscation): a fix block may use any shell, so `sh -c`, `eval` or
+nested quoting can hide a Secret name; `$[` arithmetic; backslash tricks in prose;
+`kubectl get -f https://...` reads a remote manifest; glob patterns such as `secre[t]s`;
+yq `load()`; `-v=9` logging.
 """
 
 import re
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
+from markdown_it import MarkdownIt
 
 from tools.skillcheck.findings import Finding
 from tools.skillcheck.frontmatter import parse_skill
@@ -19,10 +31,6 @@ from tools.skillcheck.frontmatter import parse_skill
 MARKER = "> Proposed fix: review before running. The agent does not run this."
 UNDO_PREFIX = "# Undo:"
 
-# A fence opener: optional blockquote/list-item prefixes, at most 3 spaces of indent, then
-# the fence. More indent than that is an indented code block, not a fence.
-FENCE_OPEN = re.compile(r"^((?: {0,3}(?:>[ ]?|(?:[-*+]|\d+[.)])[ ]+))*) {0,3}(`{3,}|~{3,})(.*)$")
-QUOTE_PREFIX = re.compile(r"^(?: {0,3}>[ ]?)+")
 LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
 # Characters that separate words inside an argument, so `pods,secrets`, `{a,secrets}`
 # and `/api/v1/namespaces/x/secrets` are all seen as mentioning the word `secrets`.
@@ -81,67 +89,63 @@ class Block:
     is_fix: bool
 
 
-def _parse_markdown(md: str, first_line: int) -> tuple[list[Block], list[tuple[int, str]]]:
-    """Split Markdown into fenced blocks and the prose lines outside them.
+def _parse_markdown(
+    md: str, first_line: int, keys: frozenset[str] = frozenset()
+) -> tuple[list[Block], list[tuple[int, str]]]:
+    """Find the code blocks and the prose commands of a Markdown text.
 
-    Follows CommonMark closely enough that the checker never sees a block end earlier
-    than a renderer would: the closing fence must carry the opener's blockquote prefix
-    (a blockquote that stops also stops the block), be a bare fence of the same
-    character and at least the same length, and be indented at most 3 spaces beyond
-    the opening fence.
+    Args:
+        md: The Markdown text.
+        first_line: The file line number of the first line of `md`.
+        keys: The allow-listed program names that make prose a command.
+
+    Returns:
+        The fenced and indented code blocks, and (line, text) candidates from prose: the
+        contents of inline code spans, and lines of text, that start with an
+        allow-listed program name. A bare mention of the name is not a candidate.
     """
     text = md.splitlines()
     blocks: list[Block] = []
     prose: list[tuple[int, str]] = []
-    i = 0
-    while i < len(text):
-        line = text[i].expandtabs(4)
-        opened = FENCE_OPEN.match(line)
-        if not opened or (opened.group(2)[0] == "`" and "`" in opened.group(3)):
-            prose.append((first_line + i, text[i]))
-            i += 1
-            continue
-        fence, info = opened.group(2), opened.group(3).strip()
-        quoted = ">" in opened.group(1)
-        base = QUOTE_PREFIX.sub("", line) if quoted else line
-        fence_col = base.index(fence)
-        above = next((t.rstrip() for t in reversed(text[:i]) if t.strip()), "")
-        content: list[str] = []
-        j = i + 1
-        closed = False
-        while j < len(text):
-            raw = text[j].expandtabs(4)
-            if quoted and not QUOTE_PREFIX.match(raw):
-                break
-            inner = QUOTE_PREFIX.sub("", raw) if quoted else raw
-            bare = inner.strip()
-            indent = len(inner) - len(inner.lstrip(" "))
-            is_fence = bare and set(bare) == {fence[0]} and len(bare) >= len(fence)
-            if is_fence and indent <= fence_col + 3:
-                closed = True
-                break
-            content.append(inner)
-            j += 1
-        lang = None
-        if info:
-            found = LANG.match(info)
-            lang = found.group(1).lower() if found else ""
-        blocks.append(Block(lang, first_line + i, content, above == MARKER))
-        i = j + 1 if closed else j
-    return blocks, prose
+    for token in MarkdownIt("commonmark").parse(md):
+        start = first_line + (token.map[0] if token.map else 0)
+        if token.type == "fence":
+            above = next((t.rstrip() for t in reversed(text[: token.map[0]]) if t.strip()), "")
+            info = token.info.strip()
+            lang = None
+            if info:
+                found = LANG.match(info)
+                lang = found.group(1).lower() if found else ""
+            is_fix = token.level == 0 and above == MARKER
+            blocks.append(Block(lang, start, token.content.splitlines(), is_fix))
+        elif token.type == "code_block":
+            # Indented code has no language, so it is reported like an untyped fence.
+            blocks.append(Block(None, start, token.content.splitlines(), False))
+        elif token.type == "html_block":
+            for offset, line in enumerate(token.content.splitlines()):
+                prose.append((start + offset, re.sub(r"<[^>]*>", "", line)))
+        elif token.type == "inline":
+            for offset, line in enumerate(token.content.split("\n")):
+                prose.append((start + offset, line))
+            prose += [(start, c.content) for c in token.children or [] if c.type == "code_inline"]
+    return blocks, [(n, t.strip()) for n, t in prose if _starts_command(t, keys)]
+
+
+def _starts_command(text: str, keys: frozenset[str] | set[str]) -> bool:
+    """True if the first word of the text (after an optional `$ `) is a program name."""
+    words = text.strip().removeprefix("$ ").split(None, 1)
+    return bool(words) and words[0] in keys
 
 
 def extract_blocks(md: str, first_line: int = 1) -> list[Block]:
-    """Find the fenced code blocks of a Markdown text.
-
-    Fences inside blockquotes and list items count, as a renderer would show them.
+    """Find the fenced and indented code blocks of a Markdown text.
 
     Args:
         md: The Markdown text.
         first_line: The file line number of the first line of `md`.
 
     Returns:
-        The blocks in order. An unclosed block runs to the end of the text.
+        The blocks in order.
     """
     return _parse_markdown(md, first_line)[0]
 
@@ -445,13 +449,8 @@ def _check_filter(words: list[str], allowlist: dict) -> list[str]:
     return problems
 
 
-def _check_command(command: str, allowlist: dict, is_fix: bool) -> list[str]:
-    """Return the problems with one command line (Secret access is checked apart).
-
-    A proposed fix is exempt from the program, subcommand and flag allow-list only;
-    shell control, expansion and pipes into anything but a filter are findings there
-    too.
-    """
+def _check_command(command: str, allowlist: dict) -> list[str]:
+    """Return the problems with one command line (Secret access is checked apart)."""
     segments = _scan(command)
     if segments == "control":
         return ["shell control not allowed"]
@@ -459,9 +458,7 @@ def _check_command(command: str, allowlist: dict, is_fix: bool) -> list[str]:
         return ["cannot parse command"]
     first = segments[0]
     problems: list[str] = []
-    if is_fix:
-        pass
-    elif not first or first[0] not in allowlist["commands"]:
+    if not first or first[0] not in allowlist["commands"]:
         problems.append(f"not on the allow-list: {command}")
     else:
         problems += _check_kubectl(first, allowlist)
@@ -474,29 +471,28 @@ def _check_command(command: str, allowlist: dict, is_fix: bool) -> list[str]:
 
 
 def _secret_problems(command: str) -> list[str]:
-    """Check a command for Secret access, on the raw text and on the resolved words."""
+    """Check a command for Secret access, on the raw text and on the quote-resolved words."""
     if _mentions_secret(command):
         return ["Secret access is not allowed"]
-    segments = _scan(command)
-    if not isinstance(segments, str) and any(
-        _mentions_secret(w) for words in segments for w in words
-    ):
-        return ["Secret access is not allowed"]
-    return []
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return []
+    return ["Secret access is not allowed"] if any(_mentions_secret(w) for w in words) else []
 
 
 def _check_lines(
     block_lines: list[str], first_line: int, is_fix: bool, allowlist: dict, mode: str
 ) -> list[tuple[int, str]]:
-    """Check the commands of one block, script or prose; return (line, message) pairs.
+    """Check the commands of one block or script; return (line, message) pairs.
 
     Args:
         block_lines: The raw lines.
         first_line: File line number of the first of them.
-        is_fix: True for a proposed-fix block (exempt from the allow-list only).
+        is_fix: True for a proposed-fix block: only the Secret ban applies.
         allowlist: The allow-list mapping.
         mode: "command" (every line is a command), "console" (only `$ ` lines are),
-            or "other" (prose and non-shell blocks: only embedded commands count).
+            or "other" (non-shell blocks: only embedded commands count).
     """
     problems: list[tuple[int, str]] = []
     if is_fix:
@@ -506,7 +502,8 @@ def _check_lines(
     keys = set(allowlist["commands"])
     for line_no, command in _commands_in(block_lines, first_line, mode, keys):
         problems += [(line_no, m) for m in _secret_problems(command)]
-        problems += [(line_no, m) for m in _check_command(command, allowlist, is_fix)]
+        if not is_fix:
+            problems += [(line_no, m) for m in _check_command(command, allowlist)]
     return list(dict.fromkeys(problems))
 
 
@@ -535,7 +532,7 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             return data.decode("utf-8", errors="replace")
 
     def check_markdown(path: Path, text: str, first_line: int) -> None:
-        blocks, prose = _parse_markdown(text, first_line)
+        blocks, prose = _parse_markdown(text, first_line, frozenset(allowlist["commands"]))
         for block in blocks:
             if block.lang is None:
                 add(path, block.start_line, "fenced block needs a language")
@@ -551,9 +548,8 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
                 block.lines, block.start_line + 1, block.is_fix, allowlist, mode
             ):
                 add(path, line_no, message)
-        # Prose: indented code, <pre> and ordinary text are scanned line by line.
-        for line_no, line in prose:
-            for _, message in _check_lines([line], line_no, False, allowlist, "other"):
+        for line_no, command in prose:
+            for message in _secret_problems(command) + _check_command(command, allowlist):
                 add(path, line_no, message)
 
     skill_file = skill_dir / "SKILL.md"
