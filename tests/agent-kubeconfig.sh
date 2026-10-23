@@ -106,5 +106,9 @@ kubectl config view --raw --minify --flatten > "$AGENT_KUBECONFIG"
 kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-credentials skill-agent --token="$token" >&2
 kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-context --current --user=skill-agent >&2
 kubectl config --kubeconfig "$AGENT_KUBECONFIG" delete-user "$TEST_CONTEXT" >&2
+if [[ -n "$namespace" ]]; then
+  # A developer's kubeconfig usually points at their namespace; so does this one.
+  kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-context --current --namespace="$namespace" >&2
+fi
 
 echo "$AGENT_KUBECONFIG"

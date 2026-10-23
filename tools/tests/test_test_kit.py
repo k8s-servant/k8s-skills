@@ -267,3 +267,18 @@ def test_run_strips_agent_scope_whitespace(tmp_path):
     result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
     assert result.returncode == 0, result.stderr
     assert "  namespace: my-namespace\n" in applied(tmp_path)
+
+
+def test_agent_kubeconfig_namespace_scope_sets_context_namespace(tmp_path):
+    """Like a developer's kubeconfig, the namespace-only agent's context points at its namespace."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh", "--namespace", "my-namespace"])
+    assert result.returncode == 0, result.stderr
+    agent = f"{repo}/.kube/agent"
+    assert (
+        f"kubectl config --kubeconfig {agent} set-context --current --namespace=my-namespace"
+        in calls(tmp_path)
+    )
+    run(tmp_path, repo, ["tests/agent-kubeconfig.sh"])
+    assert sum("--namespace=" in c for c in calls(tmp_path)) == 1
