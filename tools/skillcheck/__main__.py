@@ -10,9 +10,10 @@ import sys
 from pathlib import Path
 
 from tools.skillcheck.commands import check_commands, load_allowlist
+from tools.skillcheck.discovery import skill_dirs
 from tools.skillcheck.findings import Finding
 from tools.skillcheck.frontmatter import check_frontmatter
-from tools.skillcheck.manifests import check_manifests, write_manifests
+from tools.skillcheck.manifests import ManifestError, check_manifests, write_manifests
 from tools.skillcheck.scenarios import check_scenarios
 from tools.skillcheck.structure import check_structure
 
@@ -39,8 +40,7 @@ def _check_skill(repo: Path, skill_dir: Path, allowlist: dict) -> list[Finding]:
 
 def run_check(repo: Path) -> int:
     """Check every `skills/*/` folder of a repository and print the result."""
-    skills_dir = repo / "skills"
-    skills = sorted(p for p in skills_dir.iterdir() if p.is_dir()) if skills_dir.is_dir() else []
+    skills = skill_dirs(repo)
     allowlist = load_allowlist()
     found: list[Finding] = []
     for skill_dir in skills:
@@ -69,7 +69,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "manifests":
         repo = args.repo.resolve()
-        return write_manifests(repo) if args.write else check_manifests(repo)
+        try:
+            return write_manifests(repo) if args.write else check_manifests(repo)
+        except ManifestError as exc:
+            for problem in exc.problems:
+                print(problem)
+            print("run python -m tools.skillcheck check for details")
+            return 1
     return run_check(args.repo.resolve())
 
 

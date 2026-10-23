@@ -8,6 +8,7 @@ ships. `--check` fails CI when a committed file is stale.
 import json
 from pathlib import Path
 
+from tools.skillcheck.discovery import skill_dirs
 from tools.skillcheck.frontmatter import parse_skill
 
 NAME = "k8s-skills"
@@ -16,6 +17,14 @@ DESCRIPTION = "Read-only Kubernetes troubleshooting skills for any AI agent"
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 REPOSITORY = "https://github.com/k8s-servant/k8s-skills"
 STALE = "{path} is out of date: run python -m tools.skillcheck manifests --write"
+
+
+class ManifestError(Exception):
+    """Raised when skills cannot be listed; `problems` holds one `<path>: <reason>` each."""
+
+    def __init__(self, problems: list[str]):
+        super().__init__("; ".join(problems))
+        self.problems = problems
 
 
 def _dump(data: dict) -> str:
@@ -33,23 +42,33 @@ def render_manifests(repo: Path) -> dict[Path, str]:
         Relative path to file text.
 
     Raises:
-        ValueError: If a SKILL.md cannot be parsed or lacks a description.
+        ManifestError: If any SKILL.md is missing, unparseable or lacks a description.
     """
     manifest = json.loads((repo / ".release-please-manifest.json").read_text(encoding="utf-8"))
     version = manifest["."]
-    skills_dir = repo / "skills"
-    folders = sorted(p for p in skills_dir.iterdir() if p.is_dir()) if skills_dir.is_dir() else []
     plugins: list[dict] = [{"name": NAME, "source": "./", "description": BUNDLE_DESCRIPTION}]
-    for folder in folders:
-        meta, _, _ = parse_skill(folder / "SKILL.md")
+    problems: list[str] = []
+    for folder in skill_dirs(repo):
+        path = (folder / "SKILL.md").relative_to(repo).as_posix()
+        try:
+            meta, _, _ = parse_skill(folder / "SKILL.md")
+        except (OSError, ValueError) as exc:
+            problems.append(f"{path}: {exc}")
+            continue
+        description = meta.get("description")
+        if not isinstance(description, str) or not description.strip():
+            problems.append(f"{path}: description must be a non-empty string")
+            continue
         plugins.append(
             {
                 "name": folder.name,
                 "source": "./",
-                "description": meta["description"],
+                "description": description.strip(),
                 "skills": [f"./skills/{folder.name}"],
             }
         )
+    if problems:
+        raise ManifestError(problems)
     marketplace = {
         "name": NAME,
         "owner": {"name": "k8s-servant"},

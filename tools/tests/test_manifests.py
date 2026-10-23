@@ -67,3 +67,41 @@ def test_write_then_check_passes(tmp_path):
     assert main(["manifests", "--check", "--repo", str(repo)]) == 1
     assert main(["manifests", "--write", "--repo", str(repo)]) == 0
     assert main(["manifests", "--check", "--repo", str(repo)]) == 0
+
+
+def broken(tmp_path: Path, text: str | None) -> Path:
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    repo = make_repo(tmp_path)
+    folder = repo / "skills" / "k8s-a-x"
+    folder.mkdir(parents=True)
+    if text is not None:
+        (folder / "SKILL.md").write_text(text)
+    return repo
+
+
+def test_broken_skills_are_reported_not_crashed(tmp_path, capsys):
+    cases = {
+        None: "No such file",
+        "no frontmatter\n": "no YAML frontmatter",
+        "---\nname: k8s-a-x\n---\n": "description must be a non-empty string",
+        "---\ndescription: 5\n---\n": "description must be a non-empty string",
+    }
+    for i, (text, reason) in enumerate(cases.items()):
+        repo = broken(tmp_path / str(i), text)
+        assert main(["manifests", "--write", "--repo", str(repo)]) == 1
+        out = capsys.readouterr().out
+        assert "skills/k8s-a-x/SKILL.md: " in out and reason in out
+        assert "run python -m tools.skillcheck check for details" in out
+        assert not (repo / "plugin.json").exists()
+
+
+def test_hidden_folders_ignored_and_description_stripped(tmp_path):
+    repo = make_repo(tmp_path, {"k8s-a-x": "Use when a"})
+    (repo / "skills" / "__pycache__").mkdir()
+    (repo / "skills" / ".hidden").mkdir()
+    (repo / "skills" / "k8s-a-x" / "SKILL.md").write_text(
+        "---\nname: k8s-a-x\ndescription: |\n  Use when a\n---\n"
+    )
+    plugins = json.loads(render_manifests(repo)[MARKET])["plugins"]
+    assert [p["name"] for p in plugins] == ["k8s-skills", "k8s-a-x"]
+    assert plugins[1]["description"] == "Use when a"
