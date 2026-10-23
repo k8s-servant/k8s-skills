@@ -2,7 +2,30 @@
 commands:
   kubectl: [get, describe, logs, events, top, explain, api-resources, api-versions,
             version, cluster-info, "auth can-i", "auth whoami", "rollout status", "rollout history"]
-filters: [grep, egrep, jq, yq, awk, sort, uniq, head, tail, wc, cut, column, sed]
-forbidden_flags: [--as, --as-group, --as-uid, --token, --server, -s, --kubeconfig, --context,
-                  --cluster, --user, --username, --password, --insecure-skip-tls-verify]
+filters: [grep, egrep, jq, yq, sort, uniq, head, tail, wc, cut, column]
+# Flags each filter may use; any other flag is a finding. Filters read stdin only.
+filter_flags:
+  grep: [-i, -v, -E, -w, -c, -n, -o, -F, -e, -A, -B, -C, --ignore-case, --invert-match,
+         --extended-regexp, --word-regexp, --count, --line-number, --only-matching, --fixed-strings]
+  egrep: [-i, -v, -E, -w, -c, -n, -o, -F, -e, -A, -B, -C, --ignore-case, --invert-match,
+          --extended-regexp, --word-regexp, --count, --line-number, --only-matching, --fixed-strings]
+  jq: [-r, -c, -e, -s, --raw-output, --compact-output, --exit-status, --slurp, --arg]
+  yq: [-r, -o, -e, --output-format]
+  sort: [-n, -r, -k, -t, -h, -u, -V]
+  uniq: [-c, -d, -u]
+  head: [-n]
+  tail: [-n]
+  wc: [-l, -c, -w, -m]
+  cut: [-d, -f, -c]
+  column: [-t, -s]
+# kubectl global flags (from `kubectl options`). Only the allowed ones may be used, and
+# only -n/--namespace may come before the subcommand; every other global flag can change
+# the identity, the target server or local files.
+global_flags_allowed: [-n, --namespace, --request-timeout, -v, --v]
+global_flags: [-n, -s, -v, --as, --as-group, --as-uid, --as-user-extra, --cache-dir,
+               --certificate-authority, --client-certificate, --client-key, --cluster, --context,
+               --disable-compression, --insecure-skip-tls-verify, --kubeconfig, --kuberc,
+               --log-flush-frequency, --match-server-version, --namespace, --password, --profile,
+               --profile-output, --proxy-url, --request-timeout, --server, --tls-server-name,
+               --token, --user, --username, --v, --vmodule, --warnings-as-errors]
 command_langs: [bash, sh, shell, console, zsh]
