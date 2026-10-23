@@ -2,3 +2,7 @@
 ^https?://example\.com
 ^https?://registry\.example\.com
 ^https?://my-[a-z0-9-]+\.example\.com
+
+# release-please writes a compare link to the tag that the release PR creates, so the
+# link 404s until that PR is merged.
+^https://github\.com/k8s-servant/k8s-skills/compare/
