@@ -62,6 +62,8 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python -m tools.skillcheck check
       - run: python -m tools.skillcheck manifests --check
+      # The release builds the zips the same way; exercise that path on every PR.
+      - run: python -m tools.skillcheck package --out dist
 
   shell:
     name: shell
