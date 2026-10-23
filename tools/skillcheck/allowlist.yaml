@@ -39,3 +39,21 @@ global_flags: [-n, -s, -v, --as, --as-group, --as-uid, --as-user-extra, --cache-
                --profile-output, --proxy-url, --request-timeout, --server, --tls-server-name,
                --token, --user, --username, --v, --vmodule, --warnings-as-errors]
 command_langs: [bash, sh, shell, console, zsh]
+# Commands an agent may run only after the user approves each one, in a block directly
+# under the ask-first marker. Extend only by PR review, like `commands`; never turn it
+# into a deny-list. Every command here except exec changes the cluster, so a block with
+# one needs an `# Undo:` line.
+ask_first:
+  kubectl: ["set image", "set resources", "rollout undo", "rollout restart", "rollout pause",
+            "rollout resume", scale, patch, cordon, uncordon, label, annotate, taint, exec]
+  # exec runs one read-only program in a container: no shell, no stdin or TTY.
+  exec_flags: [-n, --namespace, -c, --container]
+  in_pod: [nslookup, dig, getent, curl, wget, cat, ls, ps, df, id, hostname]
+  # Programs listed here may use only these flags (others take any arguments).
+  in_pod_flags:
+    curl: [-s, -S, -sS, -v, -I, -i, -L, -k, -m, --max-time, --connect-timeout]
+    wget: [-q, -O-, -qO-, -T, --timeout]
+  # wget must print to stdout instead of writing a file.
+  wget_needs_one_of: [-O-, -qO-]
+  # Words that read the environment or a service account token inside a container.
+  secret_words: [env, printenv, environ, serviceaccount]

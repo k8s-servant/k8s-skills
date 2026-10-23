@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from tools.skillcheck.commands import (
+    ASK_MARKER,
     MARKER,
     check_commands,
     extract_blocks,
@@ -642,3 +643,88 @@ def test_unicode_line_separators_do_not_shift_lines(tmp_path, sep):
 def test_blocking_and_file_reading_flags_fail(tmp_path, line, flag):
     found = messages(run(tmp_path, bash(line)))
     assert f"flag would block or read local files: {flag}" in found, (line, found)
+
+
+# Ask-first blocks: commands the agent runs only after the user approves them.
+
+
+def ask(*lines: str) -> str:
+    return f"{ASK_MARKER}\n" + bash(*lines)
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        ("kubectl exec my-pod -n my-namespace -- nslookup my-app",),
+        ("kubectl exec my-pod -n my-namespace -c app -- cat /etc/resolv.conf",),
+        ("kubectl exec my-pod -n my-namespace -- wget -qO- http://my-app:8080/",),
+        ("kubectl exec my-pod -n my-namespace -- curl -sS -m 5 http://my-app:8080/healthz",),
+        (
+            "kubectl rollout undo deployment/my-app -n my-namespace",
+            "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",
+        ),
+        ("kubectl uncordon my-node", "# Undo: kubectl cordon my-node"),
+        ("kubectl get pods -n my-namespace",),
+    ],
+)
+def test_ask_first_allows_listed(tmp_path, lines):
+    assert run(tmp_path, ask(*lines)) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl delete pod my-pod",
+        "kubectl drain my-node",
+        "kubectl replace --force -f x.yaml",
+        "kubectl apply -f x.yaml",
+        "kubectl exec my-pod -- rm -rf /data",
+        "kubectl exec my-pod -- curl -X POST http://my-app/",
+        "kubectl exec my-pod -- curl -o /tmp/x http://my-app/",
+        "kubectl exec my-pod -- wget http://my-app/",
+    ],
+)
+def test_ask_first_rejects_destructive(tmp_path, line):
+    found = messages(run(tmp_path, ask(line, "# Undo: none")))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+def test_ask_first_change_needs_undo(tmp_path):
+    found = messages(run(tmp_path, ask("kubectl scale deployment/my-app --replicas=3")))
+    assert found == ["ask-first change needs an '# Undo:' line"]
+    assert run(tmp_path / "b", ask("kubectl exec my-pod -- nslookup my-app")) == []
+
+
+@pytest.mark.parametrize(
+    ("line", "expect"),
+    [
+        ("kubectl exec -it my-pod -- sh", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -i -- cat /etc/hosts", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -- bash -c 'cat /etc/hosts'", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -- env", "Secret access is not allowed"),
+        ("kubectl exec my-pod -- printenv", "Secret access is not allowed"),
+        ("kubectl exec my-pod -- cat /proc/1/environ", "Secret access is not allowed"),
+        (
+            "kubectl exec my-pod -- cat /var/run/secrets/kubernetes.io/serviceaccount/token",
+            "Secret access is not allowed",
+        ),
+    ],
+)
+def test_ask_first_rejects_shells_and_secret_dumps(tmp_path, line, expect):
+    found = messages(run(tmp_path, ask(line)))
+    assert any(expect in m for m in found), (line, found)
+
+
+def test_ask_marker_matches_constraint():
+    assert ASK_MARKER == "> Ask first: the agent runs this only after the user approves it."
+
+
+def test_ask_marker_must_be_directly_above_the_fence(tmp_path):
+    body = f"{ASK_MARKER}\n\nSome words.\n\n" + bash("kubectl uncordon my-node")
+    assert any("not on the allow-list" in m for m in messages(run(tmp_path, body)))
+
+
+def test_extract_blocks_marks_ask():
+    block = extract_blocks(f"{ASK_MARKER}\n\n```bash\nx\n```\n")[0]
+    assert block.is_ask
+    assert not block.is_fix
