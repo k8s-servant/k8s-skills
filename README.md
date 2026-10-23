@@ -57,7 +57,7 @@ of them.
 
 \* Not yet verified: these paths follow the tools' documentation but have not been
 confirmed by a real install. Please open an issue if one does not work for you. The
-other paths were installed from the v0.1.0 release.
+other paths have been confirmed by a real install.
 
 Notes per path:
 
