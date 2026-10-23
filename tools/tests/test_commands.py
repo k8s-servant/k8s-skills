@@ -882,3 +882,11 @@ def test_ask_first_allows_ordinary_hosts(tmp_path):
         ]
     ):
         assert run(tmp_path / str(i), ask(f"kubectl exec my-pod -- curl -sS {url}")) == [], url
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["http://169.254.169.[250-254]/latest/", "http://169.254.{169,1}.254/", "http://[a9fe:a9fe/"],
+)
+def test_ask_first_rejects_url_globs_and_broken_hosts(tmp_path, url):
+    assert run(tmp_path, ask(f"kubectl exec my-pod -- curl -s {url}")) != [], url

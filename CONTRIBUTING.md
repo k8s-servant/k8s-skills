@@ -136,8 +136,9 @@ It is a guardrail against honest authoring mistakes, not a sandbox. Known limits
 
 - A fix block may use any shell, so `sh -c`, `eval` or nested quoting can hide a Secret name.
 - An ask-first `cat`, `ls`, `curl` or `wget` can still reach a mounted Secret file or an
-  internal endpoint whose path or name gives no sign of it. Reviewers read each path and
-  URL, and the user sees each command before approving it.
+  internal endpoint whose path or name gives no sign of it, and a hostname can resolve
+  to a metadata address (the checker runs offline and does not resolve names). Reviewers
+  read each path and URL, and the user sees each command before approving it.
 - `$[` arithmetic and backslash tricks in prose.
 - Glob patterns such as `secre[t]s`.
 - yq `load()`.
