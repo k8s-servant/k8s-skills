@@ -2,8 +2,7 @@ name: Claude review
 
 # Automatic Claude review on every non-draft PR from a branch in this repository.
 # Fork PRs are skipped: they get no secrets, and running a model on untrusted code
-# with write access is a prompt-injection risk. Maintainers can still ask for a review
-# on a fork PR by commenting "@claude review".
+# with write access is a prompt-injection risk.
 # Bot PRs (release-please, Dependabot) are skipped too: they are generated, and the
 # action refuses to run for non-human actors.
 on:
