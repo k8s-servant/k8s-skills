@@ -50,7 +50,12 @@ kubectl config use-context agent-readonly --kubeconfig=agent.kubeconfig
 ```
 
 Start the agent with `KUBECONFIG=agent.kubeconfig`. The token expires on its own; create
-a new one when you need it. Treat `agent.kubeconfig` as a credential and do not commit it.
+a new one when you need it. The API server may cap how long a token can live, so the
+token you get can be shorter than `--duration` asks for. Treat `agent.kubeconfig` as a
+credential and do not commit it.
+
+`ca.crt` is the cluster's CA certificate. You can take it from your own kubeconfig:
+`kubectl config view --raw --minify -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 -d > ca.crt`.
 
 ## Skills
 
@@ -73,11 +78,14 @@ of them.
 |---|---|---|
 | Vercel `skills` CLI | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting` | `npx skills add k8s-servant/k8s-skills` |
 | GitHub CLI (preview) | `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting` | `gh skill install k8s-servant/k8s-skills` |
-| Claude Code | `/plugin install k8s-workload-troubleshooting@k8s-skills` | `/plugin install k8s-skills@k8s-skills` |
-| Gemini CLI | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-workload-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
+| Claude Code | `/plugin install k8s-workload-troubleshooting@k8s-skills` (not yet verified\*) | `/plugin install k8s-skills@k8s-skills` |
+| Gemini CLI (not yet verified\*) | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-workload-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
 | Codex | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting -a codex` | `npx skills add k8s-servant/k8s-skills -a codex` |
 | Manual copy | copy `skills/k8s-workload-troubleshooting/` | copy `skills/*` |
 | claude.ai / API | upload `k8s-workload-troubleshooting.zip` from a release | upload each zip |
+
+\* Not yet verified: these paths follow the tools' documentation but have not been
+confirmed by a real install. Please open an issue if one does not work for you.
 
 Notes per path:
 

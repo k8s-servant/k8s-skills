@@ -34,8 +34,11 @@ python -m tools.skillcheck manifests --check
 - Hand-offs between skills are by skill name in the body. No agent-specific tool names.
 - Use placeholders only: `my-namespace`, `my-app`, `example.com`. No real cluster names,
   hostnames, registries, company names or personal data.
-- Start from the templates: [templates/SKILL.md](templates/SKILL.md) and
-  [templates/expected.md](templates/expected.md).
+- Start from the templates: [templates/SKILL.template.md](templates/SKILL.template.md)
+  (copy it to `skills/<name>/SKILL.md`) and
+  [templates/expected.template.md](templates/expected.template.md) (copy it to
+  `tests/<skill>/<case>/expected.md`). They are not named `SKILL.md`, so tools that search
+  for skills recursively never list a template as a skill.
 
 ### Commands in a skill
 
@@ -47,7 +50,8 @@ Investigation commands may use only what is on the allow-list in
 - No `;`, `&&` or redirects. Pipes only to the listed filters, with the listed flags.
 - No flags that block or read local files: `-w`/`--watch`, `-f`/`--follow`,
   `-f`/`--filename`, `-k`/`--kustomize`, or `-o` formats ending in `-file`.
-- Scripts in `scripts/` may contain only allow-listed commands.
+- Scripts in `scripts/` may contain only a shebang line, comments and allow-listed
+  commands, one per line. No variables, no `set`, no functions or other shell syntax.
 - Never read Secrets: no `get`, `describe` or listing of `secret` or `secrets` in any form.
 - Fenced blocks need a language (` ```bash `). Indented (4-space) code blocks are rejected.
 - In prose, inline code that reads as a kubectl command is checked. Plain mentions of
