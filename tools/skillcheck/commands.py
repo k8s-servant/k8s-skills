@@ -609,6 +609,9 @@ def _check_exec(args: list[str], ask_first: dict) -> bool:
     allowed = ask_first["in_pod_flags"].get(program[0])
     if allowed is not None and any(_is_flag(a) and a not in allowed for a in program[1:]):
         return False
+    exact = ask_first["in_pod_args"].get(program[0])
+    if exact is not None and any(a not in exact for a in program[1:]):
+        return False
     # wget writes a file unless told to print to stdout.
     return program[0] != "wget" or bool(set(program[1:]) & set(ask_first["wget_needs_one_of"]))
 
@@ -656,7 +659,8 @@ def _is_ask_change(command: str, allowlist: dict) -> bool:
 
 def _ask_secret_problems(command: str, allowlist: dict) -> list[str]:
     """Secret access in an ask-first command: Secret words, environment and token reads."""
-    words = set(WORD_SPLIT.split(command.lower()))
+    # Brackets also separate words here, so an IPv6 host such as `[fd00:ec2::254]` is seen.
+    words = set(WORD_SPLIT.split(command.lower().replace("[", " ").replace("]", " ")))
     if _secret_problems(command) or words & set(allowlist["ask_first"]["secret_words"]):
         return ["Secret access is not allowed"]
     return []

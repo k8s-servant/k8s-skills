@@ -88,9 +88,14 @@ the command to the user to run. Each command must be on `commands` or `ask_first
 - `kubectl exec POD [-n ns] [-c container] -- PROGRAM [args]`, with one program from
   `ask_first.in_pod` (`nslookup`, `dig`, `getent`, `curl`, `wget`, `cat`, `ls`, `ps`,
   `df`, `id`, `hostname`). Not allowed: a shell, `-i`/`-t`/`--stdin`/`--tty`, `curl`
-  flags that send or save data, or `wget` without `-O-`.
-- `env`, `printenv`, `/proc/*/environ` and the service account token count as Secret
-  access.
+  flags that send or save data, `wget` without `-O-`, or `ps` arguments other than `-ef`,
+  `-A` and `aux` (BSD `e` prints every process's environment).
+- These count as Secret access:
+  - `env`, `printenv` and `/proc/*/environ`
+  - the service account token
+  - paths with `token`, `password`, `credentials` or `shadow` in them
+  - cloud metadata endpoints (`169.254.169.254`, `metadata.google.internal`,
+    `fd00:ec2::254`), which hand out the node's cloud credentials
 
 `port-forward` and `debug` are not on the list: `port-forward` never returns, and `debug`
 adds a container that cannot be removed.
@@ -117,6 +122,9 @@ cannot recognise as safe is a finding.
 It is a guardrail against honest authoring mistakes, not a sandbox. Known limits:
 
 - A fix block may use any shell, so `sh -c`, `eval` or nested quoting can hide a Secret name.
+- An ask-first `cat`, `ls`, `curl` or `wget` can still reach a mounted Secret file or an
+  internal endpoint whose path or name gives no sign of it. Reviewers read each path and
+  URL, and the user sees each command before approving it.
 - `$[` arithmetic and backslash tricks in prose.
 - Glob patterns such as `secre[t]s`.
 - yq `load()`.

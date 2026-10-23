@@ -728,3 +728,38 @@ def test_extract_blocks_marks_ask():
     block = extract_blocks(f"{ASK_MARKER}\n\n```bash\nx\n```\n")[0]
     assert block.is_ask
     assert not block.is_fix
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- ps auxe",
+        "kubectl exec my-pod -- ps eww",
+        "kubectl exec my-pod -- ps -ef e",
+    ],
+)
+def test_ask_first_ps_only_listed_arguments(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+def test_ask_first_ps_listed_arguments_pass(tmp_path):
+    assert run(tmp_path, ask("kubectl exec my-pod -- ps -ef")) == []
+    assert run(tmp_path / "b", ask("kubectl exec my-pod -- ps aux")) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- curl -s http://169.254.169.254/latest/meta-data/",
+        "kubectl exec my-pod -- wget -qO- http://metadata.google.internal/computeMetadata/v1/",
+        "kubectl exec my-pod -- curl -s http://[fd00:ec2::254]/latest/meta-data/",
+        "kubectl exec my-pod -- cat /etc/my-app/password",
+        "kubectl exec my-pod -- cat /etc/shadow",
+        "kubectl exec my-pod -- ls /etc/my-app/credentials",
+        "kubectl exec my-pod -- cat /var/run/my-app/token",
+    ],
+)
+def test_ask_first_rejects_credential_reads(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert "Secret access is not allowed" in found, (line, found)

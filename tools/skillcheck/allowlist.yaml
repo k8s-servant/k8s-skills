@@ -53,7 +53,13 @@ ask_first:
   in_pod_flags:
     curl: [-s, -S, -sS, -v, -I, -i, -L, -k, -m, --max-time, --connect-timeout]
     wget: [-q, -O-, -qO-, -T, --timeout]
+  # Programs listed here may use only exactly these arguments (ps with BSD `e` prints
+  # every process's environment).
+  in_pod_args:
+    ps: [-ef, -A, aux]
   # wget must print to stdout instead of writing a file.
   wget_needs_one_of: [-O-, -qO-]
-  # Words that read the environment or a service account token inside a container.
-  secret_words: [env, printenv, environ, serviceaccount]
+  # Words that read the environment, a token or password file, or a cloud metadata
+  # endpoint (which hands out the node's cloud credentials) inside a container.
+  secret_words: [env, printenv, environ, serviceaccount, token, password, credentials,
+                 shadow, 169.254.169.254, metadata.google.internal, fd00]
