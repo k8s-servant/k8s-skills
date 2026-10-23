@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/k8s-servant/k8s-skills/compare/v0.1.0...v0.1.1) (2026-10-23)
+
+
+### Documentation
+
+* mark the install paths verified against v0.1.0 ([#20](https://github.com/k8s-servant/k8s-skills/issues/20)) ([85f7678](https://github.com/k8s-servant/k8s-skills/commit/85f7678f598e29cdeff709bb144f89852673268c))
+
 ## 0.1.0 (2026-10-23)
 
 
