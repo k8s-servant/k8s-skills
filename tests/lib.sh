@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Shared helpers for the kind test kit. Source this file, never run it.
+#
+# Its main job is a safety net: scenarios break things on purpose, so every script
+# must be sure it talks to the throwaway kind cluster and nothing else (for example
+# the cluster a developer's default kubeconfig points at).
+
+# Resolve the repo root from this file, so it works however the caller was invoked.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CLUSTER_NAME="k8s-skills-test"
+TEST_CONTEXT="kind-${CLUSTER_NAME}"
+
+# Always overwrite the caller's KUBECONFIG: an inherited value could point at a
+# real cluster. The test cluster has its own file inside the repo (git-ignored).
+export KUBECONFIG="$REPO_ROOT/.kube/$CLUSTER_NAME"
+
+# Exit 2 unless the test cluster's kubeconfig exists and its current context is
+# exactly the kind test context.
+require_test_cluster() {
+  local current=""
+  if [[ -f "$KUBECONFIG" ]]; then
+    current="$(kubectl config current-context 2>/dev/null || true)"
+  fi
+  if [[ "$current" != "$TEST_CONTEXT" ]]; then
+    echo "refusing to run: current context is not $TEST_CONTEXT" >&2
+    exit 2
+  fi
+}
+
+# Thin wrapper so scenarios read as "wait_for --for=condition=Ready pod/x ...".
+wait_for() {
+  kubectl wait --timeout=180s "$@"
+}
