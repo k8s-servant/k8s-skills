@@ -80,7 +80,7 @@ def check_structure(skill_dir: Path) -> list[Finding]:
         found.append(Finding(rel_skill, 1, "Sources must contain at least one https:// link"))
 
     linked: set[Path] = set()
-    markdown_files = [skill_file, *sorted((skill_dir / "references").glob("*.md"))]
+    markdown_files = [skill_file, *sorted((skill_dir / "references").rglob("*.md"))]
     for md in markdown_files:
         if md == skill_file:
             file_links = links
@@ -99,7 +99,7 @@ def check_structure(skill_dir: Path) -> list[Finding]:
                     )
                 )
 
-    for ref in sorted((skill_dir / "references").glob("*.md")):
+    for ref in sorted((skill_dir / "references").rglob("*.md")):
         if ref.resolve() not in linked:
             found.append(Finding(ref.relative_to(root), 1, "reference not linked from SKILL.md"))
     return found

@@ -86,3 +86,19 @@ def test_unlinked_reference(tmp_path):
 def test_linked_reference_passes(tmp_path):
     skill = make(tmp_path, body(extra="[a](references/a.md)\n"), {"a.md": "text\n"})
     assert check_structure(skill) == []
+
+
+def test_nested_references_are_link_checked_and_must_be_linked(tmp_path):
+    skill_dir = make(tmp_path, body())
+    nested = skill_dir / "references" / "deep"
+    nested.mkdir(parents=True)
+    (nested / "notes.md").write_text("[gone](missing.md)\n", encoding="utf-8")
+    found = check_structure(skill_dir)
+    assert (
+        "skills/k8s-demo-skill/references/deep/notes.md",
+        "broken relative link: missing.md",
+    ) in {(str(f.path), f.message) for f in found}
+    assert (
+        "skills/k8s-demo-skill/references/deep/notes.md",
+        "reference not linked from SKILL.md",
+    ) in {(str(f.path), f.message) for f in found}
