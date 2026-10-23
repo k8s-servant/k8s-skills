@@ -3,6 +3,9 @@
   "owner": {
     "name": "k8s-servant"
   },
+  "metadata": {
+    "description": "Read-only Kubernetes troubleshooting skills for any AI agent"
+  },
   "plugins": [
     {
       "name": "k8s-skills",

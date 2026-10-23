@@ -48,7 +48,7 @@ def test_output_is_stable(tmp_path):
     assert list(json.loads(text)) == [
         "$schema", "name", "version", "description", "license", "repository", "keywords",
     ]  # fmt: skip
-    assert list(json.loads(first[MARKET])) == ["name", "owner", "plugins"]
+    assert list(json.loads(first[MARKET])) == ["name", "owner", "metadata", "plugins"]
 
 
 def test_check_mode_detects_drift(tmp_path, capsys):

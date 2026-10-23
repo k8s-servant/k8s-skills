@@ -50,7 +50,12 @@ def render_manifests(repo: Path) -> dict[Path, str]:
                 "skills": [f"./skills/{folder.name}"],
             }
         )
-    marketplace = {"name": NAME, "owner": {"name": "k8s-servant"}, "plugins": plugins}
+    marketplace = {
+        "name": NAME,
+        "owner": {"name": "k8s-servant"},
+        "metadata": {"description": DESCRIPTION},
+        "plugins": plugins,
+    }
     plugin = {
         "$schema": SCHEMA,
         "name": NAME,
