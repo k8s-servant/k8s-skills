@@ -11,6 +11,14 @@
       "name": "k8s-skills",
       "source": "./",
       "description": "All k8s-skills: read-only Kubernetes skills for any AI agent"
+    },
+    {
+      "name": "k8s-workload-troubleshooting",
+      "source": "./",
+      "description": "Use when a pod or workload is unhealthy in Kubernetes: pods stuck in Pending, CrashLoopBackOff, ImagePullBackOff or ErrImagePull, containers OOMKilled (exit code 137), failing liveness, readiness or startup probes, pods Running but not Ready, a Deployment rollout that does not progress (ProgressDeadlineExceeded), or a Job or CronJob that fails. Read-only: investigates with kubectl get, describe, logs and events, and proposes fixes for a human to review and run.",
+      "skills": [
+        "./skills/k8s-workload-troubleshooting"
+      ]
     }
   ]
 }
