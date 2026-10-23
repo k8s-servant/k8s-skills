@@ -12,6 +12,7 @@ from pathlib import Path
 from tools.skillcheck.commands import check_commands, load_allowlist
 from tools.skillcheck.findings import Finding
 from tools.skillcheck.frontmatter import check_frontmatter
+from tools.skillcheck.manifests import check_manifests, write_manifests
 from tools.skillcheck.scenarios import check_scenarios
 from tools.skillcheck.structure import check_structure
 
@@ -60,7 +61,15 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     check = sub.add_parser("check", help="check every skill in the repository")
     check.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root")
+    manifests = sub.add_parser("manifests", help="generate or verify the install manifests")
+    manifests.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root")
+    mode = manifests.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--write", action="store_true", help="write the files")
+    mode.add_argument("--check", action="store_true", help="fail if a file is stale")
     args = parser.parse_args(argv)
+    if args.command == "manifests":
+        repo = args.repo.resolve()
+        return write_manifests(repo) if args.write else check_manifests(repo)
     return run_check(args.repo.resolve())
 
 

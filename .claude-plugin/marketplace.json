@@ -1,0 +1,13 @@
+{
+  "name": "k8s-skills",
+  "owner": {
+    "name": "k8s-servant"
+  },
+  "plugins": [
+    {
+      "name": "k8s-skills",
+      "source": "./",
+      "description": "All k8s-skills: read-only Kubernetes skills for any AI agent"
+    }
+  ]
+}
