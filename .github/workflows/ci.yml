@@ -113,10 +113,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
-        with:
-          args: --no-progress --scheme https --exclude-path docs/superpowers '**/*.md'
-          fail: true
+      # The org allows only a fixed list of third-party actions, so lychee runs as a
+      # release binary checked against a pinned SHA-256 (same pattern as gitleaks).
+      - name: Install lychee (checksum verified)
+        env:
+          LYCHEE_VERSION: 0.24.2
+          LYCHEE_SHA256: 1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a
+        run: |
+          tarball="lychee-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSLO "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${tarball}"
+          echo "${LYCHEE_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
+      - name: Check links
+        run: ./lychee --no-progress --scheme https --exclude-path docs/superpowers '**/*.md'
 
   result:
     # The one check the branch ruleset requires, so jobs can be added or renamed freely.
