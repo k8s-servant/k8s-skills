@@ -1,4 +1,4 @@
-# Read-only commands a skill may tell the agent to run. Extend only by PR review.
+# Read-only commands a skill may tell the agent to run freely. Extend only by PR review.
 commands:
   kubectl: [get, describe, logs, events, top, explain, api-resources, api-versions,
             version, cluster-info, "auth can-i", "auth whoami", "rollout status", "rollout history"]

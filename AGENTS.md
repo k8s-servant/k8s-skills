@@ -5,9 +5,9 @@ Guidance for AI coding assistants working in this repository. Humans: see
 
 ## Project
 
-k8s-skills is a set of read-only Kubernetes troubleshooting skills (`skills/<name>/SKILL.md`)
-for any AI agent, plus the tooling that checks them (`tools/skillcheck`) and a kind-based
-test kit (`tests/`).
+k8s-skills is a set of Kubernetes troubleshooting skills (`skills/<name>/SKILL.md`) for
+any AI agent, which read first and ask before changing anything, plus the tooling that
+checks them (`tools/skillcheck`) and a kind-based test kit (`tests/`).
 
 ## Commands
 
@@ -31,13 +31,19 @@ current context.
 
 ## Rules (must follow)
 
-- **Read-only, always.** A skill's investigation commands come only from the allow-list in
-  `tools/skillcheck/allowlist.yaml`. The allow-list only grows by review (a PR that changes
-  it), and is never turned into a deny-list.
-- **Never read Secrets**, in any command, script or example.
-- **Writes only as proposed fixes**, in a fenced block directly under
-  `> Proposed fix: review before running. The agent does not run this.`, with an
-  `# Undo:` line.
+- **Read first, ask before changing.** Every command is in one of three tiers, each checked
+  against `tools/skillcheck/allowlist.yaml`. The allow-lists only grow by review (a PR that
+  changes them), and are never turned into deny-lists.
+  - **Run freely:** investigation commands from `commands`, anywhere in a skill.
+  - **Ask first:** commands from `ask_first` (reversible changes, and `exec` of one
+    read-only program), in a fenced block directly under
+    `> Ask first: the agent runs this only after the user approves it.`. A change needs an
+    `# Undo:` line. The skill tells the agent to run it only after the user approves it.
+  - **Never run:** anything destructive or hard to undo, only as a proposed fix in a fenced
+    block directly under
+    `> Proposed fix: review before running. The agent does not run this.`, with an
+    `# Undo:` line, for a human to run.
+- **Never read Secrets**, in any command, script or example, in any tier.
 - **Placeholders only** (`my-namespace`, `my-app`, `example.com`). This is a public
   repository: no real cluster names, registries, hostnames, tenant IDs, company names or
   personal data.

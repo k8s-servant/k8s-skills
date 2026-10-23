@@ -8,8 +8,9 @@ on this repository. Do not open a public issue for them.
 
 Examples that count as security problems:
 
-- A way to make a skill tell the agent to change a cluster, or to read a Secret, that the
-  checker in `tools/skillcheck` does not catch.
+- A way to make a skill tell the agent to run a change outside an ask-first block, to put a
+  destructive command in an ask-first block, or to read a Secret, that the checker in
+  `tools/skillcheck` does not catch.
 - A leaked credential or personal data in the repository.
 - A weakness in the release or CI workflows.
 
@@ -22,5 +23,7 @@ released as a patch version.
 
 `python -m tools.skillcheck check` is a guardrail against honest authoring mistakes, not a
 sandbox. Its known limits are listed in [CONTRIBUTING.md](CONTRIBUTING.md). Deliberate
-obfuscation is caught by human review. If you run an agent against a real cluster, give it
-read-only credentials, as described in the [README](README.md).
+obfuscation is caught by human review. "Ask first" is an instruction to the agent, not a
+lock: if you run an agent against a real cluster, its RBAC is the real limit. Give it
+read-only credentials unless you want it to apply the changes you approve, as described in
+the [README](README.md).

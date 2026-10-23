@@ -4,13 +4,13 @@
     "name": "k8s-servant"
   },
   "metadata": {
-    "description": "Read-only Kubernetes troubleshooting skills for any AI agent"
+    "description": "Kubernetes troubleshooting skills for any AI agent: read first, ask before changing anything"
   },
   "plugins": [
     {
       "name": "k8s-skills",
       "source": "./",
-      "description": "All k8s-skills: read-only Kubernetes skills for any AI agent"
+      "description": "All k8s-skills: Kubernetes troubleshooting skills that read first and ask before changing anything"
     },
     {
       "name": "k8s-workload-troubleshooting",

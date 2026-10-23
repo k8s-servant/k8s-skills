@@ -1,9 +1,10 @@
-"""Checks that every command a skill shows is read-only.
+"""Checks that every command a skill shows keeps to its tier.
 
 Skills are advice the agent follows, so the only way to promise they cannot change a
 cluster is to allow-list what they may tell the agent to run. This check reads every
 fenced code block and every line of prose in SKILL.md and references/**/*.md, and every
-line of scripts/**, and rejects anything that is not an allow-listed read-only command.
+line of scripts/**, and rejects anything that is not an allow-listed read-only command,
+except in the marked ask-first and proposed-fix blocks described below.
 The check fails closed: whatever it cannot positively recognise as safe is a finding.
 
 Markdown is parsed with markdown-it-py (CommonMark), so what counts as a code block is

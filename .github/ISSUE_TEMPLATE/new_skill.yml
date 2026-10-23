@@ -25,12 +25,12 @@ body:
   - type: textarea
     id: commands
     attributes:
-      label: Read-only commands it needs
-      description: CLI commands the investigation would use (e.g. `flux get kustomizations -A`). New tool commands are added to the allow-list in the same PR.
+      label: Commands it needs
+      description: Read-only CLI commands the investigation would use (e.g. `flux get kustomizations -A`), and any reversible changes it would ask before running. New commands are added to the allow-lists in the same PR.
   - type: checkboxes
     id: readonly
     attributes:
-      label: Read-only
+      label: Read first, ask before changing
       options:
-        - label: The investigation needs only read access; fixes would be proposed, never run by the agent.
+        - label: The investigation needs only read access. Reversible changes run only after the user approves them, and destructive ones are only proposed for a human.
           required: true

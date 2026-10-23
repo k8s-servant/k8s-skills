@@ -12,18 +12,21 @@ Cursor, Gemini CLI or any other agent that reads the open Agent Skills format
 
 The skills live in the repo as real files, not links. A skill teaches an agent how to
 investigate a problem: where to look, in what order, how to read what it finds, and
-which fix to propose. The skills are **read-only by default**: the agent diagnoses, and
-it **proposes** fix commands that a human reviews and runs.
+which fix to propose. The skills **read first and ask before changing anything**: the agent
+diagnoses freely, runs a reversible change only after the user approves it, and only
+proposes anything destructive for a human to run (see "Changed after release").
 
 Why: existing Kubernetes skill collections mostly mix diagnosis with changes the agent
-makes itself. A strictly read-only set that is checked against upstream docs and tested on
-a real cluster is a gap, and safe to give to any agent.
+makes itself. A set that reads first, never changes anything without the user's approval,
+never runs anything destructive, and is checked against upstream docs and tested on a real
+cluster is a gap, and safe to give to any agent.
 
 ## Goals
 
 - Skills that work in as many agents as possible, installable in as many ways as possible.
 - Every skill checked against the component's official docs and tested on a kind cluster.
-- Read-only investigation, with clearly marked proposed fixes.
+- Read-only investigation, with clearly marked changes: ask first for reversible ones, a
+  proposed fix for a human to run for destructive ones.
 - Generic content that works on any conformant cluster. Cloud-specific knowledge lives in
   its own per-cloud skills.
 
@@ -37,8 +40,8 @@ a real cluster is a gap, and safe to give to any agent.
 
 ## Anti-goals (a failure even if it works)
 
-- A skill that tells the agent to change the cluster itself (apply, delete, patch, scale,
-  restart, cordon, drain, exec into a pod, rollback).
+- A skill that tells the agent to change the cluster without the user's approval, or to
+  run anything destructive itself (delete, drain, replace, apply).
 - A skill that reads Secret values.
 - Commands, flags or field names written from memory and not checked against upstream docs.
 - Site names, company data or a single vendor's tooling in a generic skill.
@@ -50,7 +53,7 @@ a real cluster is a gap, and safe to give to any agent.
 |---|---|---|
 | Name and home | `k8s-servant/k8s-skills` (the existing k8s-servant GitHub org; a separate org is too much) | maintainer |
 | Format | One folder per skill with `SKILL.md`, Agent Skills standard | maintainer |
-| Behaviour | Read-only by default, fixes proposed for a human | maintainer |
+| Behaviour | Read first, ask before changing; destructive fixes only proposed for a human (was: read-only by default, see "Changed after release") | maintainer |
 | Install paths | As many as possible (see Distribution) | maintainer |
 | Cloud skills | AKS, EKS and GKE each get their own skill | maintainer |
 | Granularity | One skill per area, detail in `references/`; one entry triage skill | maintainer |
@@ -145,8 +148,9 @@ out of the first release and listed in the README as not yet supported.
 
 Releases: release-please with semver tags, so every install path can pin a tag.
 
-The README's first line: "Read-only Kubernetes skills for any AI agent." It shows the
-install paths, the skill list, and the read-only promise.
+The README's first line: "Kubernetes troubleshooting skills for any AI agent: read first,
+ask before changing anything." It shows the install paths, the skill list, and the three
+tiers.
 
 ### Installing one skill instead of all
 
@@ -246,6 +250,22 @@ docs/design.md (this file)
   gives the agent, with no hint of the cause.
 - Gemini CLI and per-skill Claude Code installs follow the tools' documentation but are
   marked "not yet verified" in the README until a real install confirms them.
+
+## Changed after release
+
+- **Read first, ask before changing (after v0.1.1).** A strictly read-only approach cut
+  the quality of what the skills can do. What matters is avoiding destructive actions, so
+  the maintainer replaced "read-only by default" with three tiers:
+  - **Run freely:** the `commands` allow-list.
+  - **Ask first:** reversible changes and `exec` of one read-only program, from a
+    reviewed `ask_first` allow-list, under
+    `> Ask first: the agent runs this only after the user approves it.`, each change with
+    an `# Undo:` line.
+  - **Never run:** destructive commands, only as proposed fixes for a human.
+
+  "Ask first" is an instruction to the agent, not a lock; RBAC stays the hard limit.
+  `port-forward` and `debug` are left out of `ask_first`: one never returns, the other
+  adds a container that cannot be removed.
 
 ## Repository creation
 

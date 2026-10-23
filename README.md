@@ -1,4 +1,5 @@
-Read-only Kubernetes skills for any AI agent.
+Kubernetes troubleshooting skills for any AI agent: read first, ask before changing
+anything.
 
 k8s-skills is a set of [Agent Skills](https://agentskills.io) that teach an AI agent to
 investigate Kubernetes problems the way an experienced SRE does: what to look at, in
@@ -6,26 +7,29 @@ which order, what each finding means, and what to propose. The skills work in Cl
 Code, Codex, Gemini CLI, GitHub Copilot, Cursor and any other agent that reads
 `SKILL.md` files.
 
-## What read-only means
+## Read first, ask before changing
 
-The agent investigates; fixes are proposed, never run.
+Every command in a skill falls into one of three tiers. CI checks each one against the
+allow-lists in `tools/skillcheck/allowlist.yaml`.
 
-- Every command a skill tells the agent to run is read-only (`get`, `describe`, `logs`,
-  `events`, `top` and a short list of others). CI rejects anything that is not on the
-  allow-list in `tools/skillcheck/allowlist.yaml`.
-- Secrets are never read. No skill shows `get`, `describe` or a listing of Secrets in any
-  form.
-- A fix appears only as a **proposed fix** under the line
-  `> Proposed fix: review before running. The agent does not run this.`, with an
-  `# Undo:` line. A human reviews it and runs it.
+| Tier | What | What the agent does |
+|---|---|---|
+| Run freely | Read-only commands: `get`, `describe`, `logs`, `events`, `top` and a short list of others | Runs them while it investigates |
+| Ask first | Reversible changes (`set image`, `set resources`, `rollout undo`, `scale`, `patch`, `cordon`, `uncordon` and a few more) and one read-only program run in a container with `exec` (`nslookup`, `curl`, `cat`, ...) | Shows the command, what it changes and how to undo it, under `> Ask first: the agent runs this only after the user approves it.`, and runs it only after you say yes |
+| Never run | Anything destructive or hard to undo (`delete`, `drain`, `replace`, `apply`, ...) | Proposes it under `> Proposed fix: review before running. The agent does not run this.`, with an `# Undo:` line, for you to review and run |
+
+Secrets are never read, in any tier. Every change, in either tier, comes with an
+`# Undo:` line.
 
 ## Your agent, your decision
 
 How you run your agent, and with which permissions, is your decision and your risk. The
-skills are written and checked to be read-only, but that is not a 100% guarantee: an
-agent can misread a skill or act on its own. What actually limits an agent is the
-Kubernetes RBAC of the credentials you give it. If you want a hard limit, run the agent
-with a read-only identity, for example one bound to the built-in `view` ClusterRole
+skills are written and checked to keep to these tiers, but that is not a 100% guarantee:
+"ask first" is an instruction the agent follows, not a lock, and an agent in an
+auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
+RBAC of the credentials you give it. If you want it to only investigate, give it a
+read-only identity, for example one bound to the built-in `view` ClusterRole. Give it
+more only if you want it to apply the changes you approve
 (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
