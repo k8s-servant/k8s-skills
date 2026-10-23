@@ -2,6 +2,16 @@
 commands:
   kubectl: [get, describe, logs, events, top, explain, api-resources, api-versions,
             version, cluster-info, "auth can-i", "auth whoami", "rollout status", "rollout history"]
+# Every top-level kubectl command (`kubectl --help` of kubectl v1.37, plus `options` and
+# `help`; plugins left out).
+# In prose, `kubectl <word>` is only treated as a command when <word> is one of these,
+# so a bare mention such as "the `kubectl` binary" or "kubectl tool" is not a finding.
+kubectl_commands: [create, expose, run, set, explain, get, edit, delete, rollout, scale,
+                   autoscale, certificate, cluster-info, top, cordon, uncordon, drain, taint,
+                   describe, logs, attach, exec, port-forward, proxy, cp, auth, debug, events,
+                   diff, apply, patch, replace, wait, kustomize, label, annotate, completion,
+                   api-resources, api-versions, config, kuberc, plugin, version, options,
+                   help]
 filters: [grep, egrep, jq, yq, sort, uniq, head, tail, wc, cut, column]
 # Flags each filter may use; any other flag is a finding. Filters read stdin only.
 filter_flags:

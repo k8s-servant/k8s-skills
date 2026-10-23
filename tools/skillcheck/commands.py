@@ -8,13 +8,16 @@ The check fails closed: whatever it cannot positively recognise as safe is a fin
 
 Markdown is parsed with markdown-it-py (CommonMark), so what counts as a code block is
 decided by a real renderer's rules, not ours. Proposed fixes are exempt from everything
-except the Secret ban and the `# Undo:` line.
+except the Secret ban and the `# Undo:` line. In prose (inline code and paragraph
+lines) text counts as a command only when a program name is followed by a kubectl
+command name or a flag, so mentions such as "the `kubectl` binary" are not findings.
 
 Known limits (this is a guardrail against honest mistakes, not a sandbox; human review
 covers deliberate obfuscation): a fix block may use any shell, so `sh -c`, `eval` or
 nested quoting can hide a Secret name; `$[` arithmetic; backslash tricks in prose;
 `kubectl get -f https://...` reads a remote manifest; glob patterns such as `secre[t]s`;
-yq `load()`; `-v=9` logging.
+yq `load()`; `-v=9` logging; a prose command whose second word is not a kubectl
+command name (fenced blocks are still checked in full).
 """
 
 import re
@@ -64,8 +67,8 @@ def load_allowlist(path: Path | None = None) -> dict:
         path: An alternative allowlist.yaml, mostly for tests.
 
     Returns:
-        The parsed mapping with keys commands, filters, filter_flags, global_flags,
-        global_flags_allowed and command_langs.
+        The parsed mapping with keys commands, kubectl_commands, filters, filter_flags,
+        global_flags, global_flags_allowed and command_langs.
     """
     path = path or Path(__file__).with_name("allowlist.yaml")
     return yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -89,8 +92,40 @@ class Block:
     is_fix: bool
 
 
+def _lines(text: str) -> list[str]:
+    """Split text into lines the way markdown-it counts them.
+
+    `str.splitlines()` also breaks on form feed, U+2028 and other separators that
+    CommonMark treats as ordinary characters, which would shift every line index.
+    """
+    lines = re.sub(r"\r\n?", "\n", text).split("\n")
+    return lines[:-1] if lines and lines[-1] == "" else lines
+
+
+def _code_spans(token, start: int) -> list[tuple[int, str]]:
+    """Return (line, content) for each inline code span of an inline token.
+
+    The line is that of the span itself: the paragraph's first line plus the line
+    breaks seen before it. Code spans fold their own line breaks into spaces, so a
+    span after a multi-line span is reported a line or so early.
+    """
+    spans: list[tuple[int, str]] = []
+    line = start
+    for child in token.children or []:
+        if child.type == "code_inline":
+            spans.append((line, child.content))
+        elif child.type in ("softbreak", "hardbreak"):
+            line += 1
+        else:
+            line += child.content.count("\n")
+    return spans
+
+
 def _parse_markdown(
-    md: str, first_line: int, keys: frozenset[str] = frozenset()
+    md: str,
+    first_line: int,
+    keys: frozenset[str] = frozenset(),
+    subcommands: frozenset[str] = frozenset(),
 ) -> tuple[list[Block], list[tuple[int, str]]]:
     """Find the code blocks and the prose commands of a Markdown text.
 
@@ -98,13 +133,15 @@ def _parse_markdown(
         md: The Markdown text.
         first_line: The file line number of the first line of `md`.
         keys: The allow-listed program names that make prose a command.
+        subcommands: The kubectl command names; prose is a command only when its second
+            word is one of them.
 
     Returns:
-        The fenced and indented code blocks, and (line, text) candidates from prose: the
-        contents of inline code spans, and lines of text, that start with an
-        allow-listed program name. A bare mention of the name is not a candidate.
+        The fenced and indented code blocks, and (line, text) candidates from prose:
+        inline code spans and lines of text that read as a command, with any `$ `
+        prompt removed. A mention of a program name is not a candidate.
     """
-    text = md.splitlines()
+    text = _lines(md)
     blocks: list[Block] = []
     prose: list[tuple[int, str]] = []
     for token in MarkdownIt("commonmark").parse(md):
@@ -117,24 +154,33 @@ def _parse_markdown(
                 found = LANG.match(info)
                 lang = found.group(1).lower() if found else ""
             is_fix = token.level == 0 and above == MARKER
-            blocks.append(Block(lang, start, token.content.splitlines(), is_fix))
+            blocks.append(Block(lang, start, _lines(token.content), is_fix))
         elif token.type == "code_block":
             # Indented code has no language, so it is reported like an untyped fence.
-            blocks.append(Block(None, start, token.content.splitlines(), False))
+            blocks.append(Block(None, start, _lines(token.content), False))
         elif token.type == "html_block":
-            for offset, line in enumerate(token.content.splitlines()):
+            for offset, line in enumerate(_lines(token.content)):
                 prose.append((start + offset, re.sub(r"<[^>]*>", "", line)))
         elif token.type == "inline":
             for offset, line in enumerate(token.content.split("\n")):
                 prose.append((start + offset, line))
-            prose += [(start, c.content) for c in token.children or [] if c.type == "code_inline"]
-    return blocks, [(n, t.strip()) for n, t in prose if _starts_command(t, keys)]
+            prose += _code_spans(token, start)
+    candidates = [(n, t.strip().removeprefix("$ ").strip()) for n, t in prose]
+    return blocks, [(n, t) for n, t in candidates if _reads_as_command(t, keys, subcommands)]
 
 
-def _starts_command(text: str, keys: frozenset[str] | set[str]) -> bool:
-    """True if the first word of the text (after an optional `$ `) is a program name."""
-    words = text.strip().removeprefix("$ ").split(None, 1)
-    return bool(words) and words[0] in keys
+def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[str]) -> bool:
+    """True if a piece of prose is a command rather than a mention of a program.
+
+    Prose in a Kubernetes repository names kubectl all the time ("the `kubectl`
+    binary", a wrapped line starting "kubectl tool ..."), so a program name alone is
+    not enough: the second word must be a kubectl command name, or a flag such as
+    `-n`, which only ever follows the program in a command.
+    """
+    words = text.split(None, 2)
+    if len(words) < 2 or words[0] not in keys:
+        return False
+    return words[1] in subcommands or words[1].startswith("-")
 
 
 def extract_blocks(md: str, first_line: int = 1) -> list[Block]:
@@ -532,7 +578,12 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             return data.decode("utf-8", errors="replace")
 
     def check_markdown(path: Path, text: str, first_line: int) -> None:
-        blocks, prose = _parse_markdown(text, first_line, frozenset(allowlist["commands"]))
+        blocks, prose = _parse_markdown(
+            text,
+            first_line,
+            frozenset(allowlist["commands"]),
+            frozenset(allowlist["kubectl_commands"]),
+        )
         for block in blocks:
             if block.lang is None:
                 add(path, block.start_line, "fenced block needs a language")

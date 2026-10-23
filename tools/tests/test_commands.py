@@ -574,3 +574,44 @@ def test_line_numbers_follow_the_parser(tmp_path):
         "text\n\n- item\n\n    ```bash\n    kubectl get pods\n    kubectl delete x\n    ```\n",
     )
     assert [f.line for f in found] == [15]
+
+
+# Round-4 review: prose that names kubectl without being a command (Ruling R15).
+@pytest.mark.parametrize(
+    "body",
+    [
+        "We use the\nkubectl tool to read state.\n",
+        "Run `$ kubectl get pods` first.\n",
+        "Para:\n$ kubectl get pods\n",
+        "The `kubectl` binary.\n",
+        "The `kubectl` binary and the kubectl guard.\n\n## kubectl logs\n",
+    ],
+)
+def test_prose_mentions_of_kubectl_are_fine(tmp_path, body):
+    assert run(tmp_path, body) == []
+
+
+def test_prose_command_with_a_kubectl_command_name_is_still_checked(tmp_path):
+    assert fails(tmp_path, "Never run `kubectl delete pod x` here.\n", "kubectl delete")
+    assert fails(tmp_path / "b", "Never run `$ kubectl delete pod x`.\n", "kubectl delete")
+    assert fails(tmp_path / "c", "Or `kubectl -n prod delete pod x`.\n", "kubectl delete")
+
+
+def test_kubectl_commands_list_names_writes_and_reads():
+    names = set(load_allowlist()["kubectl_commands"])
+    assert {"get", "describe", "logs", "delete", "apply", "patch", "exec", "drain"} <= names
+    assert "tool" not in names and "binary" not in names
+
+
+def test_inline_code_reports_the_line_it_is_on(tmp_path):
+    found = run(tmp_path, "First line.\nSecond `kubectl delete pod x`.\n")
+    assert [f.line for f in found] == [10]
+
+
+@pytest.mark.parametrize("sep", ["\u2028", "\x0c", "\x85"])
+def test_unicode_line_separators_do_not_shift_lines(tmp_path, sep):
+    fix = f"x{sep}y\n\n{MARKER}\n```bash\n# Undo: z\nkubectl delete pod x\n```\n"
+    assert run(tmp_path, refs={"r.md": fix}) == []
+    plain = f"x{sep}y\n\n```bash\nkubectl get pods\nkubectl delete x\n```\n"
+    found = run(tmp_path / "b", refs={"r.md": plain})
+    assert [f.line for f in found] == [5]
