@@ -39,7 +39,7 @@ fi
 # A case can limit the agent to one namespace with an agent-scope file naming it.
 scope=()
 if [[ -f "$case_dir/agent-scope" ]]; then
-  scope=(--namespace "$(head -n 1 "$case_dir/agent-scope")")
+  scope=(--namespace "$(head -n 1 "$case_dir/agent-scope" | tr -d '[:space:]')")
 fi
 # ${scope[@]+...} keeps an empty array working under set -u in bash 3.2 (macOS).
 agent_kubeconfig="$("$REPO_ROOT/tests/agent-kubeconfig.sh" ${scope[@]+"${scope[@]}"})"

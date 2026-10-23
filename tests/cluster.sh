@@ -17,7 +17,7 @@ usage() {
 }
 
 up() {
-  local cni="" workers=0 config=""
+  local cni="" workers=0 config="" i
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --cni)

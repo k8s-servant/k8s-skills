@@ -250,3 +250,20 @@ def test_agent_kubeconfig_removes_earlier_bindings(tmp_path):
         # The cleanup runs before the bindings for this run are applied.
         applies = [i for i, c in enumerate(log) if c == "kubectl apply -f -"]
         assert max(log.index(line) for line in cleanup) < applies[-1], (args, log)
+
+
+def test_run_strips_agent_scope_whitespace(tmp_path):
+    """A CRLF checkout or a trailing space must not end up in the namespace name."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    case = repo / "tests" / "k8s-demo-skill" / "case-one"
+    case.mkdir(parents=True)
+    for name in ("setup.sh", "break.sh", "cleanup.sh"):
+        script = case / name
+        script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        script.chmod(0o755)
+    (case / "expected.md").write_text("## Prompt\n\nIs it broken?\n", encoding="utf-8")
+    (case / "agent-scope").write_bytes(b"my-namespace \r\n")
+    result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
+    assert result.returncode == 0, result.stderr
+    assert "  namespace: my-namespace\n" in applied(tmp_path)
