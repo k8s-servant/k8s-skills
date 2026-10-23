@@ -60,6 +60,12 @@ ask_first:
     hostname: []           # an argument would rename the host
   # curl and wget may only fetch over these schemes (gopher:// or dict:// can write).
   url_schemes: [http://, https://]
+  # Cloud metadata endpoints hand out the node's cloud credentials. Hosts are parsed and
+  # normalised, so every way of writing an address is caught; link-local addresses
+  # (169.254.0.0/16, fe80::/10) are always rejected.
+  metadata_hosts: [metadata, metadata.google.internal, instance-data,
+                   instance-data.ec2.internal]
+  metadata_networks: ["fd00:ec2::/32", "100.100.100.200/32"]
   # A change may not reach many objects at once or read its content from a local file
   # that neither the reviewer nor the user sees.
   wide_change_flags: [--all, -A, --all-namespaces, -l, --selector, --patch-file]

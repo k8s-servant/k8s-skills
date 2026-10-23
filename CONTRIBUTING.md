@@ -104,9 +104,11 @@ the command to the user to run. Each command must be on `commands` or `ask_first
   - `env`, `printenv` and anything with `environ`
   - the service account token, and anything with `token`, `password`, `credential`,
     `shadow` or `secrets-store` in it
-  - cloud metadata endpoints (`169.254.169.254` and its decimal form,
-    `metadata.google.internal`, `fd00:ec2::254`, `100.100.100.200`), which hand out the
-    node's cloud credentials
+  - cloud metadata endpoints, which hand out the node's cloud credentials: any
+    link-local address (`169.254.0.0/16`, `fe80::/10`), `fd00:ec2::/32`,
+    `100.100.100.200`, and the names `metadata`, `metadata.google.internal` and
+    `instance-data`. `curl` and `wget` hosts are parsed and normalised, so decimal, hex,
+    octal and IPv4-mapped forms of an address count too
 
 `port-forward` and `debug` are not on the list: `port-forward` never returns, and `debug`
 adds a container that cannot be removed.

@@ -1,5 +1,6 @@
 """Tests for the command allow-list check: the rules that keep skills read-only."""
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -847,3 +848,37 @@ def test_ask_first_rejects_secret_substrings(tmp_path, line):
 def test_ask_first_undo_line_is_checked_for_secrets(tmp_path):
     body = ask("kubectl uncordon my-node", "# Undo: kubectl get secret my-secret -o yaml")
     assert "Secret access is not allowed" in messages(run(tmp_path, body))
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://0xa9fea9fe/latest/meta-data/",
+        "http://0251.0376.0251.0376/latest/meta-data/",
+        "http://169.254.43518/latest/meta-data/",
+        "http://[::ffff:169.254.169.254]/latest/meta-data/",
+        "http://[fe80::1]/",
+        "http://[fd00:ec2::254]/latest/meta-data/",
+        "http://metadata/computeMetadata/v1/",
+        "http://metadata.google.internal./computeMetadata/v1/",
+        "http://instance-data.ec2.internal/latest/meta-data/",
+        "169.254.169.254/latest/meta-data/",
+    ],
+)
+def test_ask_first_rejects_metadata_hosts_in_any_form(tmp_path, url):
+    for program in ("curl -s", "wget -qO-"):
+        line = f"kubectl exec my-pod -- {program} {url}"
+        assert run(tmp_path / program[:4], ask(line)) != [], line
+        shutil.rmtree(tmp_path / program[:4])
+
+
+def test_ask_first_allows_ordinary_hosts(tmp_path):
+    for i, url in enumerate(
+        [
+            "http://my-app:8080/healthz",
+            "https://my-app.my-namespace.svc.cluster.local/",
+            "http://10.96.0.10/",
+            "https://example.com/",
+        ]
+    ):
+        assert run(tmp_path / str(i), ask(f"kubectl exec my-pod -- curl -sS {url}")) == [], url

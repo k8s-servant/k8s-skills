@@ -22,10 +22,13 @@ glob patterns such as `secre[t]s`; yq `load()`; `-v=9` logging; a prose command 
 second word is not a kubectl command name (fenced blocks are still checked in full).
 """
 
+import ipaddress
 import re
 import shlex
+import socket
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 from markdown_it import MarkdownIt
@@ -632,8 +635,38 @@ def _check_exec(args: list[str], ask_first: dict) -> bool:
     for arg in program[1:]:
         if "://" in arg and not arg.lower().startswith(tuple(ask_first["url_schemes"])):
             return False
+        fetches = program[0] in ("curl", "wget") and not _is_flag(arg)
+        if fetches and _metadata_host(arg, ask_first):
+            return False
     # wget writes a file unless told to print to stdout.
     return program[0] != "wget" or bool(set(program[1:]) & set(ask_first["wget_needs_one_of"]))
+
+
+def _metadata_host(arg: str, ask_first: dict) -> bool:
+    """True if a curl or wget argument points at a cloud metadata endpoint.
+
+    The host is parsed and, when it is an address, normalised, so decimal, hex, octal,
+    shorthand and IPv4-mapped IPv6 forms of the same address are all recognised.
+    """
+    try:
+        host = urlsplit(arg if "://" in arg else f"http://{arg}").hostname or ""
+    except ValueError:
+        return True
+    host = host.rstrip(".").lower()
+    if host in ask_first["metadata_hosts"]:
+        return True
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        try:
+            address = ipaddress.ip_address(socket.inet_aton(host))
+        except OSError:
+            return False
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+        address = address.ipv4_mapped
+    return address.is_link_local or any(
+        address in ipaddress.ip_network(net) for net in ask_first["metadata_networks"]
+    )
 
 
 def _target(args: list[str]) -> str:
