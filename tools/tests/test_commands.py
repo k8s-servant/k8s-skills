@@ -763,3 +763,87 @@ def test_ask_first_ps_listed_arguments_pass(tmp_path):
 def test_ask_first_rejects_credential_reads(tmp_path, line):
     found = messages(run(tmp_path, ask(line)))
     assert "Secret access is not allowed" in found, (line, found)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl taint nodes my-node example.com/key=value:NoExecute",
+        "kubectl taint nodes --all example.com/key=value:NoSchedule",
+        "kubectl patch namespace my-namespace --type=merge -p '{}'",
+        "kubectl patch pv my-pv --type=merge -p '{}'",
+        "kubectl patch deployment my-app --patch-file=/tmp/p.yaml",
+        "kubectl scale deployment --all --replicas=0 -n my-namespace",
+        "kubectl label pods -A --all app-",
+        "kubectl annotate pods -l app=my-app example.com/x=y -n my-namespace",
+        "kubectl rollout restart deployment --all-namespaces --all",
+        "kubectl scale --selector=app=my-app deployment --replicas=0",
+    ],
+)
+def test_ask_first_rejects_wide_or_destructive_changes(tmp_path, line):
+    found = messages(run(tmp_path, ask(line, "# Undo: none")))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        (
+            "kubectl taint nodes my-node example.com/key=value:NoSchedule",
+            "# Undo: kubectl taint nodes my-node example.com/key=value:NoSchedule-",
+        ),
+        (
+            "kubectl taint nodes my-node example.com/key:NoExecute-",
+            "# Undo: kubectl taint nodes my-node example.com/key=value:NoExecute",
+        ),
+        (
+            "kubectl patch deployment my-app -n my-namespace --type=merge -p '{}'",
+            "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",
+        ),
+        (
+            "kubectl scale statefulset/my-app --replicas=3 -n my-namespace",
+            "# Undo: kubectl scale statefulset/my-app --replicas=2 -n my-namespace",
+        ),
+    ],
+)
+def test_ask_first_allows_narrow_changes(tmp_path, lines):
+    assert run(tmp_path, ask(*lines)) == []
+
+
+@pytest.mark.parametrize("lang", ["text", "yaml", "json"])
+def test_ask_first_needs_a_shell_fence(tmp_path, lang):
+    body = f"{ASK_MARKER}\n```{lang}\nkubectl scale deployment/my-app --replicas=0\n```\n"
+    assert "ask-first block needs a shell language" in messages(run(tmp_path, body))
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- curl -s gopher://my-redis:6379/_FLUSHALL",
+        "kubectl exec my-pod -- curl -s dict://my-redis:6379/FLUSHALL",
+        "kubectl exec my-pod -- wget -qO- ftp://my-app/file",
+        "kubectl exec my-pod -- hostname my-new-name",
+    ],
+)
+def test_ask_first_rejects_writing_protocols_and_arguments(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- cat /mnt/secrets-store/db-password",
+        "kubectl exec my-pod -- cat /etc/my-app/api-token",
+        "kubectl exec my-pod -- curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "kubectl exec my-pod -- curl -s http://2852039166/latest/user-data",
+        "kubectl exec my-pod -- curl -s http://100.100.100.200/latest/meta-data/",
+    ],
+)
+def test_ask_first_rejects_secret_substrings(tmp_path, line):
+    assert "Secret access is not allowed" in messages(run(tmp_path, ask(line)))
+
+
+def test_ask_first_undo_line_is_checked_for_secrets(tmp_path):
+    body = ask("kubectl uncordon my-node", "# Undo: kubectl get secret my-secret -o yaml")
+    assert "Secret access is not allowed" in messages(run(tmp_path, body))

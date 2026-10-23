@@ -37,6 +37,23 @@ MARKER = "> Proposed fix: review before running. The agent does not run this."
 ASK_MARKER = "> Ask first: the agent runs this only after the user approves it."
 ASK_MESSAGE = "not on the ask-first allow-list: "
 ASK_UNDO_MESSAGE = "ask-first change needs an '# Undo:' line"
+ASK_LANG_MESSAGE = "ask-first block needs a shell language"
+# kubectl flags of the ask-first changes that take a value, so the value is not taken
+# for the target object.
+ASK_VALUE_FLAGS = {
+    "-n",
+    "--namespace",
+    "-p",
+    "--patch",
+    "--type",
+    "--replicas",
+    "-c",
+    "--container",
+    "-o",
+    "--output",
+    "--current-replicas",
+    "--resource-version",
+}
 UNDO_PREFIX = "# Undo:"
 
 LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
@@ -612,8 +629,46 @@ def _check_exec(args: list[str], ask_first: dict) -> bool:
     exact = ask_first["in_pod_args"].get(program[0])
     if exact is not None and any(a not in exact for a in program[1:]):
         return False
+    for arg in program[1:]:
+        if "://" in arg and not arg.lower().startswith(tuple(ask_first["url_schemes"])):
+            return False
     # wget writes a file unless told to print to stdout.
     return program[0] != "wget" or bool(set(program[1:]) & set(ask_first["wget_needs_one_of"]))
+
+
+def _target(args: list[str]) -> str:
+    """The first argument that is neither a flag nor a flag's value: the object changed."""
+    i = 0
+    while i < len(args):
+        token = args[i]
+        if token in ASK_VALUE_FLAGS:
+            i += 2
+            continue
+        if not _is_flag(token):
+            return token
+        i += 1
+    return ""
+
+
+def _check_change(subcommand: str, args: list[str], ask_first: dict) -> bool:
+    """True if an ask-first change stays narrow: one named object, a visible change."""
+    for token in args:
+        if token == "--":
+            break
+        name = token.split("=", 1)[0]
+        if name in ask_first["wide_change_flags"] or (
+            not token.startswith("--") and token[:2] in ask_first["wide_change_flags"]
+        ):
+            return False
+    if subcommand in ("patch", "scale"):
+        kind = _target(args).split("/", 1)[0].split(".", 1)[0].lower()
+        if kind not in ask_first["workload_kinds"]:
+            return False
+    if subcommand == "taint":
+        specs = [t for t in args if ":" in t and not _is_flag(t) and not t.endswith("-")]
+        if any(t.rsplit(":", 1)[1] not in ask_first["taint_effects"] for t in specs):
+            return False
+    return True
 
 
 def _check_ask_command(command: str, allowlist: dict) -> list[str]:
@@ -638,6 +693,8 @@ def _check_ask_command(command: str, allowlist: dict) -> list[str]:
         if not _check_exec(args, allowlist["ask_first"]):
             return rejected
         problems: list[str] = []
+    elif not _check_change(subcommand, args, allowlist["ask_first"]):
+        return rejected
     else:
         problems = _check_flags(args, allowlist)
     for words in segments[1:]:
@@ -660,8 +717,14 @@ def _is_ask_change(command: str, allowlist: dict) -> bool:
 def _ask_secret_problems(command: str, allowlist: dict) -> list[str]:
     """Secret access in an ask-first command: Secret words, environment and token reads."""
     # Brackets also separate words here, so an IPv6 host such as `[fd00:ec2::254]` is seen.
-    words = set(WORD_SPLIT.split(command.lower().replace("[", " ").replace("]", " ")))
-    if _secret_problems(command) or words & set(allowlist["ask_first"]["secret_words"]):
+    text = command.lower()
+    words = set(WORD_SPLIT.split(text.replace("[", " ").replace("]", " ")))
+    ask_first = allowlist["ask_first"]
+    if (
+        _secret_problems(command)
+        or words & set(ask_first["secret_words"])
+        or any(part in text for part in ask_first["secret_substrings"])
+    ):
         return ["Secret access is not allowed"]
     return []
 
@@ -682,9 +745,14 @@ def _check_lines(
             or "other" (non-shell blocks: only embedded commands count).
     """
     problems: list[tuple[int, str]] = []
-    if kind == "fix":
+    if kind in ("fix", "ask"):
         for offset, raw in enumerate(block_lines):
-            if raw.strip().startswith(UNDO_PREFIX) and _mentions_secret(raw):
+            if not raw.strip().startswith(UNDO_PREFIX):
+                continue
+            # The agent may run an ask-first undo, so it gets the stricter check.
+            if (kind == "fix" and _mentions_secret(raw)) or (
+                kind == "ask" and _ask_secret_problems(raw, allowlist)
+            ):
                 problems.append((first_line + offset, "Secret access is not allowed"))
     keys = set(allowlist["commands"])
     for line_no, command in _commands_in(block_lines, first_line, mode, keys):
@@ -742,6 +810,8 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             has_undo = any(ln.strip().startswith(UNDO_PREFIX) for ln in block.lines)
             if is_command_lang and block.is_fix and not has_undo:
                 add(path, block.start_line, "proposed fix needs an '# Undo:' line")
+            if block.is_ask and not is_command_lang:
+                add(path, block.start_line, ASK_LANG_MESSAGE)
             if is_command_lang and block.is_ask and not has_undo:
                 keys = set(allowlist["commands"])
                 mode_ = "console" if block.lang == "console" else "command"

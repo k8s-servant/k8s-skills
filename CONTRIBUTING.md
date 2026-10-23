@@ -81,21 +81,32 @@ The skill tells the agent to show the command, say what it changes and how to un
 and run it only after the user says yes. If the agent's RBAC refuses it, the agent gives
 the command to the user to run. Each command must be on `commands` or `ask_first`:
 
+- The block must use a shell language (` ```bash `).
 - Changes: `set image`, `set resources`, `rollout undo`, `rollout restart`,
   `rollout pause`, `rollout resume`, `scale`, `patch`, `cordon`, `uncordon`, `label`,
   `annotate`, `taint`. A block with a change needs an `# Undo:` line that restores the
-  state you found.
+  state you found. A change must name one object you can see:
+  - no `--all`, `-A`/`--all-namespaces` or `-l`/`--selector`, and no `--patch-file`
+  - `patch` and `scale` only on workloads (Deployment, StatefulSet, DaemonSet,
+    ReplicaSet, CronJob)
+  - `taint` only adds `NoSchedule` or `PreferNoSchedule`, or removes a taint;
+    `NoExecute` evicts every pod on the node
 - `kubectl exec POD [-n ns] [-c container] -- PROGRAM [args]`, with one program from
   `ask_first.in_pod` (`nslookup`, `dig`, `getent`, `curl`, `wget`, `cat`, `ls`, `ps`,
-  `df`, `id`, `hostname`). Not allowed: a shell, `-i`/`-t`/`--stdin`/`--tty`, `curl`
-  flags that send or save data, `wget` without `-O-`, or `ps` arguments other than `-ef`,
-  `-A` and `aux` (BSD `e` prints every process's environment).
-- These count as Secret access:
-  - `env`, `printenv` and `/proc/*/environ`
-  - the service account token
-  - paths with `token`, `password`, `credentials` or `shadow` in them
-  - cloud metadata endpoints (`169.254.169.254`, `metadata.google.internal`,
-    `fd00:ec2::254`), which hand out the node's cloud credentials
+  `df`, `id`, `hostname`). Not allowed:
+  - a shell, or `-i`/`-t`/`--stdin`/`--tty`
+  - `curl` flags that send or save data, and any URL scheme but `http://` and
+    `https://` (`gopher://` and `dict://` can write)
+  - `wget` without `-O-`
+  - `ps` arguments other than `-ef`, `-A` and `aux` (BSD `e` prints every process's
+    environment), and any argument to `hostname`
+- These count as Secret access, anywhere in the command or its `# Undo:` line:
+  - `env`, `printenv` and anything with `environ`
+  - the service account token, and anything with `token`, `password`, `credential`,
+    `shadow` or `secrets-store` in it
+  - cloud metadata endpoints (`169.254.169.254` and its decimal form,
+    `metadata.google.internal`, `fd00:ec2::254`, `100.100.100.200`), which hand out the
+    node's cloud credentials
 
 `port-forward` and `debug` are not on the list: `port-forward` never returns, and `debug`
 adds a container that cannot be removed.
