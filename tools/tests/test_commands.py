@@ -205,7 +205,7 @@ def test_forbidden_flags(tmp_path):
 
 
 def test_yaml_block_is_ignored(tmp_path):
-    assert run(tmp_path, "```yaml\nkind: Pod\nname: kubectl\n```\n") == []
+    assert run(tmp_path, "```yaml\nkind: Pod\nname: my-app\n```\n") == []
 
 
 def test_comments_and_blank_lines_are_skipped(tmp_path):
@@ -419,3 +419,106 @@ def test_marker_with_trailing_whitespace_still_marks_a_fix(tmp_path):
 def test_obfuscated_secret_access_fails_in_fix_blocks(tmp_path, line):
     body = f"{MARKER}\n```bash\n# Undo: kubectl apply -f a.yaml\n{line}\n```\n"
     assert fails(tmp_path, body), line
+
+
+def test_comment_does_not_continue_onto_the_next_line(tmp_path):
+    found = run(tmp_path, bash("kubectl get pods # \\", "kubectl delete pod x"))
+    assert any("kubectl delete" in m for m in messages(found))
+
+
+def test_hash_inside_a_word_or_quotes_is_not_a_comment(tmp_path):
+    assert run(tmp_path, bash("kubectl get pods | grep '#' | grep a#b")) == []
+
+
+def test_text_block_continuation_does_not_hide_a_command(tmp_path):
+    body = "```text\nsome output \\\nkubectl delete pod x\n```\n"
+    assert fails(tmp_path, body, "not on the allow-list")
+
+
+def test_console_output_continuation_does_not_hide_a_command(tmp_path):
+    body = "```console\n$ kubectl get pods\nNAME READY \\\n$ kubectl delete pod x\n```\n"
+    assert fails(tmp_path, body, "not on the allow-list")
+
+
+def test_console_continuation_of_a_prompted_command_still_joins(tmp_path):
+    assert run(tmp_path, "```console\n$ kubectl get pods \\\n  -o wide\nNAME\n```\n") == []
+
+
+@pytest.mark.parametrize("closer", ["- ```", "> ```", "    ```", "1. ```"])
+def test_lookalike_closing_fences_do_not_end_a_block(tmp_path, closer):
+    body = f"```bash\n{closer}\nkubectl delete pod x\n"
+    assert fails(tmp_path, body, "not on the allow-list"), closer
+
+
+def test_closing_fence_may_be_indented_up_to_three_spaces(tmp_path):
+    body = "```bash\nkubectl get pods\n   ```\n\nplain text\n"
+    assert run(tmp_path, body) == []
+
+
+def test_quoted_block_ends_when_the_quote_does(tmp_path):
+    body = "> ```bash\n> kubectl get pods\n\nkubectl delete pod x\n"
+    assert fails(tmp_path, body, "not on the allow-list")
+
+
+def test_fix_block_rejects_expansion_and_concatenation(tmp_path):
+    body = f'{MARKER}\n```bash\n# Undo: kubectl rollout undo deploy/x\nR=secre; kubectl get "$R"ts\n```\n'
+    assert "shell control not allowed" in messages(run(tmp_path, body))
+
+
+def test_fix_block_rejects_pipe_into_non_filter(tmp_path):
+    body = f"{MARKER}\n```bash\n# Undo: x\necho c2VjcmV0cw== | base64 -d | xargs kubectl get\n```\n"
+    assert any("allow-listed filter" in m for m in messages(run(tmp_path, body)))
+
+
+@pytest.mark.parametrize(
+    "cmd",
+    [
+        "kubectl delete pod my-app-1 && kubectl get pods",
+        "kubectl delete pod $NAME",
+        "kubectl delete pod $(kubectl get pods -o name)",
+        "kubectl delete pod my-app-1 > out.txt",
+    ],
+)
+def test_fix_block_keeps_shell_rules(tmp_path, cmd):
+    body = f"{MARKER}\n```bash\n# Undo: kubectl apply -f a.yaml\n{cmd}\n```\n"
+    assert "shell control not allowed" in messages(run(tmp_path, body)), cmd
+
+
+def test_fix_block_plain_commands_and_filters_are_fine(tmp_path):
+    body = (
+        f"{MARKER}\n```bash\n# Undo: kubectl scale deploy/my-app --replicas=3\n"
+        "kubectl scale deploy/my-app --replicas=0\n"
+        "kubectl get pods | grep my-app\n```\n"
+    )
+    assert run(tmp_path, body) == []
+
+
+def test_quoted_and_prompted_commands_in_text_blocks(tmp_path):
+    assert fails(tmp_path, '```text\n"kubectl" delete pod x\n```\n', "not on the allow-list")
+    assert fails(
+        tmp_path / "b", "```text\nuser@host:~$ kubectl delete pod x\n```\n", "kubectl delete"
+    )
+    assert fails(tmp_path / "c", "```text\nkub''ectl delete pod x\n```\n", "kubectl delete")
+
+
+def test_indented_code_block_is_scanned(tmp_path):
+    assert fails(tmp_path, "para\n\n    kubectl delete pod x\n", "not on the allow-list")
+
+
+def test_html_pre_and_code_blocks_are_scanned(tmp_path):
+    assert fails(tmp_path, "<pre>\nkubectl delete pod x\n</pre>\n", "not on the allow-list")
+    assert fails(tmp_path / "b", "<pre><code>kubectl delete pod x</code></pre>\n")
+
+
+def test_prose_commands_and_secrets_are_checked(tmp_path):
+    assert fails(tmp_path, "Run kubectl get secrets to see them.\n", "Secret access")
+    assert run(tmp_path / "b", "Plain prose without the tool name.\n") == []
+    assert run(tmp_path / "c", "Run `kubectl get pods -A` first.\n") == []
+
+
+def test_frontmatter_is_not_scanned_as_prose(tmp_path):
+    skill_dir = tmp_path / "skills" / "k8s-demo-skill"
+    skill_dir.mkdir(parents=True)
+    text = FRONTMATTER.replace("Use when testing.", "Use when kubectl delete is mentioned.")
+    (skill_dir / "SKILL.md").write_text(text + "body\n")
+    assert check_commands(skill_dir, load_allowlist()) == []

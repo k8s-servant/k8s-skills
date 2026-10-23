@@ -2,9 +2,9 @@
 
 Skills are advice the agent follows, so the only way to promise they cannot change a
 cluster is to allow-list what they may tell the agent to run. This check reads every
-shell code block in SKILL.md and references/*.md, and every line of scripts/*, and
-rejects anything that is not an allow-listed read-only command. The check fails closed:
-whatever it cannot positively recognise as safe is a finding.
+fenced code block and every line of prose in SKILL.md and references/**/*.md, and every
+line of scripts/**, and rejects anything that is not an allow-listed read-only command.
+The check fails closed: whatever it cannot positively recognise as safe is a finding.
 """
 
 import re
@@ -19,10 +19,10 @@ from tools.skillcheck.frontmatter import parse_skill
 MARKER = "> Proposed fix: review before running. The agent does not run this."
 UNDO_PREFIX = "# Undo:"
 
-FENCE_OPEN = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
-# Blockquote and list-item prefixes that may sit in front of a fence.
-CONTAINER_PREFIX = re.compile(r"^\s*(?:>\s?|(?:[-*+]|\d+[.)])\s+)*")
-QUOTE_PREFIX = re.compile(r"^\s*(?:>\s?)+")
+# A fence opener: optional blockquote/list-item prefixes, at most 3 spaces of indent, then
+# the fence. More indent than that is an indented code block, not a fence.
+FENCE_OPEN = re.compile(r"^((?: {0,3}(?:>[ ]?|(?:[-*+]|\d+[.)])[ ]+))*) {0,3}(`{3,}|~{3,})(.*)$")
+QUOTE_PREFIX = re.compile(r"^(?: {0,3}>[ ]?)+")
 LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
 # Characters that separate words inside an argument, so `pods,secrets`, `{a,secrets}`
 # and `/api/v1/namespaces/x/secrets` are all seen as mentioning the word `secrets`.
@@ -56,7 +56,8 @@ def load_allowlist(path: Path | None = None) -> dict:
         path: An alternative allowlist.yaml, mostly for tests.
 
     Returns:
-        The parsed mapping with keys commands, filters, forbidden_flags, command_langs.
+        The parsed mapping with keys commands, filters, filter_flags, global_flags,
+        global_flags_allowed and command_langs.
     """
     path = path or Path(__file__).with_name("allowlist.yaml")
     return yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -80,6 +81,56 @@ class Block:
     is_fix: bool
 
 
+def _parse_markdown(md: str, first_line: int) -> tuple[list[Block], list[tuple[int, str]]]:
+    """Split Markdown into fenced blocks and the prose lines outside them.
+
+    Follows CommonMark closely enough that the checker never sees a block end earlier
+    than a renderer would: the closing fence must carry the opener's blockquote prefix
+    (a blockquote that stops also stops the block), be a bare fence of the same
+    character and at least the same length, and be indented at most 3 spaces beyond
+    the opening fence.
+    """
+    text = md.splitlines()
+    blocks: list[Block] = []
+    prose: list[tuple[int, str]] = []
+    i = 0
+    while i < len(text):
+        line = text[i].expandtabs(4)
+        opened = FENCE_OPEN.match(line)
+        if not opened or (opened.group(2)[0] == "`" and "`" in opened.group(3)):
+            prose.append((first_line + i, text[i]))
+            i += 1
+            continue
+        fence, info = opened.group(2), opened.group(3).strip()
+        quoted = ">" in opened.group(1)
+        base = QUOTE_PREFIX.sub("", line) if quoted else line
+        fence_col = base.index(fence)
+        above = next((t.rstrip() for t in reversed(text[:i]) if t.strip()), "")
+        content: list[str] = []
+        j = i + 1
+        closed = False
+        while j < len(text):
+            raw = text[j].expandtabs(4)
+            if quoted and not QUOTE_PREFIX.match(raw):
+                break
+            inner = QUOTE_PREFIX.sub("", raw) if quoted else raw
+            bare = inner.strip()
+            indent = len(inner) - len(inner.lstrip(" "))
+            is_fence = bare and set(bare) == {fence[0]} and len(bare) >= len(fence)
+            if is_fence and indent <= fence_col + 3:
+                closed = True
+                break
+            content.append(inner)
+            j += 1
+        lang = None
+        if info:
+            found = LANG.match(info)
+            lang = found.group(1).lower() if found else ""
+        blocks.append(Block(lang, first_line + i, content, above == MARKER))
+        i = j + 1 if closed else j
+    return blocks, prose
+
+
 def extract_blocks(md: str, first_line: int = 1) -> list[Block]:
     """Find the fenced code blocks of a Markdown text.
 
@@ -92,65 +143,100 @@ def extract_blocks(md: str, first_line: int = 1) -> list[Block]:
     Returns:
         The blocks in order. An unclosed block runs to the end of the text.
     """
-    text = md.splitlines()
-    blocks: list[Block] = []
+    return _parse_markdown(md, first_line)[0]
+
+
+def _strip_comment(line: str) -> str:
+    """Cut a line at an unquoted `#` that starts a word, as the shell does.
+
+    A trailing backslash inside a comment is only comment text, so it must not
+    continue the line.
+    """
+    quote = None
+    word_start = True
     i = 0
-    while i < len(text):
-        opened = FENCE_OPEN.match(CONTAINER_PREFIX.sub("", text[i]))
-        if not opened:
+    while i < len(line):
+        c = line[i]
+        if quote == "'":
+            quote = None if c == "'" else quote
+        elif c == "\\":
             i += 1
-            continue
-        fence, info = opened.group(2), opened.group(3).strip()
-        quoted = QUOTE_PREFIX.match(text[i]) is not None
-        above = next((t.rstrip() for t in reversed(text[:i]) if t.strip()), "")
-        content: list[str] = []
-        j = i + 1
-        while j < len(text):
-            stripped = CONTAINER_PREFIX.sub("", text[j]).strip()
-            if stripped and set(stripped) == {fence[0]} and len(stripped) >= len(fence):
-                break
-            content.append(QUOTE_PREFIX.sub("", text[j]) if quoted else text[j])
-            j += 1
-        lang = None
-        if info:
-            found = LANG.match(info)
-            lang = found.group(1).lower() if found else ""
-        blocks.append(Block(lang, first_line + i, content, above == MARKER))
-        i = j + 1
-    return blocks
+        elif quote == '"':
+            quote = None if c == '"' else quote
+        elif c in "'\"":
+            quote = c
+        elif c == "#" and word_start:
+            return line[:i]
+        word_start = c.isspace() and quote is None
+        i += 1
+    return line
 
 
 def _trailing_backslashes(line: str) -> int:
     return len(line) - len(line.rstrip("\\"))
 
 
-def _logical_commands(block_lines: list[str], first_line: int) -> list[tuple[int, str, bool]]:
-    """Turn raw lines into (line number, command, had_prompt) triples.
+def _embedded_commands(line: str, keys: set[str]) -> list[str]:
+    """Find commands written inside a line of prose or output.
 
-    Blank lines and comments are dropped, a leading `$ ` prompt is removed and
-    backslash continuations are joined (an odd number of trailing backslashes
-    continues; an even number is escaped backslashes). The line number is that of the
-    first line.
+    A line counts as a command if an allow-listed program name appears in it as a
+    whole word once quotes are removed (`"kubectl" delete`, `user@host:~$ kubectl`).
+    Each candidate runs from that word to the end of the line. Backticks and
+    parentheses are blanked first, since inline code and brackets are normal in prose.
     """
-    commands: list[tuple[int, str, bool]] = []
+    line = line.replace("`", " ").replace("(", " ").replace(")", " ")
+    stripped, origin = [], []
+    for pos, c in enumerate(line):
+        if c not in "'\"":
+            stripped.append(c)
+            origin.append(pos)
+    plain = "".join(stripped)
+    found: list[str] = []
+    for key in keys:
+        for hit in re.finditer(rf"(?<![\w-]){re.escape(key)}(?![\w-])", plain):
+            start = origin[hit.start()]
+            while start > 0 and line[start - 1] in "'\"":
+                start -= 1
+            found.append(line[start:])
+    return found
+
+
+def _commands_in(
+    lines: list[str], first_line: int, mode: str, keys: set[str]
+) -> list[tuple[int, str]]:
+    """Turn raw lines into (line number, command) pairs.
+
+    Which lines are commands is decided per raw line, before any joining:
+    every line in `command` mode, only `$ ` lines in `console` mode, none in `other`
+    mode. All remaining lines are scanned for embedded commands. Only command lines
+    can continue: blank lines and comments are dropped, a leading `$ ` is removed,
+    comments end the line (and its continuation), and an odd number of trailing
+    backslashes joins the next line. The line number is that of the first line.
+    """
+    commands: list[tuple[int, str]] = []
     pending: list[str] = []
-    start, prompted = 0, False
-    for offset, raw in enumerate(block_lines):
+    start = 0
+    for offset, raw in enumerate(lines):
         line = raw.strip()
-        if not pending and (not line or line.startswith("#")):
-            continue
         if not pending:
-            start, prompted = first_line + offset, line.startswith("$ ")
-            if prompted:
+            is_command = mode == "command" or (mode == "console" and line.startswith("$ "))
+            if not is_command:
+                commands += [(first_line + offset, c) for c in _embedded_commands(line, keys)]
+                continue
+            if not line or line.startswith("#"):
+                continue
+            start = first_line + offset
+            if line.startswith("$ "):
                 line = line[2:].lstrip()
+        line = _strip_comment(line).strip()
         if _trailing_backslashes(line) % 2 == 1:
             pending.append(line[:-1].strip())
             continue
         pending.append(line)
-        commands.append((start, " ".join(p for p in pending if p), prompted))
+        commands.append((start, " ".join(p for p in pending if p)))
         pending = []
     if pending:
-        commands.append((start, " ".join(p for p in pending if p), prompted))
+        commands.append((start, " ".join(p for p in pending if p)))
     return commands
 
 
@@ -162,19 +248,25 @@ def _mentions_secret(text: str) -> bool:
     return False
 
 
-def _scan(command: str, strict: bool) -> list[list[str]] | str:
+def _expands(after_dollar: str, quote: str | None) -> bool:
+    """True if a `$` followed by this character is an expansion or special quote."""
+    if not after_dollar:
+        return False
+    if after_dollar in "({" or VARIABLE_START.match(after_dollar):
+        return True
+    return quote is None and after_dollar in "'\""
+
+
+def _scan(command: str) -> list[list[str]] | str:
     """Split a command into pipe segments of words, as bash would see them.
 
     Words are returned with quotes resolved, so every later check sees the text bash
     would pass to the program. Anything where bash's result could differ from what is
     written (backslash escapes, `$'` and `$"` quoting, command substitution, brace
-    expansion, variables) is rejected rather than interpreted.
+    expansion, variables) or that chains commands is rejected rather than interpreted.
 
     Args:
         command: One logical command line.
-        strict: True for commands the agent would run. False for proposed fixes,
-            where control operators and variables are tolerated and only used to
-            split words.
 
     Returns:
         The segments (lists of words), or "control" or "parse" naming the problem.
@@ -203,11 +295,8 @@ def _scan(command: str, strict: bool) -> list[list[str]] | str:
             continue
         if c in "\\`":
             return "control"
-        if c == "$":
-            if nxt == "(" or (quote is None and nxt in "'\""):
-                return "control"
-            if nxt == "{" or (strict and VARIABLE_START.match(nxt)):
-                return "control"
+        if c == "$" and _expands(nxt, quote):
+            return "control"
         if quote == '"':
             if c == '"':
                 quote = None
@@ -220,16 +309,13 @@ def _scan(command: str, strict: bool) -> list[list[str]] | str:
             return "control"
         elif c.isspace():
             flush()
-        elif c == "|" or c in ";&<>()":
-            if strict and c != "|":
-                return "control"
-            if strict and nxt == "|":
+        elif c == "|":
+            if nxt and nxt in "|&":
                 return "control"
             flush()
-            if c == "|" or not strict:
-                segments.append([])
-            if c == "|" and nxt == "|":
-                i += 1
+            segments.append([])
+        elif c in ";&<>()":
+            return "control"
         else:
             word.append(c)
             in_word = True
@@ -359,16 +445,23 @@ def _check_filter(words: list[str], allowlist: dict) -> list[str]:
     return problems
 
 
-def _check_command(command: str, allowlist: dict) -> list[str]:
-    """Return the problems with one non-fix command line (secrets are checked apart)."""
-    segments = _scan(command, strict=True)
+def _check_command(command: str, allowlist: dict, is_fix: bool) -> list[str]:
+    """Return the problems with one command line (Secret access is checked apart).
+
+    A proposed fix is exempt from the program, subcommand and flag allow-list only;
+    shell control, expansion and pipes into anything but a filter are findings there
+    too.
+    """
+    segments = _scan(command)
     if segments == "control":
         return ["shell control not allowed"]
     if segments == "parse":
         return ["cannot parse command"]
     first = segments[0]
     problems: list[str] = []
-    if not first or first[0] not in allowlist["commands"]:
+    if is_fix:
+        pass
+    elif not first or first[0] not in allowlist["commands"]:
         problems.append(f"not on the allow-list: {command}")
     else:
         problems += _check_kubectl(first, allowlist)
@@ -384,40 +477,36 @@ def _secret_problems(command: str) -> list[str]:
     """Check a command for Secret access, on the raw text and on the resolved words."""
     if _mentions_secret(command):
         return ["Secret access is not allowed"]
-    segments = _scan(command, strict=False)
-    if isinstance(segments, str):
-        # Obfuscated or unparseable text cannot be shown to be free of Secret access.
-        return ["shell control not allowed"] if segments == "control" else ["cannot parse command"]
-    if any(_mentions_secret(w) for words in segments for w in words):
+    segments = _scan(command)
+    if not isinstance(segments, str) and any(
+        _mentions_secret(w) for words in segments for w in words
+    ):
         return ["Secret access is not allowed"]
     return []
 
 
 def _check_lines(
-    block_lines: list[str], first_line: int, is_fix: bool, allowlist: dict, lang: str | None
+    block_lines: list[str], first_line: int, is_fix: bool, allowlist: dict, mode: str
 ) -> list[tuple[int, str]]:
-    """Check the commands of one block or script; return (line, message) pairs.
+    """Check the commands of one block, script or prose; return (line, message) pairs.
 
-    Which lines count as commands depends on the language: everything in a command
-    language, only `$ ` lines in `console` (the rest is output), and for any other
-    language only lines that start with an allow-listed program, so a command cannot
-    hide in a block that looks like plain text.
+    Args:
+        block_lines: The raw lines.
+        first_line: File line number of the first of them.
+        is_fix: True for a proposed-fix block (exempt from the allow-list only).
+        allowlist: The allow-list mapping.
+        mode: "command" (every line is a command), "console" (only `$ ` lines are),
+            or "other" (prose and non-shell blocks: only embedded commands count).
     """
     problems: list[tuple[int, str]] = []
     if is_fix:
         for offset, raw in enumerate(block_lines):
             if raw.strip().startswith(UNDO_PREFIX) and _mentions_secret(raw):
                 problems.append((first_line + offset, "Secret access is not allowed"))
-    for line_no, command, prompted in _logical_commands(block_lines, first_line):
-        starts_command = command.split(None, 1)[0] in allowlist["commands"]
-        if lang == "console" and not (prompted or starts_command):
-            continue
-        other_lang = lang not in (None, "console") and lang not in allowlist["command_langs"]
-        if other_lang and not starts_command:
-            continue
+    keys = set(allowlist["commands"])
+    for line_no, command in _commands_in(block_lines, first_line, mode, keys):
         problems += [(line_no, m) for m in _secret_problems(command)]
-        if not is_fix:
-            problems += [(line_no, m) for m in _check_command(command, allowlist)]
+        problems += [(line_no, m) for m in _check_command(command, allowlist, is_fix)]
     return list(dict.fromkeys(problems))
 
 
@@ -446,7 +535,8 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             return data.decode("utf-8", errors="replace")
 
     def check_markdown(path: Path, text: str, first_line: int) -> None:
-        for block in extract_blocks(text, first_line):
+        blocks, prose = _parse_markdown(text, first_line)
+        for block in blocks:
             if block.lang is None:
                 add(path, block.start_line, "fenced block needs a language")
                 continue
@@ -454,9 +544,16 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             has_undo = any(ln.strip().startswith(UNDO_PREFIX) for ln in block.lines)
             if is_command_lang and block.is_fix and not has_undo:
                 add(path, block.start_line, "proposed fix needs an '# Undo:' line")
+            mode = "other"
+            if is_command_lang:
+                mode = "console" if block.lang == "console" else "command"
             for line_no, message in _check_lines(
-                block.lines, block.start_line + 1, block.is_fix, allowlist, block.lang
+                block.lines, block.start_line + 1, block.is_fix, allowlist, mode
             ):
+                add(path, line_no, message)
+        # Prose: indented code, <pre> and ordinary text are scanned line by line.
+        for line_no, line in prose:
+            for _, message in _check_lines([line], line_no, False, allowlist, "other"):
                 add(path, line_no, message)
 
     skill_file = skill_dir / "SKILL.md"
@@ -478,7 +575,7 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
     for script in sorted((skill_dir / "scripts").rglob("*")):
         if script.is_file():
             for line_no, message in _check_lines(
-                read(script).splitlines(), 1, False, allowlist, None
+                read(script).splitlines(), 1, False, allowlist, "command"
             ):
                 add(script, line_no, message)
     return found
