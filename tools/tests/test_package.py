@@ -40,3 +40,16 @@ def test_package_subcommand(tmp_path):
     repo = make_repo(tmp_path / "repo")
     assert main(["package", "--out", str(tmp_path / "dist"), "--repo", str(repo)]) == 0
     assert (tmp_path / "dist" / "k8s-b-x.zip").is_file()
+
+
+def test_dotfiles_and_pycache_are_not_packaged(tmp_path):
+    repo = make_repo(tmp_path / "repo")
+    folder = repo / "skills" / "k8s-a-x"
+    (folder / ".DS_Store").write_text("x")
+    (folder / "scripts" / "__pycache__").mkdir(parents=True)
+    (folder / "scripts" / "__pycache__" / "x.pyc").write_text("x")
+    (folder / ".hidden").mkdir()
+    (folder / ".hidden" / "notes.md").write_text("x")
+    package_skills(repo, tmp_path / "dist")
+    with zipfile.ZipFile(tmp_path / "dist" / "k8s-a-x.zip") as zf:
+        assert zf.namelist() == ["k8s-a-x/SKILL.md", "k8s-a-x/references/notes.md"]

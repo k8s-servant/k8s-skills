@@ -15,9 +15,16 @@ from tools.skillcheck.discovery import skill_dirs
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 
 
+def _is_junk(relative: Path) -> bool:
+    """True for editor and OS leftovers (dotfiles, `__pycache__`) that a release must not ship."""
+    return any(part.startswith(".") or part == "__pycache__" for part in relative.parts)
+
+
 def _write_zip(skill_dir: Path, target: Path) -> None:
     """Write one skill folder as a zip whose entries live under `<skill>/`."""
-    files = sorted(p for p in skill_dir.rglob("*") if p.is_file())
+    files = sorted(
+        p for p in skill_dir.rglob("*") if p.is_file() and not _is_junk(p.relative_to(skill_dir))
+    )
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in files:
             info = zipfile.ZipInfo(f"{skill_dir.name}/{path.relative_to(skill_dir).as_posix()}")
