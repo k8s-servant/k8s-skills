@@ -1,0 +1,4 @@
+# Placeholder links used in examples.
+^https?://example\.com
+^https?://registry\.example\.com
+^https?://my-[a-z0-9-]+\.example\.com
