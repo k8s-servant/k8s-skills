@@ -74,8 +74,8 @@ Notes per path:
   (`--scope workspace` for the current project). The extension installs every skill.
 - **Manual copy:** put the folder into `.agents/skills`, `.claude/skills`,
   `.github/skills` or `.cursor/skills` (in a project, or in your home directory for all
-  projects). `.github/skills` and `.cursor/skills` are not yet verified\*. Gemini CLI
-  reads project skills only in a folder you have trusted.
+  projects). `.cursor/skills` is not yet verified\*. Gemini CLI reads project skills
+  only in a folder you have trusted.
 - **claude.ai and the API:** each GitHub release has one zip per skill. Upload it in the
   skills settings, or through the API.
 
