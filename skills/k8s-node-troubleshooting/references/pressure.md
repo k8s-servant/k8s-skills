@@ -26,8 +26,9 @@ Default hard eviction thresholds on Linux, unless the cluster changed them:
 
 - **`MemoryPressure`**: the node's free memory fell below the threshold. The kubelet
   evicts first the pods whose use exceeds their requests, then by priority, then by how
-  far use exceeds requests, so pods without memory requests usually go first. One container killed for its own limit is an `OOMKilled`, not an
-  eviction; that belongs to `k8s-workload-troubleshooting`.
+  far use exceeds requests, so pods without memory requests usually go first. One
+  container killed for its own limit is an `OOMKilled`, not an eviction; that belongs to
+  `k8s-workload-troubleshooting`.
 - **`DiskPressure`**: the node's root filesystem, or the image filesystem, is filling up.
   Before evicting, the kubelet deletes dead pods and containers and then unused images.
   Large container logs, `emptyDir` volumes and images are the usual causes.
