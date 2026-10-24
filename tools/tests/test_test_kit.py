@@ -21,6 +21,17 @@ if [[ "$1 $2 $3" == "apply -f -" ]]; then cat >> "$FAKE_STDIN"; fi
 case "$1 $2" in
   "config current-context") echo "${FAKE_CONTEXT:-}" ;;
   "create token") echo "fake-token" ;;
+  "config view") echo "client-certificate-data: FAKE-ADMIN-CERT" ;;
+  "config --kubeconfig")
+    # Record whether the agent's final path holds admin credentials at this moment.
+    if grep -qs FAKE-ADMIN-CERT "${FAKE_AGENT:-/nonexistent}"; then
+      echo "agent file holds admin credentials" >> "$FAKE_LOG"
+    fi
+    if [[ "$4" == "delete-user" ]]; then
+      grep -v FAKE-ADMIN-CERT "$3" > "$3.new" || true
+      mv "$3.new" "$3"
+    fi
+    ;;
 esac
 """
 FAKE_CURL = """#!/usr/bin/env bash
@@ -142,6 +153,25 @@ def test_run_prints_prompt(tmp_path):
     assert result.stderr.index("ran setup.sh") < result.stderr.index("ran break.sh")
 
 
+def test_run_prompt_heading_tolerates_trailing_spaces(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    case = repo / "tests" / "k8s-demo-skill" / "case-one"
+    case.mkdir(parents=True)
+    for name in ("setup.sh", "break.sh", "cleanup.sh"):
+        script = case / name
+        script.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+        script.chmod(0o755)
+    (case / "expected.md").write_text(
+        "## Prompt  \n\nWhy is my-app crashing?\n\n## Cause \n\nsecret text\n",
+        encoding="utf-8",
+    )
+    result = run(tmp_path, repo, ["tests/run.sh", "k8s-demo-skill", "case-one"])
+    assert result.returncode == 0, result.stderr
+    assert "Why is my-app crashing?" in result.stdout
+    assert "secret text" not in result.stdout
+
+
 def applied(tmp_path: Path) -> str:
     """The YAML the scripts piped into `kubectl apply -f -`."""
     path = tmp_path / "applied.yaml"
@@ -166,6 +196,18 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "volumeattachments",
     ):
         assert f"- {resource}" in yaml_text, resource
+
+
+def test_agent_kubeconfig_never_holds_admin_credentials(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    agent = repo / ".kube" / "agent"
+    result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh"], FAKE_AGENT=str(agent))
+    assert result.returncode == 0, result.stderr
+    assert "agent file holds admin credentials" not in calls(tmp_path)
+    assert agent.exists()
+    assert "FAKE-ADMIN-CERT" not in agent.read_text()
+    assert result.stdout.strip() == str(agent)
 
 
 def test_agent_kubeconfig_namespace_scope(tmp_path):
@@ -305,10 +347,10 @@ def test_agent_kubeconfig_namespace_scope_sets_context_namespace(tmp_path):
     make_kubeconfig(repo)
     result = run(tmp_path, repo, ["tests/agent-kubeconfig.sh", "--namespace", "my-namespace"])
     assert result.returncode == 0, result.stderr
-    agent = f"{repo}/.kube/agent"
-    assert (
-        f"kubectl config --kubeconfig {agent} set-context --current --namespace=my-namespace"
-        in calls(tmp_path)
+    assert any(
+        c.startswith("kubectl config --kubeconfig ")
+        and c.endswith(" set-context --current --namespace=my-namespace")
+        for c in calls(tmp_path)
     )
     run(tmp_path, repo, ["tests/agent-kubeconfig.sh"])
     assert sum("--namespace=" in c for c in calls(tmp_path)) == 1

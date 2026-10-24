@@ -151,7 +151,9 @@ docs, and the PR says so.
 
 The kit creates a throwaway [kind](https://kind.sigs.k8s.io) cluster named
 `k8s-skills-test`, with its own kubeconfig in `.kube/`. It never touches your other
-clusters or your current context. The agent under test gets a view-only kubeconfig, so it
+clusters or your current context. It needs `kind`, `kubectl` and Docker: kind's
+Podman provider is not supported, because some scenarios use `docker exec` on a node.
+The agent under test gets a view-only kubeconfig, so it
 cannot change the cluster even by mistake: the built-in `view` role in every namespace,
 plus read access to the cluster-scoped objects `view` leaves out (nodes, PersistentVolumes,
 StorageClasses and the CSI objects). To test what an agent with access to
