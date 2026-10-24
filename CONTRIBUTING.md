@@ -100,9 +100,9 @@ Reviewers and the user check them instead:
 - A change should name one object: no `--all`, `-A` or `-l` on a change, and no
   `--patch-file` the user cannot see. `taint` should not add `NoExecute`, which evicts
   every pod on the node.
-- An exec program should only read: no `curl` that sends or saves data, `wget` with
-  `-O-`, no `ps e` (it prints every process's environment), and no `hostname` argument
-  (it renames the host).
+- An exec program should only read: no `curl` that sends or saves data, no `wget`
+  without `-O-` (it would write a file), no `ps e` (it prints every process's
+  environment), and no `hostname` argument (it renames the host).
 
 `port-forward` and `debug` are not on the list: `port-forward` never returns, and `debug`
 adds a container that cannot be removed.

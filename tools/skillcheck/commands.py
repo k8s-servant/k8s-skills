@@ -13,8 +13,9 @@ run, handed to a human) are exempt from everything except the Secret ban and the
 line. Ask-first blocks (commands the agent runs only after the user approves them) are
 checked against the `ask_first` allow-list: the verb, and for exec the one program, but
 not the program's arguments, which the user sees before approving. A change in one needs
-an `# Undo:` line. In prose (inline code and paragraph lines) text counts as a command only when a program name is followed by a kubectl
-command name or a flag, so mentions such as "the `kubectl` binary" are not findings.
+an `# Undo:` line. In prose (inline code and paragraph lines) text counts as a command
+only when a program name is followed by a kubectl command name or a flag, so mentions
+such as "the `kubectl` binary" are not findings.
 
 Known limits (this is a guardrail against honest mistakes, not a sandbox; human review
 covers deliberate obfuscation): a fix block may use any shell, so `sh -c`, `eval` or
