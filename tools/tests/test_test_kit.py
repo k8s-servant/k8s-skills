@@ -208,6 +208,12 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "clusterexternalsecrets",
     ):
         assert f"- {resource}" in yaml_text, resource
+    # Prometheus' and Alertmanager's HTTP APIs, through the API server's service proxy,
+    # on their two governing Services only.
+    assert "- services/proxy" in yaml_text
+    # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
+    for name in ("prometheus-operated", "prometheus-operated:web", "alertmanager-operated:web"):
+        assert f'"{name}"' in yaml_text, name
 
 
 def test_agent_kubeconfig_never_holds_admin_credentials(tmp_path):
@@ -435,6 +441,7 @@ ADDONS = [
     ("gatekeeper", "GATEKEEPER_MANIFEST_SHA256", "gatekeeper.yaml", "gatekeeper-system"),
     # The release manifest is `helm template` output pinned to the default namespace.
     ("external-secrets", "ESO_MANIFEST_SHA256", "external-secrets.yaml", "default"),
+    ("prometheus-operator", "PROMETHEUS_OPERATOR_MANIFEST_SHA256", "bundle.yaml", "default"),
 ]
 
 

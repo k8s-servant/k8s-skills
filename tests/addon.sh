@@ -5,7 +5,8 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets
+# Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets,
+# prometheus-operator
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +16,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator" >&2
   exit 64
 }
 
@@ -50,6 +51,12 @@ case "$1" in
     url="https://github.com/external-secrets/external-secrets/releases/download/${ESO_VERSION}/external-secrets.yaml"
     sum="$ESO_MANIFEST_SHA256"
     # The release manifest is rendered with every object in the default namespace.
+    namespace="default"
+    ;;
+  prometheus-operator)
+    url="https://github.com/prometheus-operator/prometheus-operator/releases/download/${PROMETHEUS_OPERATOR_VERSION}/bundle.yaml"
+    sum="$PROMETHEUS_OPERATOR_MANIFEST_SHA256"
+    # The bundle installs the operator in the default namespace.
     namespace="default"
     ;;
   *) usage ;;
