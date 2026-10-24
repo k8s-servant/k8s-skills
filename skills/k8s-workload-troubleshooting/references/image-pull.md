@@ -53,7 +53,7 @@ one node but fails on another can mean the image is present on some nodes only.
 Correct the image reference (in the deployment source when there is one), add or fix
 `imagePullSecrets`, or roll back to the last revision that pulled fine.
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl set image deployment/my-app app=registry.example.com/my-app:1.4.2 -n my-namespace

@@ -69,7 +69,7 @@ when the failures are expected and transient.
 When the Job failed only because `activeDeadlineSeconds` is too short for work that is
 healthy but slow, raise it in the CronJob's job template so the next run gets more time:
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl patch cronjob my-app -n my-namespace -p '{"spec": {"jobTemplate": {"spec": {"activeDeadlineSeconds": 1800}}}}'

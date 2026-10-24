@@ -36,6 +36,19 @@ kubectl describe service my-app -n my-namespace
 `describe` prints each probe on one line, for example
 `Readiness: http-get http://:80/healthz delay=0s timeout=1s period=5s #success=1 #failure=3`.
 
+When the event message does not make the cause clear, call the probe's endpoint from
+inside the container to see what the app answers, if the image has `wget` (use the port
+and path from the probe). This runs a program in the user's container, so ask first:
+
+> Ask first: the agent runs this only after the user approves it.
+
+```bash
+kubectl exec my-pod -n my-namespace -- wget -qO- -T 2 http://localhost:80/healthz
+```
+
+A minimal image may have no `wget` (the command then fails with "executable file not
+found"); say so and rely on the events and logs.
+
 ## Read the results
 
 The `Unhealthy` event message says how the probe failed:
@@ -68,7 +81,7 @@ Point the probe at a path and port the app serves, raise `timeoutSeconds` or
 `failureThreshold` when the app is slow but healthy, or add a startup probe for slow
 starts. Removing a probe hides the problem; propose it only as a last resort and say so.
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl patch deployment my-app -n my-namespace --type=json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/httpGet/path", "value": "/ready"}]'
