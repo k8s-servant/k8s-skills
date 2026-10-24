@@ -7,8 +7,8 @@
 # Without a flag the agent has `view` in every namespace plus read access to the
 # cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
-# plus Argo CD's and Gatekeeper's objects, which no aggregated role covers, and
-# ValidatingAdmissionPolicies.
+# plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
+# ClusterExternalSecrets and ValidatingAdmissionPolicies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -119,6 +119,11 @@ rules:
   - apiGroups: [constraints.gatekeeper.sh, config.gatekeeper.sh, mutations.gatekeeper.sh,
                 syncset.gatekeeper.sh, status.gatekeeper.sh, expansion.gatekeeper.sh]
     resources: ["*"]
+    verbs: [get, list, watch]
+  # External Secrets' view role leaves ClusterExternalSecrets out.
+  - apiGroups: [external-secrets.io]
+    resources:
+      - clusterexternalsecrets
     verbs: [get, list, watch]
   # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
   - apiGroups: [admissionregistration.k8s.io]
