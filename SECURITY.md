@@ -9,8 +9,9 @@ on this repository. Do not open a public issue for them.
 Examples that count as security problems:
 
 - A way to make a skill tell the agent to run a change outside an ask-first block, to put a
-  destructive command in an ask-first block, or to read a Secret, that the checker in
-  `tools/skillcheck` does not catch.
+  command that is not on the `ask_first` list in an ask-first block, or to read a Secret,
+  that the checker in `tools/skillcheck` does not catch. Arguments inside an ask-first
+  block are checked by review and by the user, not by the checker.
 - A leaked credential or personal data in the repository.
 - A weakness in the release or CI workflows.
 

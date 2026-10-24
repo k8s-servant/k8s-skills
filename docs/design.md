@@ -266,6 +266,11 @@ docs/design.md (this file)
   "Ask first" is an instruction to the agent, not a lock; RBAC stays the hard limit.
   `port-forward` and `debug` are left out of `ask_first`: one never returns, the other
   adds a container that cannot be removed.
+- **Lighter ask-first checks (after #26).** The first ask-first checker also parsed
+  the arguments: curl and wget flags, URL schemes, metadata hosts in every address form,
+  narrow-change rules. That code grew with each review and checked what the user
+  already sees before approving. The checker now checks the verb, the exec program and
+  Secret access. Argument rules are a review item in CONTRIBUTING.md.
 
 ## Repository creation
 
