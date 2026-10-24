@@ -131,7 +131,9 @@ rules:
     resources: ["*"]
     verbs: [get, list, watch]
   # Prometheus' and Alertmanager's HTTP APIs (targets, rules, alerts) through the API
-  # server's service proxy, on their governing Services only.
+  # server's service proxy, on their governing Services only. RBAC cannot limit the
+  # path, so the skill itself tells the agent to keep off the endpoints that return
+  # the generated configuration (/api/v1/status/config, /api/v2/status).
   - apiGroups: [""]
     resources:
       - services/proxy

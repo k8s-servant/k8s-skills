@@ -43,7 +43,10 @@ for the Targets page of the Prometheus UI.
 Never read Secrets. The operator stores the generated Prometheus and Alertmanager
 configuration in Secrets (`prometheus-<name>`, `alertmanager-<name>-generated`), and
 the upstream troubleshooting guide decodes them. Do not: use the selection rules, the
-operator's events and logs, and Prometheus' own API instead.
+operator's events and logs, and Prometheus' own API instead. For the same reason never
+call Prometheus' `/api/v1/status/config` or Alertmanager's `/api/v2/status`: they return
+that generated configuration (credentials masked, but webhook URLs and routes not).
+Access to the service proxy covers the whole Service, so this rule is yours to keep.
 
 ## When to use
 
@@ -187,6 +190,6 @@ source:
 - Messages from the source:
   [resource_selector.go](https://github.com/prometheus-operator/prometheus-operator/blob/v0.94.2/pkg/prometheus/resource_selector.go),
   [operator.go](https://github.com/prometheus-operator/prometheus-operator/blob/v0.94.2/pkg/operator/operator.go),
-  [scrape.go](https://github.com/prometheus/prometheus/blob/v3.15.1/scrape/scrape.go).
+  [scrape.go](https://github.com/prometheus/prometheus/blob/v3.14.0/scrape/scrape.go).
   The behaviour and messages quoted here were also seen on a Kubernetes 1.37 kind
   cluster with Prometheus Operator 0.94.2 and Prometheus 3.14.0.
