@@ -29,6 +29,14 @@
       ]
     },
     {
+      "name": "k8s-external-secrets-troubleshooting",
+      "source": "./",
+      "description": "Use when External Secrets Operator does not create or update a Kubernetes Secret: an ExternalSecret with SecretSyncedError (\"could not get secret data from provider\"), SecretOwnedByOther (\"target is owned by another ExternalSecret\"), SecretMissing or SecretImmutable, a SecretStore or ClusterSecretStore that is not Ready (InvalidProviderConfig, \"unable to validate store\"), a ClusterSecretStore not allowed from a namespace, a ClusterExternalSecret with failed namespaces, a value that does not refresh, or manifests on the removed v1beta1 API. Investigates with kubectl get, describe, events and controller logs, never reading the Secrets themselves, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-external-secrets-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-flux-troubleshooting",
       "source": "./",
       "description": "Use when Flux does not deploy or update something in Kubernetes: a GitRepository, OCIRepository or HelmRepository that is not Ready (\"couldn't find remote ref\", \"authentication required\"), a Kustomization that is not Ready (\"kustomization path not found\", \"kustomize build failed\", \"dependency ... is not ready\", health check timeouts), a HelmRelease that is not Ready (HelmChart \"invalid chart reference\", InstallFailed, UpgradeFailed, RetriesExceeded), changes in Git that never reach the cluster, or suspended Flux objects. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",

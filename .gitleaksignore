@@ -1,0 +1,4 @@
+# False positive: a pinned manifest sha256 in tests/versions.env, whose variable name
+# contained "SECRETS" (renamed to ESO_MANIFEST_SHA256). The commit is on the abandoned
+# branch feat/external-secrets-skill; this entry can go once that branch is deleted.
+d99a3ebf2b8f0ea0a597dced813f722009580ad2:tests/versions.env:generic-api-key:24
