@@ -11,6 +11,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 REAL_TESTS = Path(__file__).resolve().parents[2] / "tests"
 CONTEXT = "kind-k8s-skills-test"
 REFUSAL = f"refusing to run: current context is not {CONTEXT}"
@@ -418,20 +420,27 @@ def pin_version(repo: Path, key: str, value: str) -> None:
     versions.write_text("\n".join([*lines, f"{key}={value}"]) + "\n")
 
 
-def test_addon_applies_a_verified_manifest_and_waits(tmp_path):
+ADDONS = [
+    ("cert-manager", "CERT_MANAGER_MANIFEST_SHA256", "cert-manager.yaml", "cert-manager"),
+    ("flux", "FLUX_MANIFEST_SHA256", "install.yaml", "flux-system"),
+]
+
+
+@pytest.mark.parametrize(("name", "sha_key", "asset", "namespace"), ADDONS)
+def test_addon_applies_a_verified_manifest_and_waits(tmp_path, name, sha_key, asset, namespace):
     repo = make_repo(tmp_path)
     make_kubeconfig(repo)
-    pin_version(repo, "CERT_MANAGER_MANIFEST_SHA256", fake_manifest_checksum())
+    pin_version(repo, sha_key, fake_manifest_checksum())
     scratch = tmp_path / "tmp"
     scratch.mkdir()
-    result = run(tmp_path, repo, ["tests/addon.sh", "cert-manager"], FAKE_TMP=str(scratch))
+    result = run(tmp_path, repo, ["tests/addon.sh", name], FAKE_TMP=str(scratch))
     assert result.returncode == 0, result.stderr
     log = calls(tmp_path)
     fetches = [c for c in log if c.startswith("curl ")]
-    assert len(fetches) == 1 and "cert-manager.yaml" in fetches[0], log
+    assert len(fetches) == 1 and asset in fetches[0], log
     applies = [c for c in log if c.startswith("kubectl apply -f ")]
     assert len(applies) == 1 and "https://" not in applies[0], log
-    waits = [c for c in log if c.startswith("kubectl wait") and "-n cert-manager" in c]
+    waits = [c for c in log if c.startswith("kubectl wait") and f"-n {namespace}" in c]
     assert waits, log
     assert log.index(applies[0]) < log.index(waits[0])
     assert list(scratch.iterdir()) == []

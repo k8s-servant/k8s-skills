@@ -20,7 +20,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # setup
 .venv/bin/python -m tools.skillcheck manifests --check   # fail if manifests are stale
 .venv/bin/python -m tools.skillcheck package --out dist  # release zips
 tests/cluster.sh up | down                               # throwaway kind cluster
-tests/addon.sh <name>                                    # install a pinned add-on (cert-manager)
+tests/addon.sh <name>                                    # install a pinned add-on (names: see the script)
 tests/run.sh <skill> <case>                              # run a scenario
 tests/run.sh --cleanup <skill> <case>                    # undo a scenario
 npx --yes markdownlint-cli2@0.24.0 "**/*.md" "#.venv" "#node_modules"   # markdown lint

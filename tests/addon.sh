@@ -5,7 +5,7 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager
+# Names: cert-manager, flux
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager" >&2
+  echo "usage: tests/addon.sh cert-manager|flux" >&2
   exit 64
 }
 
@@ -25,6 +25,11 @@ case "$1" in
     url="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
     sum="$CERT_MANAGER_MANIFEST_SHA256"
     namespace="cert-manager"
+    ;;
+  flux)
+    url="https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/install.yaml"
+    sum="$FLUX_MANIFEST_SHA256"
+    namespace="flux-system"
     ;;
   *) usage ;;
 esac
