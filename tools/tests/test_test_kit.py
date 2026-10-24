@@ -50,6 +50,9 @@ file="$dir/tmp.$$.$RANDOM"
 : > "$file"
 echo "$file"
 """
+FAKE_HELM = """#!/usr/bin/env bash
+echo "helm $*" >> "$FAKE_LOG"
+"""
 FAKE_KIND = """#!/usr/bin/env bash
 echo "kind $*" >> "$FAKE_LOG"
 if [[ -n "${FAKE_KIND_FAIL:-}" ]]; then exit 1; fi
@@ -71,6 +74,7 @@ def make_repo(tmp_path: Path) -> Path:
         ("kind", FAKE_KIND),
         ("curl", FAKE_CURL),
         ("mktemp", FAKE_MKTEMP),
+        ("helm", FAKE_HELM),
     ):
         path = bin_dir / name
         path.write_text(text, encoding="utf-8")
@@ -211,6 +215,7 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     # Prometheus' and Alertmanager's HTTP APIs, through the API server's service proxy,
     # on their two governing Services only.
     assert "- services/proxy" in yaml_text
+    assert "apiGroups: [cilium.io]" in yaml_text
     # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
     for name in ("prometheus-operated", "prometheus-operated:web", "alertmanager-operated:web"):
         assert f'"{name}"' in yaml_text, name
@@ -496,3 +501,30 @@ def test_addon_rejects_unknown_names(tmp_path):
         result = run(tmp_path, repo, ["tests/addon.sh", *args])
         assert result.returncode == 64, (args, result.stderr)
         assert "usage:" in result.stderr
+
+
+def test_cluster_up_cilium_installs_a_verified_chart_and_waits(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_version(repo, "CILIUM_CHART_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "cilium"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    fetches = [c for c in log if c.startswith("curl ")]
+    assert len(fetches) == 1 and "helm.cilium.io/cilium-" in fetches[0], log
+    assert "disableDefaultCNI: true" in "\n".join(log)
+    installs = [c for c in log if c.startswith("helm install cilium ")]
+    assert len(installs) == 1 and "https://" not in installs[0], log
+    for setting in ("ipam.mode=kubernetes", "operator.replicas=1", "image.pullPolicy=IfNotPresent"):
+        assert setting in installs[0], setting
+    assert "-n kube-system" in installs[0]
+    waits = [c for c in log if "rollout status daemonset/cilium -n kube-system" in c]
+    assert waits and log.index(installs[0]) < log.index(waits[0]), log
+
+
+def test_cluster_up_cilium_refuses_a_chart_with_the_wrong_checksum(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_version(repo, "CILIUM_CHART_SHA256", "0" * 64)
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "cilium"])
+    assert result.returncode != 0
+    assert "checksum" in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith(("kind create", "helm install"))]

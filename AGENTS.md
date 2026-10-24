@@ -19,7 +19,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # setup
 .venv/bin/python -m tools.skillcheck manifests --write   # regenerate install manifests
 .venv/bin/python -m tools.skillcheck manifests --check   # fail if manifests are stale
 .venv/bin/python -m tools.skillcheck package --out dist  # release zips
-tests/cluster.sh up | down                               # throwaway kind cluster
+tests/cluster.sh up [--cni calico|cilium] | down          # throwaway kind cluster
 tests/addon.sh <name>                                    # install a pinned add-on (names: see the script)
 tests/run.sh <skill> <case>                              # run a scenario
 tests/run.sh --cleanup <skill> <case>                    # undo a scenario

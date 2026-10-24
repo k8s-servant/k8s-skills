@@ -88,7 +88,10 @@ the command to the user to run. Each command must be on `commands` or `ask_first
   state you found.
 - `kubectl exec POD [-n ns] [-c container] -- PROGRAM [args]`, with one program from
   `ask_first.in_pod` (`nslookup`, `dig`, `getent`, `curl`, `wget`, `cat`, `ls`, `ps`,
-  `df`, `id`, `hostname`). No shell, and no `-i`/`-t`/`--stdin`/`--tty`.
+  `df`, `id`, `hostname`, and in the Cilium agent `cilium-dbg`, `cilium-health`,
+  `hubble`). No shell, and no `-i`/`-t`/`--stdin`/`--tty`. The Cilium tools also have
+  subcommands that change state; a skill uses only their reading subcommands, and
+  reviewers check that.
 - These count as Secret access, anywhere in the command or its `# Undo:` line: `env`,
   `printenv`, and anything with `environ`, `serviceaccount`, `token`, `password`,
   `credential`, `shadow`, `secrets-store` or a usual cloud metadata address
@@ -167,7 +170,7 @@ on its first line. The agent then gets `view` in that namespace only, and no nod
 and its kubeconfig context points at that namespace, as a developer's usually does.
 
 ```bash
-tests/cluster.sh up                       # create the cluster (--cni calico for NetworkPolicy cases, --workers N for node cases)
+tests/cluster.sh up                       # create the cluster (--cni calico for NetworkPolicy cases, --cni cilium for Cilium cases, --workers N for node cases)
 tests/addon.sh cert-manager               # install a pinned add-on (setup.sh scripts call this)
 tests/run.sh <skill> <case>               # set up and break the scenario, print the prompt and KUBECONFIG
 # Give the agent the prompt and the printed KUBECONFIG, then compare its answer with expected.md.
