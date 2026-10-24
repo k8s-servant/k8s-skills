@@ -153,7 +153,8 @@ The kit creates a throwaway [kind](https://kind.sigs.k8s.io) cluster named
 `k8s-skills-test`, with its own kubeconfig in `.kube/`. It never touches your other
 clusters or your current context. The agent under test gets a view-only kubeconfig, so it
 cannot change the cluster even by mistake: the built-in `view` role in every namespace,
-plus read access to nodes, which `view` leaves out. To test what an agent with access to
+plus read access to the cluster-scoped objects `view` leaves out (nodes, PersistentVolumes,
+StorageClasses and the CSI objects). To test what an agent with access to
 one namespace sees, put an `agent-scope` file in the case folder with the namespace name
 on its first line. The agent then gets `view` in that namespace only, and no node access,
 and its kubeconfig context points at that namespace, as a developer's usually does.

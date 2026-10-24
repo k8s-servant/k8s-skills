@@ -4,8 +4,9 @@
 # (which excludes Secrets). Prints the file's path.
 #
 # Usage: tests/agent-kubeconfig.sh [--namespace NS]
-# Without a flag the agent has `view` in every namespace plus read access to nodes,
-# which `view` leaves out. With --namespace it has `view` in NS only, like a developer
+# Without a flag the agent has `view` in every namespace plus read access to the
+# cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses and
+# the CSI objects. With --namespace it has `view` in NS only, like a developer
 # with access to one namespace.
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
@@ -38,7 +39,8 @@ YAML
 
 # Remove every binding an earlier run made, so this run's scope is exactly what it asks
 # for (a namespace-only agent must not keep cluster-wide access from a previous case).
-kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader --ignore-not-found >&2
+kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader \
+  skill-agent-cluster-reader --ignore-not-found >&2
 kubectl delete rolebindings --all-namespaces --field-selector metadata.name=skill-agent-view --ignore-not-found >&2
 
 if [[ -n "$namespace" ]]; then
@@ -75,21 +77,29 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: skill-agent-node-reader
+  name: skill-agent-cluster-reader
 rules:
   - apiGroups: [""]
     resources:
       - nodes
+      - persistentvolumes
+    verbs: [get, list, watch]
+  - apiGroups: [storage.k8s.io]
+    resources:
+      - storageclasses
+      - csidrivers
+      - csinodes
+      - volumeattachments
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: skill-agent-node-reader
+  name: skill-agent-cluster-reader
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: skill-agent-node-reader
+  name: skill-agent-cluster-reader
 subjects:
   - kind: ServiceAccount
     name: skill-agent
