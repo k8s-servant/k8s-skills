@@ -228,13 +228,16 @@ kubectl uncordon my-node
 # Undo: kubectl cordon my-node
 ```
 
-Roll back a Deployment whose pods started failing right after a rollout:
+Roll back a Deployment whose pods started failing right after a rollout. First note the
+current revision with `kubectl rollout history deployment/my-app -n my-namespace`; the
+undo below returns to it by number (here revision 3), so it holds even if another rollout
+happens in between:
 
 > Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl rollout undo deployment/my-app -n my-namespace
-# Undo: kubectl rollout undo deployment/my-app -n my-namespace
+# Undo: kubectl rollout undo deployment/my-app -n my-namespace --to-revision=3
 ```
 
 Force-delete a pod stuck `Terminating` on a node that is gone for good. Never run this
