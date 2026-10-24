@@ -2,7 +2,7 @@
 
 ## Prompt
 
-After we added a Cilium policy for my-web in my-namespace, my-web cannot reach my-app any more, although the policy allows exactly that. Find out why.
+my-web in my-namespace cannot reach my-app since this morning. The cluster runs Cilium. Find out why.
 
 ## Cause
 
