@@ -17,7 +17,10 @@ usage() {
 }
 
 up() {
-  local cni="" workers=0 config="" i
+  local cni="" workers=0 i
+  # Temp files, removed on every exit path (globals, so the EXIT trap still sees them).
+  config="" manifest=""
+  trap 'rm -f "$config" "$manifest"' EXIT
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --cni)
@@ -33,6 +36,11 @@ up() {
       *) usage ;;
     esac
   done
+
+  if [[ "$cni" == "calico" ]]; then
+    manifest="$(mktemp)"
+    fetch_calico "$manifest"
+  fi
 
   mkdir -p "$REPO_ROOT/.kube"
   local args=(create cluster --name "$CLUSTER_NAME" --image "$KIND_NODE_IMAGE" --kubeconfig "$KUBECONFIG")
@@ -55,12 +63,25 @@ up() {
   fi
 
   kind "${args[@]}"
-  [[ -z "$config" ]] || rm -f "$config"
 
   if [[ "$cni" == "calico" ]]; then
-    kubectl apply -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
+    kubectl apply -f "$manifest"
+    # Nodes turn Ready before policies are enforced; wait for the calico-node pods.
+    kubectl rollout status daemonset/calico-node -n kube-system --timeout=300s
   fi
   kubectl wait --for=condition=Ready nodes --all --timeout=300s
+}
+
+# Download the pinned Calico manifest and check its checksum, before any cluster exists.
+fetch_calico() {
+  local sum
+  curl -fsSL -o "$1" \
+    "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
+  sum="$(shasum -a 256 "$1" | cut -d ' ' -f 1)"
+  if [[ "$sum" != "$CALICO_MANIFEST_SHA256" ]]; then
+    echo "Calico manifest checksum mismatch: got $sum, want $CALICO_MANIFEST_SHA256" >&2
+    exit 1
+  fi
 }
 
 down() {

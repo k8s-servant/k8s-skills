@@ -5,6 +5,7 @@ PATH, inside a throwaway copy of the repo layout, so the tests never touch a rea
 cluster or the real ``.kube/`` folder.
 """
 
+import hashlib
 import os
 import shutil
 import subprocess
@@ -22,8 +23,22 @@ case "$1 $2" in
   "create token") echo "fake-token" ;;
 esac
 """
+FAKE_CURL = """#!/usr/bin/env bash
+echo "curl $*" >> "$FAKE_LOG"
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "-o" ]]; then printf 'fake calico manifest\n' > "$2"; fi
+  shift
+done
+"""
+FAKE_MKTEMP = """#!/usr/bin/env bash
+dir="${FAKE_TMP:-$(dirname "$FAKE_LOG")}"
+file="$dir/tmp.$$.$RANDOM"
+: > "$file"
+echo "$file"
+"""
 FAKE_KIND = """#!/usr/bin/env bash
 echo "kind $*" >> "$FAKE_LOG"
+if [[ -n "${FAKE_KIND_FAIL:-}" ]]; then exit 1; fi
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "--config" ]]; then cat "$2" >> "$FAKE_LOG"; fi
   shift
@@ -37,7 +52,12 @@ def make_repo(tmp_path: Path) -> Path:
     shutil.copytree(REAL_TESTS, repo / "tests", ignore=shutil.ignore_patterns("k8s-*"))
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    for name, text in (("kubectl", FAKE_KUBECTL), ("kind", FAKE_KIND)):
+    for name, text in (
+        ("kubectl", FAKE_KUBECTL),
+        ("kind", FAKE_KIND),
+        ("curl", FAKE_CURL),
+        ("mktemp", FAKE_MKTEMP),
+    ):
         path = bin_dir / name
         path.write_text(text, encoding="utf-8")
         path.chmod(0o755)
@@ -212,6 +232,7 @@ def test_cluster_up_with_workers(tmp_path):
 
 def test_cluster_up_with_cni_and_workers(tmp_path):
     repo = make_repo(tmp_path)
+    pin_calico_checksum(repo, fake_manifest_checksum())
     result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "calico", "--workers", "2"])
     assert result.returncode == 0, result.stderr
     log = "\n".join(calls(tmp_path))
@@ -282,3 +303,56 @@ def test_agent_kubeconfig_namespace_scope_sets_context_namespace(tmp_path):
     )
     run(tmp_path, repo, ["tests/agent-kubeconfig.sh"])
     assert sum("--namespace=" in c for c in calls(tmp_path)) == 1
+
+
+def pin_calico_checksum(repo: Path, checksum: str) -> None:
+    versions = repo / "tests" / "versions.env"
+    lines = [
+        line
+        for line in versions.read_text().splitlines()
+        if not line.startswith("CALICO_MANIFEST_SHA256=")
+    ]
+    versions.write_text("\n".join([*lines, f"CALICO_MANIFEST_SHA256={checksum}"]) + "\n")
+
+
+def fake_manifest_checksum() -> str:
+    return hashlib.sha256(b"fake calico manifest\n").hexdigest()
+
+
+def test_cluster_up_calico_applies_a_verified_manifest_and_waits(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_calico_checksum(repo, fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "calico"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    applies = [c for c in log if c.startswith("kubectl apply -f ")]
+    assert len(applies) == 1 and "https://" not in applies[0], log
+    waits = [c for c in log if "rollout status daemonset/calico-node -n kube-system" in c]
+    assert waits, log
+    assert log.index(applies[0]) < log.index(waits[0])
+
+
+def test_cluster_up_calico_refuses_a_manifest_with_the_wrong_checksum(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_calico_checksum(repo, "0" * 64)
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "calico"])
+    assert result.returncode != 0
+    assert "checksum" in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith("kubectl apply")]
+    assert not [c for c in calls(tmp_path) if c.startswith("kind create")]
+
+
+def test_cluster_up_calico_removes_the_manifest_when_kind_fails(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_calico_checksum(repo, fake_manifest_checksum())
+    scratch = tmp_path / "tmp"
+    scratch.mkdir()
+    result = run(
+        tmp_path,
+        repo,
+        ["tests/cluster.sh", "up", "--cni", "calico"],
+        FAKE_TMP=str(scratch),
+        FAKE_KIND_FAIL="1",
+    )
+    assert result.returncode != 0
+    assert list(scratch.iterdir()) == []
