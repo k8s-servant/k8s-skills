@@ -48,44 +48,42 @@ Planned: ecosystem and cloud skills.
 
 ## Install
 
-The examples use `k8s-workload-troubleshooting`. Every path can install one skill or all
-of them.
+Install with the [`skills` CLI](https://github.com/vercel-labs/skills), or copy the
+folders yourself. Both work for one skill or all of them.
 
-### Installing one skill instead of all
+```bash
+# All skills, for Claude Code (use -a codex, -a cursor, ... for other agents)
+npx skills add k8s-servant/k8s-skills -a claude-code
 
-| Path | One skill | All skills |
-|---|---|---|
-| Vercel `skills` CLI | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting` | `npx skills add k8s-servant/k8s-skills` |
-| GitHub CLI (preview) | `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting` | `gh skill install k8s-servant/k8s-skills --all` |
-| Claude Code | `/plugin install k8s-workload-troubleshooting@k8s-skills` | `/plugin install k8s-skills@k8s-skills` |
-| Gemini CLI | `gemini skills install https://github.com/k8s-servant/k8s-skills.git --path skills/k8s-workload-troubleshooting` | `gemini extensions install https://github.com/k8s-servant/k8s-skills` |
-| Codex | `npx skills add k8s-servant/k8s-skills -s k8s-workload-troubleshooting -a codex` | `npx skills add k8s-servant/k8s-skills -a codex` |
-| Manual copy | copy `skills/k8s-workload-troubleshooting/` | copy `skills/*` |
-| claude.ai / API (not yet verified\*) | upload `k8s-workload-troubleshooting.zip` from a release | upload each zip |
+# One skill
+npx skills add k8s-servant/k8s-skills -s k8s-triage -a claude-code
+```
 
-\* Not yet verified: these paths follow the tools' documentation but have not been
-confirmed by a real install. Please open an issue if one does not work for you. The
-other paths have been confirmed by a real install.
+The CLI sends anonymous usage telemetry; set `DISABLE_TELEMETRY=1` to turn it off.
 
-Notes per path:
+Or copy from a clone of this repository:
 
-- **Claude Code:** add the marketplace first with `/plugin marketplace add k8s-servant/k8s-skills`.
-- **Vercel `skills` CLI:** it sends anonymous usage telemetry. Set `DISABLE_TELEMETRY=1`
-  to turn it off.
-- **GitHub CLI:** `gh skill` is a preview feature. Pin a release with
-  `gh skill install k8s-servant/k8s-skills k8s-workload-troubleshooting@vX.Y.Z`. Without
-  a skill name or `--all`, it asks which skills to install, or only lists them when it
-  is not run in a terminal.
-- **Codex:** there is no Codex plugin marketplace file in this repository yet, so Codex
-  uses the Vercel CLI with `-a codex`.
-- **Gemini CLI:** `gemini skills install` installs for your user by default
-  (`--scope workspace` for the current project). The extension installs every skill.
-- **Manual copy:** put the folder into `.agents/skills`, `.claude/skills`,
-  `.github/skills` or `.cursor/skills` (in a project, or in your home directory for all
-  projects). `.cursor/skills` is not yet verified\*. Gemini CLI reads project skills
-  only in a folder you have trusted.
-- **claude.ai and the API:** each GitHub release has one zip per skill. Upload it in the
-  skills settings, or through the API.
+```bash
+git clone https://github.com/k8s-servant/k8s-skills.git
+mkdir -p .claude/skills && cp -R k8s-skills/skills/* .claude/skills/
+```
+
+Copy into `~/.claude/skills` instead to have the skills in every project. Other agents
+read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot) or `.github/skills` (GitHub
+Copilot).
+
+### Other ways
+
+- **Claude Code plugin:** `/plugin marketplace add k8s-servant/k8s-skills`, then
+  `/plugin install k8s-skills@k8s-skills` for all skills or
+  `/plugin install k8s-triage@k8s-skills` for one.
+- **GitHub CLI** (preview): `gh skill install k8s-servant/k8s-skills --all`, or one skill
+  by name, pinned with `@vX.Y.Z`.
+- **Gemini CLI:** `gemini extensions install https://github.com/k8s-servant/k8s-skills`
+  for all skills. Gemini reads project skills only in a folder you have trusted.
+- **claude.ai and the API:** each [release](https://github.com/k8s-servant/k8s-skills/releases)
+  has one zip per skill to upload in the skills settings or through the API (not yet
+  confirmed by a real upload).
 
 Skills that hand over to each other still work alone: a hand-off to a skill that is not
 installed tells the agent to continue with the steps it has and name the skill that would
