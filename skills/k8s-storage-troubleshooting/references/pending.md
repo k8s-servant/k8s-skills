@@ -56,8 +56,9 @@ owner decides and runs it:
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
+kubectl get pv my-pv -o jsonpath='{.spec.claimRef}{"\n"}'
 kubectl patch pv my-pv --type=json -p '[{"op": "remove", "path": "/spec/claimRef"}]'
-# Undo: none in place; the PV becomes Available and the next matching claim can bind it
+# Undo: put the claimRef printed by the first line back with kubectl patch pv my-pv --type=merge -p '{"spec": {"claimRef": ...}}', which works only until another claim binds the PV; after that its data is exposed to that claim
 ```
 
 The documented route for a retained volume is to delete the PV, clean or keep the data

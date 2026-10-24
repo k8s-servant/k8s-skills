@@ -166,9 +166,11 @@ only for a claim that never bound (no data):
 ```bash
 kubectl get pvc my-data -n my-namespace -o yaml > my-data-pvc.yaml
 kubectl delete pvc my-data -n my-namespace
-# Edit my-data-pvc.yaml: set spec.storageClassName to an existing class, remove status and metadata.uid, then:
-kubectl apply -f my-data-pvc.yaml
-# Undo: kubectl delete pvc my-data -n my-namespace, then apply the saved my-data-pvc.yaml unchanged
+# Copy my-data-pvc.yaml to my-data-new.yaml and edit the copy: set spec.storageClassName to an
+# existing class; remove status, metadata.uid, metadata.resourceVersion,
+# metadata.creationTimestamp and the volume.kubernetes.io/* annotations. Then:
+kubectl apply -f my-data-new.yaml
+# Undo: kubectl delete pvc my-data -n my-namespace, then apply my-data-pvc.yaml with the same metadata and status fields removed
 ```
 
 Better: fix `storageClassName` in the app's source and let the next deploy create the
