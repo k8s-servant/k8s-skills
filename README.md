@@ -4,8 +4,8 @@ anything.
 k8s-skills is a set of [Agent Skills](https://agentskills.io) that teach an AI agent to
 investigate Kubernetes problems the way an experienced SRE does: what to look at, in
 which order, what each finding means, and what to propose. The skills work in Claude
-Code, Codex, Gemini CLI, GitHub Copilot, Cursor and any other agent that reads
-`SKILL.md` files.
+Code, Codex, Gemini CLI, GitHub Copilot and any other agent that reads `SKILL.md`
+files and can run `kubectl`.
 
 ## Read first, ask before changing
 
@@ -52,7 +52,7 @@ Install with the [`skills` CLI](https://github.com/vercel-labs/skills), or copy 
 folders yourself. Both work for one skill or all of them.
 
 ```bash
-# All skills, for Claude Code (use -a codex, -a cursor, ... for other agents)
+# All skills, for Claude Code (use -a codex, ... for other agents)
 npx skills add k8s-servant/k8s-skills -a claude-code
 
 # One skill
@@ -81,9 +81,6 @@ Copilot).
   by name, pinned with `@vX.Y.Z`.
 - **Gemini CLI:** `gemini extensions install https://github.com/k8s-servant/k8s-skills`
   for all skills. Gemini reads project skills only in a folder you have trusted.
-- **claude.ai and the API:** each [release](https://github.com/k8s-servant/k8s-skills/releases)
-  has one zip per skill to upload in the skills settings or through the API (not yet
-  confirmed by a real upload).
 
 Skills that hand over to each other still work alone: a hand-off to a skill that is not
 installed tells the agent to continue with the steps it has and name the skill that would
