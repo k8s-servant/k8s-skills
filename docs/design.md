@@ -81,14 +81,49 @@ cluster is a gap, and safe to give to any agent.
 | `k8s-network-troubleshooting` | Services without endpoints, wrong selectors or ports, DNS resolution, NetworkPolicy blocking traffic, Ingress or Gateway not routing. |
 | `k8s-storage-troubleshooting` | PVCs stuck in Pending, StorageClass and provisioner problems, attach and mount errors, volumes filling up. |
 
-### Later batches
+### Ecosystem skills
 
-- Ecosystem, one skill per tool: `k8s-flux-troubleshooting`, `k8s-argocd-troubleshooting`,
-  `k8s-cert-manager-troubleshooting`, Prometheus alerts and queries, Gateway API and common
-  ingress controllers, Kyverno, External Secrets ...
-  Order decided after the first batch, by demand.
-- Clouds: `k8s-aks-troubleshooting`, `k8s-eks-troubleshooting`, `k8s-gke-troubleshooting`
-  (node pools, cloud load balancers, identity, managed add-ons).
+One skill per tool, so each description names its tool and the agent picks the right one.
+Order: the most used tools first, and those easy to run on kind before the heavy ones.
+
+| Batch | Skills |
+|---|---|
+| 1. Delivery | `k8s-cert-manager-troubleshooting`, `k8s-flux-troubleshooting`, `k8s-argocd-troubleshooting`, `k8s-helm-troubleshooting` |
+| 2. Policy and secrets | `k8s-kyverno-troubleshooting`, `k8s-gatekeeper-troubleshooting`, `k8s-external-secrets-troubleshooting` |
+| 3. Observability | `k8s-prometheus-troubleshooting` (Operator, Alertmanager, rules), `k8s-grafana-troubleshooting` |
+| 4. Networking | `k8s-cilium-troubleshooting`, `k8s-istio-troubleshooting`, `k8s-envoy-gateway-troubleshooting` |
+| Later candidates | KEDA, Velero, Crossplane, Linkerd, Traefik, CloudNativePG |
+
+Rules for every ecosystem skill (decided with the maintainer, after #42):
+
+- **kubectl first, the tool's CLI optional.** Every investigation works with kubectl
+  alone: the tool's custom resources, their status conditions, events and controller
+  logs. Read-only commands of the tool's own CLI (`flux get`, `cmctl status`,
+  `cilium status`, `istioctl analyze`) are an extra "if installed" step, added to
+  `allowlist.yaml` in the skill's PR. Argo CD's CLI needs its own login, so it stays
+  optional there.
+- **Helm reads Secrets.** Helm keeps each release, values included, in a Secret, so
+  `helm status`, `helm history` and `helm get` read Secrets. The Helm skill investigates
+  with kubectl (the `meta.helm.sh/*` annotations, the rendered objects, events) and gives
+  `helm` commands to the user to run, as proposed fixes with a literal
+  `# Undo: nothing to undo, it only reads` line. They are in the never-run tier only
+  because they read Secrets, not because they change anything, and the skill says so.
+- **Secrets stay unread** in External Secrets too: the skill reads `ExternalSecret`,
+  `SecretStore` and `ClusterSecretStore` status, never the target Secret.
+- **No separate Envoy skill.** Envoy is the proxy inside Istio and Envoy Gateway; reading
+  its config belongs to those two skills. The Gateway API itself stays in
+  `k8s-network-troubleshooting`.
+- **Scenarios** install the tool on kind from a pinned version in `tests/versions.env`,
+  with the manifest checked against a pinned checksum, as for Calico. Tools that
+  replace the CNI (Cilium) get their own `tests/cluster.sh up --cni cilium`, since a
+  CNI is chosen when the cluster is created; the others install on the default kind
+  cluster.
+
+### Clouds
+
+`k8s-aks-troubleshooting`, `k8s-eks-troubleshooting`, `k8s-gke-troubleshooting` (node
+pools, cloud load balancers, identity, managed add-ons), checked against provider docs,
+and on a real cluster when someone has an account.
 
 ### Skill conventions
 
