@@ -20,7 +20,7 @@ says which source failed (`source 1 of 2`).
 ## Read the results
 
 The message starts with `Failed to load target state: failed to generate manifest for
-source 1 of 1: rpc error: code = Unknown desc = ` and ends with the cause:
+source 1 of 1: rpc error: code = Unknown desc =` and ends with the cause:
 
 | End of the message | Meaning |
 |---|---|
