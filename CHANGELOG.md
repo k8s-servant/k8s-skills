@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/k8s-servant/k8s-skills/compare/v0.3.0...v0.3.1) (2026-10-24)
+
+
+### Documentation
+
+* lead the install guide with the skills CLI and a plain copy ([#38](https://github.com/k8s-servant/k8s-skills/issues/38)) ([c52e64d](https://github.com/k8s-servant/k8s-skills/commit/c52e64d8242e568f2217ed3ba7fdb8d8be0b8956))
+* make copying to the home directory the main manual install ([#40](https://github.com/k8s-servant/k8s-skills/issues/40)) ([0993d02](https://github.com/k8s-servant/k8s-skills/commit/0993d0238940a851ba66dcb166b99fee64129449))
+
 ## [0.3.0](https://github.com/k8s-servant/k8s-skills/compare/v0.2.0...v0.3.0) (2026-10-24)
 
 
