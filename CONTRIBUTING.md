@@ -160,7 +160,8 @@ The agent under test gets a view-only kubeconfig, so it
 cannot change the cluster even by mistake: the built-in `view` role in every namespace,
 plus read access to the cluster-scoped objects `view` leaves out (nodes, PersistentVolumes,
 StorageClasses, the CSI objects, admission webhook configurations and cert-manager
-ClusterIssuers), and to Argo CD's objects, which no aggregated role covers. To test what an agent with access to
+ClusterIssuers), to Argo CD's and Gatekeeper's objects, which no aggregated role covers, and to
+ValidatingAdmissionPolicies. To test what an agent with access to
 one namespace sees, put an `agent-scope` file in the case folder with the namespace name
 on its first line. The agent then gets `view` in that namespace only, and no node access,
 and its kubeconfig context points at that namespace, as a developer's usually does.

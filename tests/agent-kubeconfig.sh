@@ -7,7 +7,8 @@
 # Without a flag the agent has `view` in every namespace plus read access to the
 # cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
-# plus Argo CD's objects, which no aggregated role covers.
+# plus Argo CD's and Gatekeeper's objects, which no aggregated role covers, and
+# ValidatingAdmissionPolicies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -109,6 +110,21 @@ rules:
       - applications
       - applicationsets
       - appprojects
+    verbs: [get, list, watch]
+  # Neither does Gatekeeper; its constraint kinds are generated, so take the whole group.
+  - apiGroups: [templates.gatekeeper.sh]
+    resources:
+      - constrainttemplates
+    verbs: [get, list, watch]
+  - apiGroups: [constraints.gatekeeper.sh, config.gatekeeper.sh, mutations.gatekeeper.sh,
+                syncset.gatekeeper.sh, status.gatekeeper.sh, expansion.gatekeeper.sh]
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
+  - apiGroups: [admissionregistration.k8s.io]
+    resources:
+      - validatingadmissionpolicies
+      - validatingadmissionpolicybindings
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
