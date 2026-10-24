@@ -2,7 +2,7 @@
 
 ## Prompt
 
-We moved the backend of my-app.example.com to the Service my-api in my-other-namespace, and since then our Envoy Gateway my-gateway in my-namespace returns HTTP 500 for it. Find out why.
+Since last week's change to my-app, our Envoy Gateway my-gateway in my-namespace returns HTTP 500 for my-app.example.com. Find out why.
 
 ## Cause
 

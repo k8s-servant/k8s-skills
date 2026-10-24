@@ -14,7 +14,7 @@ kubectl get httproute my-app -n my-namespace -o jsonpath='{range .status.parents
 kubectl get gateway my-gateway -n my-namespace -o jsonpath='{range .spec.listeners[*]}{.name}{" "}{.hostname}{" "}{.allowedRoutes}{"\n"}{end}'
 kubectl get services -A | grep my-app
 kubectl get referencegrants -A -o yaml
-kubectl logs -n my-namespace deployment/my-web --tail=10
+kubectl logs -n my-namespace deployment/my-client --tail=10
 ```
 
 ## Read the results

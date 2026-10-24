@@ -149,6 +149,16 @@ kubectl patch httproute my-app -n my-namespace --type=json -p '[{"op": "replace"
 # Undo: kubectl patch httproute my-app -n my-namespace --type=json -p '[{"op": "replace", "path": "/spec/rules/0/backendRefs/0/name", "value": "my-app-svc"}]'
 ```
 
+Give a route the hostname its listener accepts (use the index of the hostname you
+found):
+
+> Ask first: the agent runs this only after the user approves it.
+
+```bash
+kubectl patch httproute my-app -n my-namespace --type=json -p '[{"op": "replace", "path": "/spec/hostnames/0", "value": "my-app.example.com"}]'
+# Undo: kubectl patch httproute my-app -n my-namespace --type=json -p '[{"op": "replace", "path": "/spec/hostnames/0", "value": "app.example.com"}]'
+```
+
 ## Sources
 
 Checked against the Envoy Gateway 1.9 documentation and source (v1.9.2) and Gateway API
@@ -159,6 +169,9 @@ Checked against the Envoy Gateway 1.9 documentation and source (v1.9.2) and Gate
 - [Customize EnvoyProxy](https://gateway.envoyproxy.io/docs/tasks/operations/customize-envoyproxy/):
   the Service type and other proxy settings.
 - [egctl](https://gateway.envoyproxy.io/docs/tasks/operations/egctl/).
+- The v1.9.2 `install.yaml` release asset: it carries the Gateway API CRDs with the
+  annotations `gateway.networking.k8s.io/bundle-version: v1.6.1` and
+  `gateway.networking.k8s.io/channel: experimental`.
 - Gateway API [HTTPRoute](https://gateway-api.sigs.k8s.io/reference/api-types/httproute/),
   [ReferenceGrant](https://gateway-api.sigs.k8s.io/reference/api-types/referencegrant/) and the
   [API specification](https://gateway-api.sigs.k8s.io/reference/api-spec/1.6/spec/):

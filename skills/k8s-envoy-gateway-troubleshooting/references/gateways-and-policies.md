@@ -48,5 +48,5 @@ already flowing through the proxies:
 
 ```bash
 kubectl rollout restart deployment/envoy-gateway -n envoy-gateway-system
-# Undo: kubectl rollout undo deployment/envoy-gateway -n envoy-gateway-system
+# Undo: none needed; the restart only recreates the controller pod with the same template
 ```
