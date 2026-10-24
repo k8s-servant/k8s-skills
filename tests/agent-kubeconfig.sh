@@ -110,15 +110,20 @@ fi
 token="$(kubectl create token skill-agent --namespace kube-system --duration=4h)"
 
 # Start from the admin file for the server address and CA, then swap the admin
-# credentials for the token so the agent file holds no admin access.
+# credentials for the token. This happens in a temp file next to the agent file, which
+# is moved into place only once the admin user is gone, so .kube/agent never holds
+# admin access.
 umask 077
-kubectl config view --raw --minify --flatten > "$AGENT_KUBECONFIG"
-kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-credentials skill-agent --token="$token" >&2
-kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-context --current --user=skill-agent >&2
-kubectl config --kubeconfig "$AGENT_KUBECONFIG" delete-user "$TEST_CONTEXT" >&2
+draft="$(mktemp "$AGENT_KUBECONFIG.XXXXXX")"
+trap 'rm -f "$draft"' EXIT
+kubectl config view --raw --minify --flatten > "$draft"
+kubectl config --kubeconfig "$draft" set-credentials skill-agent --token="$token" >&2
+kubectl config --kubeconfig "$draft" set-context --current --user=skill-agent >&2
+kubectl config --kubeconfig "$draft" delete-user "$TEST_CONTEXT" >&2
 if [[ -n "$namespace" ]]; then
   # A developer's kubeconfig usually points at their namespace; so does this one.
-  kubectl config --kubeconfig "$AGENT_KUBECONFIG" set-context --current --namespace="$namespace" >&2
+  kubectl config --kubeconfig "$draft" set-context --current --namespace="$namespace" >&2
 fi
+mv "$draft" "$AGENT_KUBECONFIG"
 
 echo "$AGENT_KUBECONFIG"

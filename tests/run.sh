@@ -45,5 +45,5 @@ fi
 agent_kubeconfig="$("$REPO_ROOT/tests/agent-kubeconfig.sh" ${scope[@]+"${scope[@]}"})"
 
 # The prompt is the text under "## Prompt", up to the next H2.
-awk '/^## /{p = ($0 == "## Prompt"); next} p' "$case_dir/expected.md"
+awk '/^## /{p = ($0 ~ /^## Prompt[ \t]*$/); next} p' "$case_dir/expected.md"
 echo "KUBECONFIG=$agent_kubeconfig"
