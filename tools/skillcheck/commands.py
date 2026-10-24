@@ -11,8 +11,9 @@ Markdown is parsed with markdown-it-py (CommonMark), so what counts as a code bl
 decided by a real renderer's rules, not ours. Proposed fixes (commands the agent must not
 run, handed to a human) are exempt from everything except the Secret ban and the `# Undo:`
 line. Ask-first blocks (commands the agent runs only after the user approves them) are
-checked against the `ask_first` allow-list, and a change in one needs an `# Undo:` line. In prose (inline code and paragraph
-lines) text counts as a command only when a program name is followed by a kubectl
+checked against the `ask_first` allow-list: the verb, and for exec the one program, but
+not the program's arguments, which the user sees before approving. A change in one needs
+an `# Undo:` line. In prose (inline code and paragraph lines) text counts as a command only when a program name is followed by a kubectl
 command name or a flag, so mentions such as "the `kubectl` binary" are not findings.
 
 Known limits (this is a guardrail against honest mistakes, not a sandbox; human review
@@ -22,13 +23,10 @@ glob patterns such as `secre[t]s`; yq `load()`; `-v=9` logging; a prose command 
 second word is not a kubectl command name (fenced blocks are still checked in full).
 """
 
-import ipaddress
 import re
 import shlex
-import socket
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import yaml
 from markdown_it import MarkdownIt
@@ -41,22 +39,6 @@ ASK_MARKER = "> Ask first: the agent runs this only after the user approves it."
 ASK_MESSAGE = "not on the ask-first allow-list: "
 ASK_UNDO_MESSAGE = "ask-first change needs an '# Undo:' line"
 ASK_LANG_MESSAGE = "ask-first block needs a shell language"
-# kubectl flags of the ask-first changes that take a value, so the value is not taken
-# for the target object.
-ASK_VALUE_FLAGS = {
-    "-n",
-    "--namespace",
-    "-p",
-    "--patch",
-    "--type",
-    "--replicas",
-    "-c",
-    "--container",
-    "-o",
-    "--output",
-    "--current-replicas",
-    "--resource-version",
-}
 UNDO_PREFIX = "# Undo:"
 
 LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
@@ -608,7 +590,7 @@ def _ask_subcommand(words: list[str], allowlist: dict) -> tuple[str, int] | None
 
 
 def _check_exec(args: list[str], ask_first: dict) -> bool:
-    """True if `kubectl exec` args run one allow-listed read-only program in a pod."""
+    """True if `kubectl exec` args run one allow-listed program in one pod, with no shell or TTY."""
     if "--" not in args:
         return False
     split = args.index("--")
@@ -624,84 +606,7 @@ def _check_exec(args: list[str], ask_first: dict) -> bool:
         elif "=" not in token:
             i += 1
         i += 1
-    if pods != 1 or not program or program[0] not in ask_first["in_pod"]:
-        return False
-    allowed = ask_first["in_pod_flags"].get(program[0])
-    if allowed is not None and any(_is_flag(a) and a not in allowed for a in program[1:]):
-        return False
-    exact = ask_first["in_pod_args"].get(program[0])
-    if exact is not None and any(a not in exact for a in program[1:]):
-        return False
-    for arg in program[1:]:
-        if "://" in arg and not arg.lower().startswith(tuple(ask_first["url_schemes"])):
-            return False
-        fetches = program[0] in ("curl", "wget") and not _is_flag(arg)
-        if fetches and _metadata_host(arg, ask_first):
-            return False
-    # wget writes a file unless told to print to stdout.
-    return program[0] != "wget" or bool(set(program[1:]) & set(ask_first["wget_needs_one_of"]))
-
-
-def _metadata_host(arg: str, ask_first: dict) -> bool:
-    """True if a curl or wget argument points at a cloud metadata endpoint.
-
-    The host is parsed and, when it is an address, normalised, so decimal, hex, octal,
-    shorthand and IPv4-mapped IPv6 forms of the same address are all recognised.
-    """
-    try:
-        host = urlsplit(arg if "://" in arg else f"http://{arg}").hostname or ""
-    except ValueError:
-        return True
-    host = host.rstrip(".").lower()
-    if host in ask_first["metadata_hosts"]:
-        return True
-    try:
-        address = ipaddress.ip_address(host)
-    except ValueError:
-        try:
-            address = ipaddress.ip_address(socket.inet_aton(host))
-        except OSError:
-            return False
-    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
-        address = address.ipv4_mapped
-    return address.is_link_local or any(
-        address in ipaddress.ip_network(net) for net in ask_first["metadata_networks"]
-    )
-
-
-def _target(args: list[str]) -> str:
-    """The first argument that is neither a flag nor a flag's value: the object changed."""
-    i = 0
-    while i < len(args):
-        token = args[i]
-        if token in ASK_VALUE_FLAGS:
-            i += 2
-            continue
-        if not _is_flag(token):
-            return token
-        i += 1
-    return ""
-
-
-def _check_change(subcommand: str, args: list[str], ask_first: dict) -> bool:
-    """True if an ask-first change stays narrow: one named object, a visible change."""
-    for token in args:
-        if token == "--":
-            break
-        name = token.split("=", 1)[0]
-        if name in ask_first["wide_change_flags"] or (
-            not token.startswith("--") and token[:2] in ask_first["wide_change_flags"]
-        ):
-            return False
-    if subcommand in ("patch", "scale"):
-        kind = _target(args).split("/", 1)[0].split(".", 1)[0].lower()
-        if kind not in ask_first["workload_kinds"]:
-            return False
-    if subcommand == "taint":
-        specs = [t for t in args if ":" in t and not _is_flag(t) and not t.endswith("-")]
-        if any(t.rsplit(":", 1)[1] not in ask_first["taint_effects"] for t in specs):
-            return False
-    return True
+    return pods == 1 and bool(program) and program[0] in ask_first["in_pod"]
 
 
 def _check_ask_command(command: str, allowlist: dict) -> list[str]:
@@ -726,8 +631,6 @@ def _check_ask_command(command: str, allowlist: dict) -> list[str]:
         if not _check_exec(args, allowlist["ask_first"]):
             return rejected
         problems: list[str] = []
-    elif not _check_change(subcommand, args, allowlist["ask_first"]):
-        return rejected
     else:
         problems = _check_flags(args, allowlist)
     for words in segments[1:]:

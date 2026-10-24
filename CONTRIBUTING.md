@@ -85,30 +85,24 @@ the command to the user to run. Each command must be on `commands` or `ask_first
 - Changes: `set image`, `set resources`, `rollout undo`, `rollout restart`,
   `rollout pause`, `rollout resume`, `scale`, `patch`, `cordon`, `uncordon`, `label`,
   `annotate`, `taint`. A block with a change needs an `# Undo:` line that restores the
-  state you found. A change must name one object you can see:
-  - no `--all`, `-A`/`--all-namespaces` or `-l`/`--selector`, and no `--patch-file`
-  - `patch` and `scale` only on workloads (Deployment, StatefulSet, DaemonSet,
-    ReplicaSet, CronJob)
-  - `taint` only adds `NoSchedule` or `PreferNoSchedule`, or removes a taint;
-    `NoExecute` evicts every pod on the node
+  state you found.
 - `kubectl exec POD [-n ns] [-c container] -- PROGRAM [args]`, with one program from
   `ask_first.in_pod` (`nslookup`, `dig`, `getent`, `curl`, `wget`, `cat`, `ls`, `ps`,
-  `df`, `id`, `hostname`). Not allowed:
-  - a shell, or `-i`/`-t`/`--stdin`/`--tty`
-  - `curl` flags that send or save data, and any URL scheme but `http://` and
-    `https://` (`gopher://` and `dict://` can write)
-  - `wget` without `-O-`
-  - `ps` arguments other than `-ef`, `-A` and `aux` (BSD `e` prints every process's
-    environment), and any argument to `hostname`
-- These count as Secret access, anywhere in the command or its `# Undo:` line:
-  - `env`, `printenv` and anything with `environ`
-  - the service account token, and anything with `token`, `password`, `credential`,
-    `shadow` or `secrets-store` in it
-  - cloud metadata endpoints, which hand out the node's cloud credentials: any
-    link-local address (`169.254.0.0/16`, `fe80::/10`), `fd00:ec2::/32`,
-    `100.100.100.200`, and the names `metadata`, `metadata.google.internal` and
-    `instance-data`. `curl` and `wget` hosts are parsed and normalised, so decimal, hex,
-    octal and IPv4-mapped forms of an address count too
+  `df`, `id`, `hostname`). No shell, and no `-i`/`-t`/`--stdin`/`--tty`.
+- These count as Secret access, anywhere in the command or its `# Undo:` line: `env`,
+  `printenv`, and anything with `environ`, `serviceaccount`, `token`, `password`,
+  `credential`, `shadow`, `secrets-store` or a usual cloud metadata address
+  (`169.254.169.254`, `metadata.google.internal`) in it.
+
+The checker does not check arguments, because the user sees each command before it runs.
+Reviewers and the user check them instead:
+
+- A change should name one object: no `--all`, `-A` or `-l` on a change, and no
+  `--patch-file` the user cannot see. `taint` should not add `NoExecute`, which evicts
+  every pod on the node.
+- An exec program should only read: no `curl` that sends or saves data, `wget` with
+  `-O-`, no `ps e` (it prints every process's environment), and no `hostname` argument
+  (it renames the host).
 
 `port-forward` and `debug` are not on the list: `port-forward` never returns, and `debug`
 adds a container that cannot be removed.
@@ -129,16 +123,16 @@ may use any shell, except access to Secrets.
 ### What the checker enforces, and its limits
 
 `python -m tools.skillcheck check` checks frontmatter, section order, size, names,
-the commands, ask-first blocks and fix blocks above, and that scenarios exist. It fails closed: whatever it
-cannot recognise as safe is a finding.
+the commands, ask-first blocks and fix blocks above, and that scenarios exist. It fails
+closed: whatever it cannot recognise as safe is a finding.
 
 It is a guardrail against honest authoring mistakes, not a sandbox. Known limits:
 
 - A fix block may use any shell, so `sh -c`, `eval` or nested quoting can hide a Secret name.
-- An ask-first `cat`, `ls`, `curl` or `wget` can still reach a mounted Secret file or an
-  internal endpoint whose path or name gives no sign of it, and a hostname can resolve
-  to a metadata address (the checker runs offline and does not resolve names). Reviewers
-  read each path and URL, and the user sees each command before approving it.
+- Ask-first arguments are not checked beyond the Secret words above, so an ask-first
+  `cat`, `ls`, `curl` or `wget` can reach a mounted Secret file or a metadata endpoint
+  whose path or address gives no sign of it. Reviewers read each path and URL, and the
+  user sees each command before approving it.
 - `$[` arithmetic and backslash tricks in prose.
 - Glob patterns such as `secre[t]s`.
 - yq `load()`.
