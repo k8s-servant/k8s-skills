@@ -53,9 +53,10 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-grafana-troubleshooting` | Grafana fails: provisioning errors that crash the pod, dashboards that do not load, datasources pointing at the wrong Service, database locks, login, grafana-operator selectors |
 | `k8s-cilium-troubleshooting` | Traffic fails on a Cilium cluster: CiliumNetworkPolicy drops and default deny, DNS blocked by egress policies, L7 403s, Hubble flows, agent, endpoint and IPAM problems |
 | `k8s-istio-troubleshooting` | Requests fail in an Istio mesh: Envoy access logs and response flags (UH, NR, filter_chain_not_found), AuthorizationPolicy 403s, subsets without pods, STRICT mTLS, injection, ambient |
+| `k8s-envoy-gateway-troubleshooting` | Envoy Gateway does not route: Gateways not Programmed, HTTPRoutes not Accepted (hostnames, allowedRoutes), unresolved backends and missing ReferenceGrants, 404/500/503, policies |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
-Planned: more ecosystem skills (Flux, Argo CD, Helm, Kyverno and others) and cloud skills.
+Planned: cloud skills (AKS, EKS, GKE) and more ecosystem skills.
 
 ## Install
 
