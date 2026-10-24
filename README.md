@@ -39,9 +39,10 @@ only if you want it to apply the changes you approve (see [Using RBAC Authorizat
 |---|---|
 | `k8s-triage` | Something is wrong in the cluster and it is not clear where: a ranked first look at nodes, pods, events and resource use, with a first fix and the skill that goes deeper |
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
+| `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
-Planned: `k8s-network-troubleshooting`, `k8s-storage-troubleshooting`, then ecosystem and cloud skills.
+Planned: `k8s-storage-troubleshooting`, then ecosystem and cloud skills.
 
 ## Install
 
