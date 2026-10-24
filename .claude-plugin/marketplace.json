@@ -85,6 +85,14 @@
       ]
     },
     {
+      "name": "k8s-prometheus-troubleshooting",
+      "source": "./",
+      "description": "Use when Prometheus on Kubernetes does not collect or alert as expected: a ServiceMonitor or PodMonitor whose targets never appear, targets that are down (\"server returned HTTP status 404 Not Found\", \"connection refused\", \"context deadline exceeded\"), a PrometheusRule that does not load or alerts that do not fire or reach Alertmanager, a Prometheus or Alertmanager custom resource that is not Available, \"InvalidConfiguration\" events from the Prometheus Operator, or Prometheus pods that are OOMKilled or out of disk. Covers the Prometheus Operator (kube-prometheus, kube-prometheus-stack). Investigates with kubectl get, describe, events, logs and Prometheus' HTTP API through the API server, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-prometheus-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-storage-troubleshooting",
       "source": "./",
       "description": "Use when Kubernetes storage blocks a workload: a PersistentVolumeClaim stuck in Pending, ProvisioningFailed events, a StorageClass that does not exist or a provisioner that cannot provide the access mode, pods Pending with \"unbound immediate PersistentVolumeClaims\", FailedAttachVolume, FailedMount or Multi-Attach errors, a PVC or PV stuck Terminating or Released, or a volume that is full or will not expand. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",

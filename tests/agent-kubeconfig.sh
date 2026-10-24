@@ -8,7 +8,8 @@
 # cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
-# ClusterExternalSecrets and ValidatingAdmissionPolicies.
+# ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator objects and
+# the prometheus-operated and alertmanager-operated service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -125,6 +126,19 @@ rules:
     resources:
       - clusterexternalsecrets
     verbs: [get, list, watch]
+  # The Prometheus Operator aggregates nothing to `view`.
+  - apiGroups: [monitoring.coreos.com]
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Prometheus' and Alertmanager's HTTP APIs (targets, rules, alerts) through the API
+  # server's service proxy, on their governing Services only.
+  - apiGroups: [""]
+    resources:
+      - services/proxy
+    # RBAC sees the proxied name with its port: "prometheus-operated:web".
+    resourceNames: ["prometheus-operated", "prometheus-operated:web",
+                    "alertmanager-operated", "alertmanager-operated:web"]
+    verbs: [get]
   # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
   - apiGroups: [admissionregistration.k8s.io]
     resources:
