@@ -5,7 +5,7 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager, flux, argocd, kyverno
+# Names: cert-manager, flux, argocd, kyverno, gatekeeper
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper" >&2
   exit 64
 }
 
@@ -40,6 +40,11 @@ case "$1" in
     url="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/install.yaml"
     sum="$KYVERNO_MANIFEST_SHA256"
     namespace="kyverno"
+    ;;
+  gatekeeper)
+    url="https://raw.githubusercontent.com/open-policy-agent/gatekeeper/${GATEKEEPER_VERSION}/deploy/gatekeeper.yaml"
+    sum="$GATEKEEPER_MANIFEST_SHA256"
+    namespace="gatekeeper-system"
     ;;
   *) usage ;;
 esac

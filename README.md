@@ -47,6 +47,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-argocd-troubleshooting` | Argo CD does not deploy: comparison errors (wrong path or revision), destinations not allowed by the project, no automated sync, failed syncs, drift, health |
 | `k8s-helm-troubleshooting` | Helm installs or upgrades fail or a release is stuck: `--wait` timeouts, ownership conflicts, `another operation is in progress`, hooks, immutable fields; helm commands are left to the user |
 | `k8s-kyverno-troubleshooting` | Kyverno denies or fails to police resources: Enforce denials, Audit-only policies and PolicyReports, ClusterPolicy and CEL ValidatingPolicy, mutate and generate rules, webhooks down |
+| `k8s-gatekeeper-troubleshooting` | OPA Gatekeeper denies or fails to police resources: constraint denials and actions, templates that do not compile, a webhook that fails open, exemptions, sync, mutation |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
 Planned: more ecosystem skills (Flux, Argo CD, Helm, Kyverno and others) and cloud skills.

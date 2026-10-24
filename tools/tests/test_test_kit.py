@@ -203,6 +203,8 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "applications",
         "applicationsets",
         "appprojects",
+        "constrainttemplates",
+        "validatingadmissionpolicies",
     ):
         assert f"- {resource}" in yaml_text, resource
 
@@ -429,6 +431,7 @@ ADDONS = [
     ("flux", "FLUX_MANIFEST_SHA256", "install.yaml", "flux-system"),
     ("argocd", "ARGOCD_MANIFEST_SHA256", "install.yaml", "argocd"),
     ("kyverno", "KYVERNO_MANIFEST_SHA256", "install.yaml", "kyverno"),
+    ("gatekeeper", "GATEKEEPER_MANIFEST_SHA256", "gatekeeper.yaml", "gatekeeper-system"),
 ]
 
 
