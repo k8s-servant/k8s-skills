@@ -58,9 +58,27 @@ up() {
   [[ -z "$config" ]] || rm -f "$config"
 
   if [[ "$cni" == "calico" ]]; then
-    kubectl apply -f "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
+    install_calico
   fi
   kubectl wait --for=condition=Ready nodes --all --timeout=300s
+}
+
+# Apply the pinned Calico manifest only if its checksum matches, then wait for the
+# calico-node pods: nodes turn Ready before policies are enforced.
+install_calico() {
+  local manifest sum
+  manifest="$(mktemp)"
+  curl -fsSL -o "$manifest" \
+    "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
+  sum="$(shasum -a 256 "$manifest" | cut -d ' ' -f 1)"
+  if [[ "$sum" != "$CALICO_MANIFEST_SHA256" ]]; then
+    rm -f "$manifest"
+    echo "Calico manifest checksum mismatch: got $sum, want $CALICO_MANIFEST_SHA256" >&2
+    exit 1
+  fi
+  kubectl apply -f "$manifest"
+  rm -f "$manifest"
+  kubectl rollout status daemonset/calico-node -n kube-system --timeout=300s
 }
 
 down() {
