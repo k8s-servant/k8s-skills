@@ -17,7 +17,10 @@ usage() {
 }
 
 up() {
-  local cni="" workers=0 config="" manifest="" i
+  local cni="" workers=0 i
+  # Temp files, removed on every exit path (globals, so the EXIT trap still sees them).
+  config="" manifest=""
+  trap 'rm -f "$config" "$manifest"' EXIT
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --cni)
@@ -60,11 +63,9 @@ up() {
   fi
 
   kind "${args[@]}"
-  [[ -z "$config" ]] || rm -f "$config"
 
   if [[ "$cni" == "calico" ]]; then
     kubectl apply -f "$manifest"
-    rm -f "$manifest"
     # Nodes turn Ready before policies are enforced; wait for the calico-node pods.
     kubectl rollout status daemonset/calico-node -n kube-system --timeout=300s
   fi
@@ -78,7 +79,6 @@ fetch_calico() {
     "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
   sum="$(shasum -a 256 "$1" | cut -d ' ' -f 1)"
   if [[ "$sum" != "$CALICO_MANIFEST_SHA256" ]]; then
-    rm -f "$1"
     echo "Calico manifest checksum mismatch: got $sum, want $CALICO_MANIFEST_SHA256" >&2
     exit 1
   fi

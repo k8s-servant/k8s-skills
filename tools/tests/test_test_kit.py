@@ -30,8 +30,15 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 """
+FAKE_MKTEMP = """#!/usr/bin/env bash
+dir="${FAKE_TMP:-$(dirname "$FAKE_LOG")}"
+file="$dir/tmp.$$.$RANDOM"
+: > "$file"
+echo "$file"
+"""
 FAKE_KIND = """#!/usr/bin/env bash
 echo "kind $*" >> "$FAKE_LOG"
+if [[ -n "${FAKE_KIND_FAIL:-}" ]]; then exit 1; fi
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "--config" ]]; then cat "$2" >> "$FAKE_LOG"; fi
   shift
@@ -45,7 +52,12 @@ def make_repo(tmp_path: Path) -> Path:
     shutil.copytree(REAL_TESTS, repo / "tests", ignore=shutil.ignore_patterns("k8s-*"))
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    for name, text in (("kubectl", FAKE_KUBECTL), ("kind", FAKE_KIND), ("curl", FAKE_CURL)):
+    for name, text in (
+        ("kubectl", FAKE_KUBECTL),
+        ("kind", FAKE_KIND),
+        ("curl", FAKE_CURL),
+        ("mktemp", FAKE_MKTEMP),
+    ):
         path = bin_dir / name
         path.write_text(text, encoding="utf-8")
         path.chmod(0o755)
@@ -328,3 +340,19 @@ def test_cluster_up_calico_refuses_a_manifest_with_the_wrong_checksum(tmp_path):
     assert "checksum" in result.stderr
     assert not [c for c in calls(tmp_path) if c.startswith("kubectl apply")]
     assert not [c for c in calls(tmp_path) if c.startswith("kind create")]
+
+
+def test_cluster_up_calico_removes_the_manifest_when_kind_fails(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_calico_checksum(repo, fake_manifest_checksum())
+    scratch = tmp_path / "tmp"
+    scratch.mkdir()
+    result = run(
+        tmp_path,
+        repo,
+        ["tests/cluster.sh", "up", "--cni", "calico"],
+        FAKE_TMP=str(scratch),
+        FAKE_KIND_FAIL="1",
+    )
+    assert result.returncode != 0
+    assert list(scratch.iterdir()) == []
