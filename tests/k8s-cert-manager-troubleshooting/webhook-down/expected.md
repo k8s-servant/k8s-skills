@@ -2,7 +2,7 @@
 
 ## Prompt
 
-Applying an Issuer in my-namespace fails with: Internal error occurred: failed calling webhook "webhook.cert-manager.io": failed to call webhook: Post "https://cert-manager-webhook.cert-manager.svc:443/validate?timeout=30s": dial tcp 10.96.200.200:443: i/o timeout. Find out why.
+Applying an Issuer in my-namespace fails with `Internal error occurred: failed calling webhook "webhook.cert-manager.io": failed to call webhook: Post "https://cert-manager-webhook.cert-manager.svc:443/validate?timeout=30s": dial tcp 10.96.200.200:443: i/o timeout`. Find out why.
 
 ## Cause
 
