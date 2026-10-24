@@ -105,14 +105,19 @@ Rules for every ecosystem skill (decided with the maintainer, after #42):
 - **Helm reads Secrets.** Helm keeps each release, values included, in a Secret, so
   `helm status`, `helm history` and `helm get` read Secrets. The Helm skill investigates
   with kubectl (the `meta.helm.sh/*` annotations, the rendered objects, events) and gives
-  `helm` commands to the user to run, as proposed fixes with "nothing to undo".
+  `helm` commands to the user to run, as proposed fixes with a literal
+  `# Undo: nothing to undo, it only reads` line. They are in the never-run tier only
+  because they read Secrets, not because they change anything, and the skill says so.
 - **Secrets stay unread** in External Secrets too: the skill reads `ExternalSecret`,
   `SecretStore` and `ClusterSecretStore` status, never the target Secret.
 - **No separate Envoy skill.** Envoy is the proxy inside Istio and Envoy Gateway; reading
   its config belongs to those two skills. The Gateway API itself stays in
   `k8s-network-troubleshooting`.
 - **Scenarios** install the tool on kind from a pinned version in `tests/versions.env`,
-  with the manifest checked against a pinned checksum, as for Calico.
+  with the manifest checked against a pinned checksum, as for Calico. Tools that
+  replace the CNI (Cilium) get their own `tests/cluster.sh up --cni cilium`, since a
+  CNI is chosen when the cluster is created; the others install on the default kind
+  cluster.
 
 ### Clouds
 
