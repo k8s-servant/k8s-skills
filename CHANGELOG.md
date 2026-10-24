@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/k8s-servant/k8s-skills/compare/v0.1.1...v0.2.0) (2026-10-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* read first, ask before changing ([#26](https://github.com/k8s-servant/k8s-skills/issues/26))
+
+### Features
+
+* read first, ask before changing ([#26](https://github.com/k8s-servant/k8s-skills/issues/26)) ([7d7fc79](https://github.com/k8s-servant/k8s-skills/commit/7d7fc79c640de8d387a29f0d59212e633a746277))
+* **skills:** add k8s-triage ([#30](https://github.com/k8s-servant/k8s-skills/issues/30)) ([4db5b4f](https://github.com/k8s-servant/k8s-skills/commit/4db5b4fa0c87f808de5e571f0e2efd1879068005))
+* **skills:** ask before running k8s-workload-troubleshooting fixes ([#32](https://github.com/k8s-servant/k8s-skills/issues/32)) ([55dfb7a](https://github.com/k8s-servant/k8s-skills/commit/55dfb7a53daa0ce3ce99ce37d1d6c9f36060bb55))
+
 ## [0.1.1](https://github.com/k8s-servant/k8s-skills/compare/v0.1.0...v0.1.1) (2026-10-23)
 
 
