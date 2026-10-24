@@ -29,9 +29,10 @@ skills are written and checked to keep to these tiers, but that is not a 100% gu
 auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
 RBAC of the credentials you give it. If you want it to only investigate, give it a
 read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
-cannot read nodes, so for `k8s-triage` on a whole cluster and for
-`k8s-node-troubleshooting` also allow `get`, `list` and `watch` on `nodes`. Give it more
-only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
+node and storage skills also allow `get`, `list` and `watch` on `nodes`,
+`persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
+`csinodes` and `volumeattachments`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 

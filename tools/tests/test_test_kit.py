@@ -156,8 +156,16 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     yaml_text = applied(tmp_path)
     assert "kind: ClusterRoleBinding" in yaml_text
     assert "name: view" in yaml_text
-    assert "name: skill-agent-node-reader" in yaml_text
-    assert "- nodes" in yaml_text
+    assert "name: skill-agent-cluster-reader" in yaml_text
+    for resource in (
+        "nodes",
+        "persistentvolumes",
+        "storageclasses",
+        "csidrivers",
+        "csinodes",
+        "volumeattachments",
+    ):
+        assert f"- {resource}" in yaml_text, resource
 
 
 def test_agent_kubeconfig_namespace_scope(tmp_path):
@@ -170,6 +178,7 @@ def test_agent_kubeconfig_namespace_scope(tmp_path):
     assert "namespace: my-namespace" in yaml_text
     assert "ClusterRoleBinding" not in yaml_text
     assert "nodes" not in yaml_text
+    assert "storageclasses" not in yaml_text
 
 
 def test_agent_kubeconfig_rejects_bad_arguments(tmp_path):
@@ -259,7 +268,7 @@ def test_agent_kubeconfig_removes_earlier_bindings(tmp_path):
         cleanup = [
             (
                 "kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader"
-                " --ignore-not-found"
+                " skill-agent-cluster-reader --ignore-not-found"
             ),
             (
                 "kubectl delete rolebindings --all-namespaces"

@@ -61,7 +61,10 @@ kubectl events -n my-namespace --for persistentvolumeclaim/my-data
 ```
 
 **2. See the StorageClasses**: which exist, which is the default, the provisioner, the
-binding mode and whether volumes can expand.
+binding mode and whether volumes can expand. StorageClasses and PVs are cluster-scoped,
+and the built-in `view` role cannot read them; if these commands are forbidden, say so,
+and read the class and the provisioner from `describe pvc` (its `StorageClass` and the
+`volume.kubernetes.io/storage-provisioner` annotation) and from the events.
 
 ```bash
 kubectl get storageclass
