@@ -124,8 +124,14 @@ jobs:
           curl -fsSLO "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${tarball}"
           echo "${LYCHEE_SHA256}  ${tarball}" | sha256sum -c -
           tar -xzf "${tarball}" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
+      # Retries ride out the occasional 503 or dropped connection; the token lets lychee
+      # check github.com links through the API instead of hitting anonymous rate limits.
       - name: Check links
-        run: ./lychee --no-progress --scheme https --exclude-path docs/superpowers '**/*.md'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          ./lychee --no-progress --scheme https --max-retries 5 --retry-wait-time 10
+          --exclude-path docs/superpowers '**/*.md'
 
   result:
     # The one check the branch ruleset requires, so jobs can be added or renamed freely.
