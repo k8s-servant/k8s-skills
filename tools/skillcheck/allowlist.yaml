@@ -1,4 +1,4 @@
-# Read-only commands a skill may tell the agent to run. Extend only by PR review.
+# Read-only commands a skill may tell the agent to run freely. Extend only by PR review.
 commands:
   kubectl: [get, describe, logs, events, top, explain, api-resources, api-versions,
             version, cluster-info, "auth can-i", "auth whoami", "rollout status", "rollout history"]
@@ -39,3 +39,50 @@ global_flags: [-n, -s, -v, --as, --as-group, --as-uid, --as-user-extra, --cache-
                --profile-output, --proxy-url, --request-timeout, --server, --tls-server-name,
                --token, --user, --username, --v, --vmodule, --warnings-as-errors]
 command_langs: [bash, sh, shell, console, zsh]
+# Commands an agent may run only after the user approves each one, in a block directly
+# under the ask-first marker. Extend only by PR review, like `commands`; never turn it
+# into a deny-list. Every command here except exec changes the cluster, so a block with
+# one needs an `# Undo:` line.
+ask_first:
+  kubectl: ["set image", "set resources", "rollout undo", "rollout restart", "rollout pause",
+            "rollout resume", scale, patch, cordon, uncordon, label, annotate, taint, exec]
+  # exec runs one read-only program in a container: no shell, no stdin or TTY.
+  exec_flags: [-n, --namespace, -c, --container]
+  in_pod: [nslookup, dig, getent, curl, wget, cat, ls, ps, df, id, hostname]
+  # Programs listed here may use only these flags (others take any arguments).
+  in_pod_flags:
+    curl: [-s, -S, -sS, -v, -I, -i, -L, -k, -m, --max-time, --connect-timeout]
+    wget: [-q, -O-, -qO-, -T, --timeout]
+  # Programs listed here may use only exactly these arguments (ps with BSD `e` prints
+  # every process's environment).
+  in_pod_args:
+    ps: [-ef, -A, aux]
+    hostname: []           # an argument would rename the host
+  # curl and wget may only fetch over these schemes (gopher:// or dict:// can write).
+  url_schemes: [http://, https://]
+  # Cloud metadata endpoints hand out the node's cloud credentials. Hosts are parsed and
+  # normalised, so every way of writing an address is caught; link-local addresses
+  # (169.254.0.0/16, fe80::/10) are always rejected.
+  metadata_hosts: [metadata, metadata.google.internal, instance-data,
+                   instance-data.ec2.internal]
+  metadata_networks: ["fd00:ec2::/32", "100.100.100.200/32"]
+  # A change may not reach many objects at once or read its content from a local file
+  # that neither the reviewer nor the user sees.
+  wide_change_flags: [--all, -A, --all-namespaces, -l, --selector, --patch-file]
+  # patch and scale may only target these workload kinds.
+  workload_kinds: [deployment, deployments, deploy, statefulset, statefulsets, sts,
+                   daemonset, daemonsets, ds, replicaset, replicasets, rs, cronjob,
+                   cronjobs, cj]
+  # taint may only add these effects, or remove a taint (a trailing `-`). NoExecute
+  # evicts every pod on the node.
+  taint_effects: [NoSchedule, PreferNoSchedule]
+  # wget must print to stdout instead of writing a file.
+  wget_needs_one_of: [-O-, -qO-]
+  # Programs that print the environment, matched as whole words.
+  secret_words: [env, printenv]
+  # Text that points at the environment, a token, password or credential file, a CSI
+  # secrets mount, or a cloud metadata endpoint (which hands out the node's cloud
+  # credentials), matched anywhere in the command.
+  secret_substrings: [environ, serviceaccount, token, password, credential, shadow,
+                      secrets-store, 169.254.169.254, metadata.google.internal, fd00:ec2,
+                      "2852039166", 100.100.100.200]

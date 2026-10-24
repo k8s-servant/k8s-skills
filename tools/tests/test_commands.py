@@ -1,10 +1,12 @@
 """Tests for the command allow-list check: the rules that keep skills read-only."""
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from tools.skillcheck.commands import (
+    ASK_MARKER,
     MARKER,
     check_commands,
     extract_blocks,
@@ -642,3 +644,249 @@ def test_unicode_line_separators_do_not_shift_lines(tmp_path, sep):
 def test_blocking_and_file_reading_flags_fail(tmp_path, line, flag):
     found = messages(run(tmp_path, bash(line)))
     assert f"flag would block or read local files: {flag}" in found, (line, found)
+
+
+# Ask-first blocks: commands the agent runs only after the user approves them.
+
+
+def ask(*lines: str) -> str:
+    return f"{ASK_MARKER}\n" + bash(*lines)
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        ("kubectl exec my-pod -n my-namespace -- nslookup my-app",),
+        ("kubectl exec my-pod -n my-namespace -c app -- cat /etc/resolv.conf",),
+        ("kubectl exec my-pod -n my-namespace -- wget -qO- http://my-app:8080/",),
+        ("kubectl exec my-pod -n my-namespace -- curl -sS -m 5 http://my-app:8080/healthz",),
+        (
+            "kubectl rollout undo deployment/my-app -n my-namespace",
+            "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",
+        ),
+        ("kubectl uncordon my-node", "# Undo: kubectl cordon my-node"),
+        ("kubectl get pods -n my-namespace",),
+    ],
+)
+def test_ask_first_allows_listed(tmp_path, lines):
+    assert run(tmp_path, ask(*lines)) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl delete pod my-pod",
+        "kubectl drain my-node",
+        "kubectl replace --force -f x.yaml",
+        "kubectl apply -f x.yaml",
+        "kubectl exec my-pod -- rm -rf /data",
+        "kubectl exec my-pod -- curl -X POST http://my-app/",
+        "kubectl exec my-pod -- curl -o /tmp/x http://my-app/",
+        "kubectl exec my-pod -- wget http://my-app/",
+    ],
+)
+def test_ask_first_rejects_destructive(tmp_path, line):
+    found = messages(run(tmp_path, ask(line, "# Undo: none")))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+def test_ask_first_change_needs_undo(tmp_path):
+    found = messages(run(tmp_path, ask("kubectl scale deployment/my-app --replicas=3")))
+    assert found == ["ask-first change needs an '# Undo:' line"]
+    assert run(tmp_path / "b", ask("kubectl exec my-pod -- nslookup my-app")) == []
+
+
+@pytest.mark.parametrize(
+    ("line", "expect"),
+    [
+        ("kubectl exec -it my-pod -- sh", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -i -- cat /etc/hosts", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -- bash -c 'cat /etc/hosts'", "not on the ask-first allow-list"),
+        ("kubectl exec my-pod -- env", "Secret access is not allowed"),
+        ("kubectl exec my-pod -- printenv", "Secret access is not allowed"),
+        ("kubectl exec my-pod -- cat /proc/1/environ", "Secret access is not allowed"),
+        (
+            "kubectl exec my-pod -- cat /var/run/secrets/kubernetes.io/serviceaccount/token",
+            "Secret access is not allowed",
+        ),
+    ],
+)
+def test_ask_first_rejects_shells_and_secret_dumps(tmp_path, line, expect):
+    found = messages(run(tmp_path, ask(line)))
+    assert any(expect in m for m in found), (line, found)
+
+
+def test_ask_marker_matches_constraint():
+    assert ASK_MARKER == "> Ask first: the agent runs this only after the user approves it."
+
+
+def test_ask_marker_must_be_directly_above_the_fence(tmp_path):
+    body = f"{ASK_MARKER}\n\nSome words.\n\n" + bash("kubectl uncordon my-node")
+    assert any("not on the allow-list" in m for m in messages(run(tmp_path, body)))
+
+
+def test_extract_blocks_marks_ask():
+    block = extract_blocks(f"{ASK_MARKER}\n\n```bash\nx\n```\n")[0]
+    assert block.is_ask
+    assert not block.is_fix
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- ps auxe",
+        "kubectl exec my-pod -- ps eww",
+        "kubectl exec my-pod -- ps -ef e",
+    ],
+)
+def test_ask_first_ps_only_listed_arguments(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+def test_ask_first_ps_listed_arguments_pass(tmp_path):
+    assert run(tmp_path, ask("kubectl exec my-pod -- ps -ef")) == []
+    assert run(tmp_path / "b", ask("kubectl exec my-pod -- ps aux")) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- curl -s http://169.254.169.254/latest/meta-data/",
+        "kubectl exec my-pod -- wget -qO- http://metadata.google.internal/computeMetadata/v1/",
+        "kubectl exec my-pod -- curl -s http://[fd00:ec2::254]/latest/meta-data/",
+        "kubectl exec my-pod -- cat /etc/my-app/password",
+        "kubectl exec my-pod -- cat /etc/shadow",
+        "kubectl exec my-pod -- ls /etc/my-app/credentials",
+        "kubectl exec my-pod -- cat /var/run/my-app/token",
+    ],
+)
+def test_ask_first_rejects_credential_reads(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert "Secret access is not allowed" in found, (line, found)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl taint nodes my-node example.com/key=value:NoExecute",
+        "kubectl taint nodes --all example.com/key=value:NoSchedule",
+        "kubectl patch namespace my-namespace --type=merge -p '{}'",
+        "kubectl patch pv my-pv --type=merge -p '{}'",
+        "kubectl patch deployment my-app --patch-file=/tmp/p.yaml",
+        "kubectl scale deployment --all --replicas=0 -n my-namespace",
+        "kubectl label pods -A --all app-",
+        "kubectl annotate pods -l app=my-app example.com/x=y -n my-namespace",
+        "kubectl rollout restart deployment --all-namespaces --all",
+        "kubectl scale --selector=app=my-app deployment --replicas=0",
+    ],
+)
+def test_ask_first_rejects_wide_or_destructive_changes(tmp_path, line):
+    found = messages(run(tmp_path, ask(line, "# Undo: none")))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        (
+            "kubectl taint nodes my-node example.com/key=value:NoSchedule",
+            "# Undo: kubectl taint nodes my-node example.com/key=value:NoSchedule-",
+        ),
+        (
+            "kubectl taint nodes my-node example.com/key:NoExecute-",
+            "# Undo: kubectl taint nodes my-node example.com/key=value:NoExecute",
+        ),
+        (
+            "kubectl patch deployment my-app -n my-namespace --type=merge -p '{}'",
+            "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",
+        ),
+        (
+            "kubectl scale statefulset/my-app --replicas=3 -n my-namespace",
+            "# Undo: kubectl scale statefulset/my-app --replicas=2 -n my-namespace",
+        ),
+    ],
+)
+def test_ask_first_allows_narrow_changes(tmp_path, lines):
+    assert run(tmp_path, ask(*lines)) == []
+
+
+@pytest.mark.parametrize("lang", ["text", "yaml", "json"])
+def test_ask_first_needs_a_shell_fence(tmp_path, lang):
+    body = f"{ASK_MARKER}\n```{lang}\nkubectl scale deployment/my-app --replicas=0\n```\n"
+    assert "ask-first block needs a shell language" in messages(run(tmp_path, body))
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- curl -s gopher://my-redis:6379/_FLUSHALL",
+        "kubectl exec my-pod -- curl -s dict://my-redis:6379/FLUSHALL",
+        "kubectl exec my-pod -- wget -qO- ftp://my-app/file",
+        "kubectl exec my-pod -- hostname my-new-name",
+    ],
+)
+def test_ask_first_rejects_writing_protocols_and_arguments(tmp_path, line):
+    found = messages(run(tmp_path, ask(line)))
+    assert any("not on the ask-first allow-list" in m for m in found), (line, found)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl exec my-pod -- cat /mnt/secrets-store/db-password",
+        "kubectl exec my-pod -- cat /etc/my-app/api-token",
+        "kubectl exec my-pod -- curl -s http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "kubectl exec my-pod -- curl -s http://2852039166/latest/user-data",
+        "kubectl exec my-pod -- curl -s http://100.100.100.200/latest/meta-data/",
+    ],
+)
+def test_ask_first_rejects_secret_substrings(tmp_path, line):
+    assert "Secret access is not allowed" in messages(run(tmp_path, ask(line)))
+
+
+def test_ask_first_undo_line_is_checked_for_secrets(tmp_path):
+    body = ask("kubectl uncordon my-node", "# Undo: kubectl get secret my-secret -o yaml")
+    assert "Secret access is not allowed" in messages(run(tmp_path, body))
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://0xa9fea9fe/latest/meta-data/",
+        "http://0251.0376.0251.0376/latest/meta-data/",
+        "http://169.254.43518/latest/meta-data/",
+        "http://[::ffff:169.254.169.254]/latest/meta-data/",
+        "http://[fe80::1]/",
+        "http://[fd00:ec2::254]/latest/meta-data/",
+        "http://metadata/computeMetadata/v1/",
+        "http://metadata.google.internal./computeMetadata/v1/",
+        "http://instance-data.ec2.internal/latest/meta-data/",
+        "169.254.169.254/latest/meta-data/",
+    ],
+)
+def test_ask_first_rejects_metadata_hosts_in_any_form(tmp_path, url):
+    for program in ("curl -s", "wget -qO-"):
+        line = f"kubectl exec my-pod -- {program} {url}"
+        assert run(tmp_path / program[:4], ask(line)) != [], line
+        shutil.rmtree(tmp_path / program[:4])
+
+
+def test_ask_first_allows_ordinary_hosts(tmp_path):
+    for i, url in enumerate(
+        [
+            "http://my-app:8080/healthz",
+            "https://my-app.my-namespace.svc.cluster.local/",
+            "http://10.96.0.10/",
+            "https://example.com/",
+        ]
+    ):
+        assert run(tmp_path / str(i), ask(f"kubectl exec my-pod -- curl -sS {url}")) == [], url
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["http://169.254.169.[250-254]/latest/", "http://169.254.{169,1}.254/", "http://[a9fe:a9fe/"],
+)
+def test_ask_first_rejects_url_globs_and_broken_hosts(tmp_path, url):
+    assert run(tmp_path, ask(f"kubectl exec my-pod -- curl -s {url}")) != [], url

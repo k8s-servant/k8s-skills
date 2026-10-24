@@ -12,8 +12,10 @@ from tools.skillcheck.discovery import skill_dirs
 from tools.skillcheck.frontmatter import parse_skill
 
 NAME = "k8s-skills"
-BUNDLE_DESCRIPTION = "All k8s-skills: read-only Kubernetes skills for any AI agent"
-DESCRIPTION = "Read-only Kubernetes troubleshooting skills for any AI agent"
+BUNDLE_DESCRIPTION = "All k8s-skills: Kubernetes troubleshooting skills that read first and ask before changing anything"
+DESCRIPTION = (
+    "Kubernetes troubleshooting skills for any AI agent: read first, ask before changing anything"
+)
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 REPOSITORY = "https://github.com/k8s-servant/k8s-skills"
 STALE = "{path} is out of date: run python -m tools.skillcheck manifests --write"

@@ -44,9 +44,11 @@ jobs:
             Review this pull request. Follow the conventions in AGENTS.md and
             CONTRIBUTING.md when they exist. Focus, in order:
 
-            1. **Read-only guarantee.** Flag any write command outside a marked
-               "Proposed fix" block, any access to Secrets, and any change to the
-               command allow-list that is not justified.
+            1. **Tier rules (read first, ask before changing).** Flag any change
+               outside an "Ask first" or "Proposed fix" block, anything destructive
+               or hard to undo in an "Ask first" block, a change without a correct
+               `# Undo:` line, any access to Secrets, and any change to the
+               allow-lists that is not justified.
             2. **Accuracy against upstream docs.** Every skill has a Sources section
                and the sources are relevant; claims and flags match the upstream docs.
             3. **Agent-neutral wording, no site data.** No agent-specific phrasing and
