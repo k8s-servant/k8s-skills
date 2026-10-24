@@ -6,7 +6,7 @@
 #
 # Usage: tests/addon.sh <name>
 # Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets,
-# prometheus-operator
+# prometheus-operator, istio (Helm charts, so it needs helm)
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -16,7 +16,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio" >&2
   exit 64
 }
 
@@ -59,13 +59,30 @@ case "$1" in
     # The bundle installs the operator in the default namespace.
     namespace="default"
     ;;
+  istio) ;;
   *) usage ;;
 esac
 
 require_test_cluster
 
 manifest=""
-trap 'rm -f "$manifest"' EXIT
+base_chart=""
+trap 'rm -f "$manifest" "$base_chart"' EXIT
+
+if [[ "$1" == "istio" ]]; then
+  # Istio ships Helm charts only: base (CRDs) first, then istiod. The demo profile keeps
+  # requests small and writes Envoy access logs to stdout, which the scenarios read.
+  charts="https://blob.istio.io/istio-release/charts"
+  base_chart="$(mktemp)"
+  manifest="$(mktemp)"
+  fetch_verified "$charts/base-${ISTIO_VERSION}.tgz" "$ISTIO_BASE_CHART_SHA256" "$base_chart"
+  fetch_verified "$charts/istiod-${ISTIO_VERSION}.tgz" "$ISTIOD_CHART_SHA256" "$manifest"
+  helm upgrade --install istio-base "$base_chart" -n istio-system --create-namespace \
+    --set defaultRevision=default >&2
+  helm upgrade --install istiod "$manifest" -n istio-system --set profile=demo --wait >&2
+  exit 0
+fi
+
 manifest="$(mktemp)"
 fetch_verified "$url" "$sum" "$manifest"
 # Some manifests (Argo CD) leave their objects' namespace to `kubectl apply -n`.

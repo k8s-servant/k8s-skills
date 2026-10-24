@@ -88,9 +88,10 @@ the command to the user to run. Each command must be on `commands` or `ask_first
   state you found.
 - `kubectl exec POD [-n ns] [-c container] -- PROGRAM [args]`, with one program from
   `ask_first.in_pod` (`nslookup`, `dig`, `getent`, `curl`, `wget`, `cat`, `ls`, `ps`,
-  `df`, `id`, `hostname`, and in the Cilium agent `cilium-dbg`, `cilium-health`,
-  `hubble`). No shell, and no `-i`/`-t`/`--stdin`/`--tty`. The Cilium tools also have
-  subcommands that change state; a skill uses only their reading subcommands, and
+  `df`, `id`, `hostname`, in the Cilium agent `cilium-dbg`, `cilium-health`, `hubble`,
+  and in Istio's proxy `pilot-agent`). No shell, and no `-i`/`-t`/`--stdin`/`--tty`. The Cilium tools and
+  `pilot-agent` can also change state; a skill uses only their reading subcommands (for
+  `pilot-agent`, `request GET` on a reading admin path), and
   reviewers check that.
 - These count as Secret access, anywhere in the command or its `# Undo:` line: `env`,
   `printenv`, and anything with `environ`, `serviceaccount`, `token`, `password`,

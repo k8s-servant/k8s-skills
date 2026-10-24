@@ -48,11 +48,12 @@ ask_first:
             "rollout resume", scale, patch, cordon, uncordon, label, annotate, taint, exec]
   # exec runs one read-only program in a container: no shell, no stdin or TTY.
   exec_flags: [-n, --namespace, -c, --container]
-  # cilium-dbg, cilium-health and hubble run inside the Cilium agent pod. They also have
+  # cilium-dbg, cilium-health and hubble run inside the Cilium agent pod, pilot-agent in
+  # Istio's istio-proxy container (`pilot-agent request GET <admin path>` only). They also have
   # subcommands that change state, so skills use only reading ones (status, endpoint
   # list/get, policy get, hubble observe with --last or --since); reviewers check that.
   in_pod: [nslookup, dig, getent, curl, wget, cat, ls, ps, df, id, hostname, cilium-dbg,
-           cilium-health, hubble]
+           cilium-health, hubble, pilot-agent]
   # The user sees each ask-first command before it runs, so the program's arguments are
   # left to them and to review. Only Secret access is checked.
 
