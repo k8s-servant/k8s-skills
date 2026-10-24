@@ -167,9 +167,10 @@ message, the exit code, the condition), then the proposed fix.
 Show each fix to the user before running it: what it changes and how to undo it. The
 fixes here are reversible, so they go under "Ask first" and run only after the user says
 yes. Anything destructive or hard to undo (deleting a pod or a Job, `replace --force`)
-is never run by you; say why and hand it to the user. Prefer fixing the source the workload is deployed from (manifest, Helm
-values, GitOps repository) when there is one; a direct command is for when there is
-not, or for an urgent mitigation. Typical fixes:
+is never run by you: hand it to the user as a proposed fix and say why. Prefer fixing
+the source the workload is deployed from (manifest, Helm values, GitOps repository) when
+there is one; a direct command is for when there is not, or for an urgent mitigation.
+Typical fixes:
 
 Correct an image tag that does not exist (the container name is the one in the pod
 spec):
