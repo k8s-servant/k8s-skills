@@ -216,6 +216,7 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     # on their two governing Services only.
     assert "- services/proxy" in yaml_text
     assert "apiGroups: [cilium.io]" in yaml_text
+    assert "networking.istio.io" in yaml_text and "security.istio.io" in yaml_text
     # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
     for name in ("prometheus-operated", "prometheus-operated:web", "alertmanager-operated:web"):
         assert f'"{name}"' in yaml_text, name
@@ -540,3 +541,30 @@ def test_cluster_up_cilium_needs_helm_before_creating_the_cluster(tmp_path):
     assert result.returncode != 0
     assert "helm" in result.stderr
     assert not [c for c in calls(tmp_path) if c.startswith("kind create")]
+
+
+def test_addon_istio_installs_verified_charts_with_helm(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "ISTIO_BASE_CHART_SHA256", fake_manifest_checksum())
+    pin_version(repo, "ISTIOD_CHART_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/addon.sh", "istio"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    fetches = [c for c in log if c.startswith("curl ")]
+    assert len(fetches) == 2 and all("blob.istio.io/istio-release/charts/" in c for c in fetches)
+    installs = [c for c in log if c.startswith("helm upgrade --install ")]
+    assert [c.split()[3] for c in installs] == ["istio-base", "istiod"], log
+    assert all("https://" not in c and "-n istio-system" in c for c in installs), log
+    assert "profile=demo" in installs[1]
+    assert not [c for c in log if c.startswith("kubectl apply")], log
+
+
+def test_addon_istio_refuses_a_chart_with_the_wrong_checksum(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "ISTIO_BASE_CHART_SHA256", "0" * 64)
+    pin_version(repo, "ISTIOD_CHART_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/addon.sh", "istio"])
+    assert result.returncode != 0
+    assert not [c for c in calls(tmp_path) if c.startswith("helm ")]

@@ -663,6 +663,7 @@ def ask(*lines: str) -> str:
         ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- cilium-dbg endpoint list",),
         ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- cilium-health status",),
         ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- hubble observe --last 50",),
+        ("kubectl exec my-pod -n my-namespace -c istio-proxy -- pilot-agent request GET clusters",),
         (
             "kubectl rollout undo deployment/my-app -n my-namespace",
             "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",

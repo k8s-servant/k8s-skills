@@ -8,8 +8,8 @@
 # cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
-# ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator and Cilium
-# objects, and the prometheus-operated and alertmanager-operated service proxies.
+# ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium and
+# Istio objects, and the prometheus-operated and alertmanager-operated service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -143,6 +143,11 @@ rules:
     verbs: [get]
   # Cilium aggregates nothing to `view` either.
   - apiGroups: [cilium.io]
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Nor does Istio. Its own reader role also grants Secrets, so it is not used here.
+  - apiGroups: [networking.istio.io, security.istio.io, telemetry.istio.io,
+                extensions.istio.io]
     resources: ["*"]
     verbs: [get, list, watch]
   # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
