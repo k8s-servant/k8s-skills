@@ -154,7 +154,8 @@ fixes. Applications are often themselves managed from Git (app-of-apps, Applicat
 or a GitOps repository for Argo CD); a patch on the live Application is then reverted,
 so propose the change in Git. Write each undo with the values you found.
 
-Point an Application at the right path (to test before fixing Git):
+Point an Application at the right path (to test before fixing Git; the undo puts back the
+value you found in step 2):
 
 > Ask first: the agent runs this only after the user approves it.
 
@@ -180,7 +181,7 @@ the Application has no automated sync (`initiatedBy` records who asked):
 
 ```bash
 kubectl patch application my-app -n argocd --type=merge -p '{"operation": {"initiatedBy": {"username": "my-user"}, "sync": {"revision": "master"}}}'
-# Undo: sync the revision that was deployed before, from status.history, the same way
+# Undo: sync the revision of the previous entry in status.history the same way; objects this sync created stay until removed with prune, which is for the user
 ```
 
 Turning on automated sync is a change to how the Application behaves from then on;

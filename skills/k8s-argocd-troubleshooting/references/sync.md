@@ -50,5 +50,5 @@ kubectl logs -n argocd statefulset/argocd-application-controller --tail=200 | gr
 
 ```bash
 kubectl delete deployment my-app -n my-namespace
-# Undo: the next sync recreates it from Git; its pods are replaced, not kept
+# Undo: the next sync recreates it from Git (automated sync, or a manual one); its pods are replaced, not kept
 ```
