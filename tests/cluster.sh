@@ -41,6 +41,10 @@ up() {
     manifest="$(mktemp)"
     fetch_calico "$manifest"
   elif [[ "$cni" == "cilium" ]]; then
+    if ! command -v helm >/dev/null; then
+      echo "--cni cilium needs helm on PATH" >&2
+      exit 1
+    fi
     manifest="$(mktemp)"
     fetch_verified "https://helm.cilium.io/cilium-${CILIUM_VERSION}.tgz" "$CILIUM_CHART_SHA256" "$manifest"
   fi

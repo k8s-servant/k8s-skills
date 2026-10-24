@@ -2,7 +2,7 @@
 
 ## Prompt
 
-my-web in my-namespace gets HTTP 403 Forbidden from my-app, but nginx in my-app has no access rules. The cluster runs Cilium. Find out why.
+my-web in my-namespace gets HTTP 403 Forbidden from my-app. The cluster runs Cilium. Find out why.
 
 ## Cause
 

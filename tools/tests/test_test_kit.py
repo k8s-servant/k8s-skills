@@ -528,3 +528,15 @@ def test_cluster_up_cilium_refuses_a_chart_with_the_wrong_checksum(tmp_path):
     assert result.returncode != 0
     assert "checksum" in result.stderr
     assert not [c for c in calls(tmp_path) if c.startswith(("kind create", "helm install"))]
+
+
+def test_cluster_up_cilium_needs_helm_before_creating_the_cluster(tmp_path):
+    repo = make_repo(tmp_path)
+    pin_version(repo, "CILIUM_CHART_SHA256", fake_manifest_checksum())
+    (tmp_path / "bin" / "helm").unlink()
+    # A PATH without the real helm: the fakes plus the basic system tools only.
+    path = f"{tmp_path / 'bin'}{os.pathsep}/usr/bin{os.pathsep}/bin"
+    result = run(tmp_path, repo, ["tests/cluster.sh", "up", "--cni", "cilium"], PATH=path)
+    assert result.returncode != 0
+    assert "helm" in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith("kind create")]
