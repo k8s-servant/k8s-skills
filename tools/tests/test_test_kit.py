@@ -327,3 +327,4 @@ def test_cluster_up_calico_refuses_a_manifest_with_the_wrong_checksum(tmp_path):
     assert result.returncode != 0
     assert "checksum" in result.stderr
     assert not [c for c in calls(tmp_path) if c.startswith("kubectl apply")]
+    assert not [c for c in calls(tmp_path) if c.startswith("kind create")]
