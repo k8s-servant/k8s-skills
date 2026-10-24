@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0](https://github.com/k8s-servant/k8s-skills/compare/v0.2.0...v0.3.0) (2026-10-24)
+
+
+### Features
+
+* **skills:** add k8s-network-troubleshooting ([#36](https://github.com/k8s-servant/k8s-skills/issues/36)) ([a308a4e](https://github.com/k8s-servant/k8s-skills/commit/a308a4e7d41de06ba83841074e9c71cfb061e9d6))
+* **skills:** add k8s-node-troubleshooting ([#33](https://github.com/k8s-servant/k8s-skills/issues/33)) ([e4fd766](https://github.com/k8s-servant/k8s-skills/commit/e4fd766baf103f2aa15401514783ce4944506e45))
+* **skills:** add k8s-storage-troubleshooting ([#37](https://github.com/k8s-servant/k8s-skills/issues/37)) ([ade187f](https://github.com/k8s-servant/k8s-skills/commit/ade187f5aaffa17ed23a28fc194f63142125adea))
+
 ## [0.2.0](https://github.com/k8s-servant/k8s-skills/compare/v0.1.1...v0.2.0) (2026-10-24)
 
 
