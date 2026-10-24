@@ -60,11 +60,12 @@ be the cause; continue with `k8s-node-troubleshooting`.
 Fix the cause the logs show: the missing setting, the wrong command, the unreachable
 dependency. Changes to the image or configuration usually belong in the source the app
 is deployed from. When the newest revision introduced the crash, rolling back is a safe
-mitigation:
+mitigation. Note the current revision first (`kubectl rollout history`); the undo returns
+to it by number (here revision 3):
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl rollout undo deployment/my-app -n my-namespace
-# Undo: kubectl rollout undo deployment/my-app -n my-namespace
+# Undo: kubectl rollout undo deployment/my-app -n my-namespace --to-revision=3
 ```

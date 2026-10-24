@@ -55,7 +55,7 @@ Raise the memory limit (and usually the request to match) to what the app actual
 needs, or make the app use less memory (heap size, concurrency). Make the change in the
 deployment source when there is one.
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl set resources deployment/my-app -c app --limits=memory=512Mi --requests=memory=512Mi -n my-namespace

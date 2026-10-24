@@ -5,8 +5,8 @@ description: >-
   CrashLoopBackOff, ImagePullBackOff or ErrImagePull, containers OOMKilled (exit code
   137), failing liveness, readiness or startup probes, pods Running but not Ready, a
   Deployment rollout that does not progress (ProgressDeadlineExceeded), or a Job or
-  CronJob that fails. Read-only: investigates with kubectl get, describe, logs and
-  events, and proposes fixes for a human to review and run.
+  CronJob that fails. Investigates with kubectl get, describe, logs and events, and
+  proposes fixes. Reads first and asks before changing anything.
 license: Apache-2.0
 metadata:
   verified-with: "kubernetes 1.37"
@@ -16,9 +16,10 @@ metadata:
 # Kubernetes workload troubleshooting
 
 Find out why a pod, Deployment, StatefulSet, DaemonSet, Job or CronJob is unhealthy, and
-propose a fix. **You only read.** Run the read-only commands below; never change the
-cluster yourself. Every fix goes to the user as a proposal, in the format under
-[Proposed fix](#proposed-fix), for a human to review and run.
+propose a fix. **Read first, ask before changing.** Run the investigation commands
+freely. Run a command under an "Ask first" line only after the user approves that exact
+command; if your credentials do not allow it, give it to the user to run. Never run a
+"Proposed fix"; hand it to the user.
 
 The commands use placeholders: `my-namespace`, `my-app` (the workload) and `my-pod`
 (one of its pods). Replace them with the real names. Never read Secrets. If logs or
@@ -163,34 +164,38 @@ message, the exit code, the condition), then the proposed fix.
 
 ## Proposed fix
 
-Propose, never run. Each fix states what it changes and how to undo it, and is shown in
-this exact format: the marker line, then a fenced block with the commands and an
-`# Undo:` line. Prefer fixing the source the workload is deployed from (manifest, Helm
-values, GitOps repository) when there is one; a direct command is for when there is
-not, or for an urgent mitigation. Typical fixes:
+Show each fix to the user before running it: what it changes and how to undo it. The
+fixes here are reversible, so they go under "Ask first" and run only after the user says
+yes. Anything destructive or hard to undo (deleting a pod or a Job, `replace --force`)
+is never run by you: hand it to the user as a proposed fix and say why. Prefer fixing
+the source the workload is deployed from (manifest, Helm values, GitOps repository) when
+there is one; a direct command is for when there is not, or for an urgent mitigation.
+Typical fixes:
 
 Correct an image tag that does not exist (the container name is the one in the pod
 spec):
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl set image deployment/my-app app=registry.example.com/my-app:1.4.2 -n my-namespace
 # Undo: kubectl set image deployment/my-app app=registry.example.com/my-app:1.4.3 -n my-namespace
 ```
 
-Roll a stuck Deployment back to the previous revision:
+Roll a stuck Deployment back to the previous revision. First note the current revision
+with `kubectl rollout history deployment/my-app -n my-namespace`; the undo returns to it
+by number (here revision 3):
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl rollout undo deployment/my-app -n my-namespace
-# Undo: kubectl rollout undo deployment/my-app -n my-namespace (rolls forward to the revision you left)
+# Undo: kubectl rollout undo deployment/my-app -n my-namespace --to-revision=3
 ```
 
 Raise a memory limit that the app outgrows (choose the value from the app's real use):
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl set resources deployment/my-app -c app --limits=memory=256Mi --requests=memory=256Mi -n my-namespace
@@ -199,7 +204,7 @@ kubectl set resources deployment/my-app -c app --limits=memory=256Mi --requests=
 
 Point a readiness probe at a path the app serves:
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl patch deployment my-app -n my-namespace --type=json -p '[{"op": "replace", "path": "/spec/template/spec/containers/0/readinessProbe/httpGet/path", "value": "/"}]'

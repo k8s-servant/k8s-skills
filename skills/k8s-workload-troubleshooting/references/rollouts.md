@@ -61,7 +61,7 @@ Fix the cause in the new revision (image, configuration, probe, resources) throu
 deployment source. As an immediate mitigation, roll back. Without options a rollback goes to
 the previous revision; with `--to-revision=N` it goes to revision N.
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl rollout undo deployment/my-app -n my-namespace --to-revision=1

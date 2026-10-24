@@ -67,7 +67,7 @@ Typical fixes: lower an unrealistic request, correct a `nodeSelector` or affinit
 the missing ConfigMap through the source the app is deployed from, or ask the cluster
 administrators for capacity or quota. Use the format in SKILL.md's Proposed fix section.
 
-> Proposed fix: review before running. The agent does not run this.
+> Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl set resources deployment/my-app -c app --requests=cpu=250m,memory=256Mi -n my-namespace
