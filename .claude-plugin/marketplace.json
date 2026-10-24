@@ -45,6 +45,14 @@
       ]
     },
     {
+      "name": "k8s-kyverno-troubleshooting",
+      "source": "./",
+      "description": "Use when Kyverno blocks, changes or fails to police resources in Kubernetes: \"admission webhook \\\"validate.kyverno.svc-fail\\\" denied the request\", \"resource ... was blocked due to the following policies\", \"Policy ... failed\" from a ValidatingPolicy, a policy that should block but only reports (Audit), PolicyReports with failures, a policy that is not Ready, mutate or generate rules that do nothing, UpdateRequests stuck, or \"failed calling webhook\" for kyverno when its pods are down. Covers ClusterPolicy and Policy (kyverno.io) and the CEL policies (policies.kyverno.io). Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-kyverno-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-network-troubleshooting",
       "source": "./",
       "description": "Use when traffic does not reach a workload in Kubernetes although its pods are running: a Service with no endpoints, a wrong selector or targetPort, connection refused or time-outs between pods, DNS names that do not resolve (NXDOMAIN, \"server can't find\"), a NetworkPolicy blocking traffic, or an Ingress or Gateway API route that does not route. Investigates with kubectl get and describe, asks before checks inside a container, and proposes fixes. Reads first and asks before changing anything.",

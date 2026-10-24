@@ -5,7 +5,7 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager, flux, argocd
+# Names: cert-manager, flux, argocd, kyverno
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno" >&2
   exit 64
 }
 
@@ -35,6 +35,11 @@ case "$1" in
     url="https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml"
     sum="$ARGOCD_MANIFEST_SHA256"
     namespace="argocd"
+    ;;
+  kyverno)
+    url="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/install.yaml"
+    sum="$KYVERNO_MANIFEST_SHA256"
+    namespace="kyverno"
     ;;
   *) usage ;;
 esac
