@@ -15,7 +15,7 @@ from tools.skillcheck.frontmatter import parse_skill
 
 SECTIONS = ["When to use", "Investigate", "Read the results", "Proposed fix", "Sources"]
 # Link targets that are not files in this repository.
-EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "#")
+EXTERNAL_PREFIXES = ("http://", "https://", "ftp://", "mailto:", "tel:", "data:", "#")
 
 
 def _headings_and_links(

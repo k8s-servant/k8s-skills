@@ -34,6 +34,11 @@ def _check_skill(repo: Path, skill_dir: Path, allowlist: dict) -> list[Finding]:
     for check in checks:
         try:
             found += check()
+        except OSError as exc:
+            # A broken symlink or a folder named *.md: name the file that failed.
+            failed = Path(exc.filename) if exc.filename else skill_dir / "SKILL.md"
+            where = failed.relative_to(repo) if failed.is_relative_to(repo) else rel / "SKILL.md"
+            found.append(Finding(where, None, f"cannot check: {exc.strerror or exc}"))
         except (ValueError, UnicodeDecodeError) as exc:
             found.append(Finding(rel / "SKILL.md", None, f"cannot check: {exc}"))
     return found

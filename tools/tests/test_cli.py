@@ -89,3 +89,19 @@ def test_cli_reports_test_folder_without_a_skill(tmp_path, capsys):
     (tmp_path / "tests" / "k8s-gone-skill" / "a").mkdir(parents=True)
     assert main(["check", "--repo", str(tmp_path)]) == 1
     assert "tests/k8s-gone-skill: test folder has no matching skill" in capsys.readouterr().out
+
+
+def test_cli_unreadable_reference_is_a_finding_on_that_file(tmp_path, capsys):
+    """A broken symlink or a folder named *.md is reported, not a traceback."""
+    for case, make in (
+        ("symlink", lambda p: p.symlink_to(p.parent / "missing.md")),
+        ("folder", lambda p: p.mkdir()),
+    ):
+        repo = tmp_path / case
+        add_valid(repo)
+        refs = repo / "skills" / "k8s-aks-demo" / "references"
+        refs.mkdir()
+        make(refs / "bad.md")
+        assert main(["check", "--repo", str(repo)]) == 1, case
+        out = capsys.readouterr().out
+        assert "skills/k8s-aks-demo/references/bad.md: cannot check:" in out, (case, out)

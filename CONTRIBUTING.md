@@ -137,6 +137,8 @@ It is a guardrail against honest authoring mistakes, not a sandbox. Known limits
 - Glob patterns such as `secre[t]s`.
 - yq `load()`.
 - `-v=9` logging.
+- Long kubectl flags after the subcommand pass unless they are a disallowed global flag
+  or one that blocks or reads local files; there is no per-subcommand list.
 - A prose command whose second word is not a kubectl command name (fenced blocks are
   still checked in full).
 
