@@ -428,6 +428,7 @@ ADDONS = [
     ("cert-manager", "CERT_MANAGER_MANIFEST_SHA256", "cert-manager.yaml", "cert-manager"),
     ("flux", "FLUX_MANIFEST_SHA256", "install.yaml", "flux-system"),
     ("argocd", "ARGOCD_MANIFEST_SHA256", "install.yaml", "argocd"),
+    ("kyverno", "KYVERNO_MANIFEST_SHA256", "install.yaml", "kyverno"),
 ]
 
 
