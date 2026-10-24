@@ -37,6 +37,14 @@
       ]
     },
     {
+      "name": "k8s-envoy-gateway-troubleshooting",
+      "source": "./",
+      "description": "Use when Envoy Gateway (the Gateway API implementation by the Envoy project) does not route traffic in Kubernetes: a Gateway that is not Programmed (\"AddressNotAssigned\"), an HTTPRoute that is not Accepted (\"NoMatchingListenerHostname\", \"NotAllowedByListeners\") or whose ResolvedRefs is False (\"BackendNotFound\", \"RefNotPermitted\" without a ReferenceGrant), clients getting 404, 500 or 503 \"no healthy upstream\" from the gateway, a GatewayClass that is not Accepted, or BackendTrafficPolicy, ClientTrafficPolicy, SecurityPolicy and EnvoyProxy resources that do not apply. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-envoy-gateway-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-external-secrets-troubleshooting",
       "source": "./",
       "description": "Use when External Secrets Operator does not create or update a Kubernetes Secret: an ExternalSecret with SecretSyncedError (\"could not get secret data from provider\"), SecretOwnedByOther (\"target is owned by another ExternalSecret\"), SecretMissing or SecretImmutable, a SecretStore or ClusterSecretStore that is not Ready (InvalidProviderConfig, \"unable to validate store\"), a ClusterSecretStore not allowed from a namespace, a ClusterExternalSecret with failed namespaces, a value that does not refresh, or manifests on the removed v1beta1 API. Investigates with kubectl get, describe, events and controller logs, never reading the Secrets themselves, and proposes fixes. Reads first and asks before changing anything.",

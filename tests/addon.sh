@@ -6,7 +6,7 @@
 #
 # Usage: tests/addon.sh <name>
 # Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets,
-# prometheus-operator, istio (Helm charts, so it needs helm)
+# prometheus-operator, istio (Helm charts, so it needs helm), envoy-gateway
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -16,7 +16,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio|envoy-gateway" >&2
   exit 64
 }
 
@@ -58,6 +58,11 @@ case "$1" in
     sum="$PROMETHEUS_OPERATOR_MANIFEST_SHA256"
     # The bundle installs the operator in the default namespace.
     namespace="default"
+    ;;
+  envoy-gateway)
+    url="https://github.com/envoyproxy/gateway/releases/download/${ENVOY_GATEWAY_VERSION}/install.yaml"
+    sum="$ENVOY_GATEWAY_MANIFEST_SHA256"
+    namespace="envoy-gateway-system"
     ;;
   istio) ;;
   *) usage ;;

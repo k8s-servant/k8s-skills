@@ -217,6 +217,7 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     assert "- services/proxy" in yaml_text
     assert "apiGroups: [cilium.io]" in yaml_text
     assert "networking.istio.io" in yaml_text and "security.istio.io" in yaml_text
+    assert "gateway.networking.k8s.io" in yaml_text and "gateway.envoyproxy.io" in yaml_text
     # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
     for name in ("prometheus-operated", "prometheus-operated:web", "alertmanager-operated:web"):
         assert f'"{name}"' in yaml_text, name
@@ -448,6 +449,7 @@ ADDONS = [
     # The release manifest is `helm template` output pinned to the default namespace.
     ("external-secrets", "ESO_MANIFEST_SHA256", "external-secrets.yaml", "default"),
     ("prometheus-operator", "PROMETHEUS_OPERATOR_MANIFEST_SHA256", "bundle.yaml", "default"),
+    ("envoy-gateway", "ENVOY_GATEWAY_MANIFEST_SHA256", "install.yaml", "envoy-gateway-system"),
 ]
 
 
