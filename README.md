@@ -61,16 +61,22 @@ npx skills add k8s-servant/k8s-skills -s k8s-triage -a claude-code
 
 The CLI sends anonymous usage telemetry; set `DISABLE_TELEMETRY=1` to turn it off.
 
-Or copy from a clone of this repository:
+Or copy from a clone of this repository. Into your home directory, the skills are
+available in every project:
 
 ```bash
-git clone https://github.com/k8s-servant/k8s-skills.git
-mkdir -p .claude/skills && cp -R k8s-skills/skills/* .claude/skills/
+git clone https://github.com/k8s-servant/k8s-skills.git ~/k8s-skills
+mkdir -p ~/.claude/skills && cp -R ~/k8s-skills/skills/* ~/.claude/skills/
 ```
 
-Copy into `~/.claude/skills` instead to have the skills in every project. Other agents
-read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot) or `.github/skills` (GitHub
-Copilot).
+For one project only, copy into the project instead, from its root folder:
+
+```bash
+mkdir -p .claude/skills && cp -R ~/k8s-skills/skills/* .claude/skills/
+```
+
+In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot) or
+`.github/skills` (GitHub Copilot).
 
 ### Other ways
 
