@@ -50,6 +50,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-gatekeeper-troubleshooting` | OPA Gatekeeper denies or fails to police resources: constraint denials and actions, templates that do not compile, a webhook that fails open, exemptions, sync, mutation |
 | `k8s-external-secrets-troubleshooting` | External Secrets does not create or update a Secret: sync errors from the controller log, stores not Ready, targets owned by another ExternalSecret, refresh; never reads the Secrets |
 | `k8s-prometheus-troubleshooting` | Prometheus does not scrape or alert: ServiceMonitors not selected, wrong port names, targets down, rules not loaded, alerts not reaching Alertmanager, memory and disk |
+| `k8s-grafana-troubleshooting` | Grafana fails: provisioning errors that crash the pod, dashboards that do not load, datasources pointing at the wrong Service, database locks, login, grafana-operator selectors |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
 Planned: more ecosystem skills (Flux, Argo CD, Helm, Kyverno and others) and cloud skills.
