@@ -29,9 +29,9 @@ skills are written and checked to keep to these tiers, but that is not a 100% gu
 auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
 RBAC of the credentials you give it. If you want it to only investigate, give it a
 read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
-cannot read nodes, so for `k8s-triage` on a whole cluster also allow `get`, `list` and
-`watch` on `nodes`. Give it more only if you want it to apply the changes you approve
-(see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+cannot read nodes, so for `k8s-triage` on a whole cluster and for
+`k8s-node-troubleshooting` also allow `get`, `list` and `watch` on `nodes`. Give it more
+only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
@@ -39,9 +39,9 @@ cannot read nodes, so for `k8s-triage` on a whole cluster also allow `get`, `lis
 |---|---|
 | `k8s-triage` | Something is wrong in the cluster and it is not clear where: a ranked first look at nodes, pods, events and resource use, with a first fix and the skill that goes deeper |
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
+| `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
-Planned: `k8s-node-troubleshooting`, `k8s-network-troubleshooting`, `k8s-storage-troubleshooting`,
-then ecosystem and cloud skills.
+Planned: `k8s-network-troubleshooting`, `k8s-storage-troubleshooting`, then ecosystem and cloud skills.
 
 ## Install
 
