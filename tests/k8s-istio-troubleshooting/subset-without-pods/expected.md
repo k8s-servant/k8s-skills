@@ -2,7 +2,7 @@
 
 ## Prompt
 
-Since a routing change, my-web in my-namespace gets HTTP 503 from my-app in our Istio mesh, although my-app is running. Find out why.
+my-web in my-namespace gets HTTP 503 from my-app in our Istio mesh, although my-app is running. Find out why.
 
 ## Cause
 
