@@ -69,8 +69,13 @@ crashes; look at each pod, not only the Deployment.
 
 ```bash
 kubectl get deployments,pods -n monitoring -l app=my-grafana -o wide
-kubectl describe pod -n monitoring -l app=my-grafana
+kubectl get pods -n monitoring -l app=my-grafana -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.phase}{"\n"}{range .status.containerStatuses[*]}{"  "}{.name}{" ready="}{.ready}{" restarts="}{.restartCount}{" last="}{.lastState.terminated.reason}{"\n"}{end}{end}'
+kubectl events -n monitoring
 ```
+
+Avoid `kubectl describe pod` here: it prints the containers' environment values, and
+Grafana pods often carry passwords there. If you see a credential anyway, do not repeat
+it.
 
 The chart labels its pods `app.kubernetes.io/name=grafana`; use that selector there.
 

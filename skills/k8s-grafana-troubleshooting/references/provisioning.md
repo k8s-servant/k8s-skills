@@ -22,11 +22,13 @@ With the Helm chart's sidecar, also:
 ```bash
 kubectl get configmaps -A -l grafana_dashboard --show-labels
 kubectl logs -n monitoring deployment/my-grafana -c grafana-sc-dashboard --tail=50
-kubectl get deployment my-grafana -n monitoring -o jsonpath='{range .spec.template.spec.containers[*]}{.name}{" "}{.env}{"\n"}{end}'
+kubectl get deployment my-grafana -n monitoring -o json | jq -r '.spec.template.spec.containers[] | select(.name | startswith("grafana-sc")) | .name as $c | .env[]? | select(.name == "LABEL" or .name == "LABEL_VALUE" or .name == "NAMESPACE" or .name == "FOLDER") | "\($c) \(.name)=\(.value)"'
 ```
 
-The sidecar's environment shows `LABEL`, `LABEL_VALUE`, `NAMESPACE` (which namespaces
-it watches) and `FOLDER`.
+That prints only the sidecar's `LABEL`, `LABEL_VALUE`, `NAMESPACE` (which namespaces it
+watches) and `FOLDER`. Do not print the containers' whole environment: Grafana
+deployments often carry passwords as plain values there (`GF_SECURITY_ADMIN_PASSWORD`,
+the sidecar's `REQ_PASSWORD`).
 
 ## Read the results
 
@@ -35,7 +37,7 @@ it watches) and `FOLDER`.
 | `Error: ✗ invalid service state: Failed ... Datasource provisioning error: datasource.yaml config is invalid. Only one datasource per organization can be marked as default` | Two datasources have `isDefault: true` (across all datasource files of the org). |
 | `Datasource provisioning error: ...` with a YAML error | The datasource file does not parse. |
 | `could not parse provisioning config file: <file> error: ...` | A dashboard provider file does not parse; Grafana stops. |
-| `failed to load dashboard from ` `file=<path>` `error=<JSON error>` | That dashboard JSON is invalid; Grafana skips it and keeps running. |
+| `failed to load dashboard from` `file=<path>` `error=<JSON error>` | That dashboard JSON is invalid; Grafana skips it and keeps running. |
 | `the same UID is used more than once`, `dashboard title is not unique in folder` | Two dashboards collide; only one is shown. |
 | Sidecar `ApiException when calling kubernetes: ... 403` | The sidecar's service account may not read ConfigMaps in the namespaces it watches. |
 

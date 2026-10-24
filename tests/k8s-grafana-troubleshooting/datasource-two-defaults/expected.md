@@ -2,7 +2,7 @@
 
 ## Prompt
 
-We added a second Prometheus datasource to Grafana (my-grafana in monitoring) and now the new Grafana pod keeps restarting. Find out why.
+We changed Grafana's configuration (my-grafana in monitoring) and now the new Grafana pod keeps restarting. Find out why.
 
 ## Cause
 
