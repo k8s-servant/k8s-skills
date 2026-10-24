@@ -1,5 +1,5 @@
 {
   "name": "k8s-skills",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Kubernetes troubleshooting skills for any AI agent: read first, ask before changing anything"
 }
