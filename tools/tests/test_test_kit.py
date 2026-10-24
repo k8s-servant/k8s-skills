@@ -194,6 +194,9 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "csidrivers",
         "csinodes",
         "volumeattachments",
+        "clusterissuers",
+        "validatingwebhookconfigurations",
+        "mutatingwebhookconfigurations",
     ):
         assert f"- {resource}" in yaml_text, resource
 
@@ -407,3 +410,56 @@ def test_cluster_up_calico_removes_the_manifest_when_kind_fails(tmp_path):
     )
     assert result.returncode != 0
     assert list(scratch.iterdir()) == []
+
+
+def pin_version(repo: Path, key: str, value: str) -> None:
+    versions = repo / "tests" / "versions.env"
+    lines = [line for line in versions.read_text().splitlines() if not line.startswith(f"{key}=")]
+    versions.write_text("\n".join([*lines, f"{key}={value}"]) + "\n")
+
+
+def test_addon_applies_a_verified_manifest_and_waits(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "CERT_MANAGER_MANIFEST_SHA256", fake_manifest_checksum())
+    scratch = tmp_path / "tmp"
+    scratch.mkdir()
+    result = run(tmp_path, repo, ["tests/addon.sh", "cert-manager"], FAKE_TMP=str(scratch))
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    fetches = [c for c in log if c.startswith("curl ")]
+    assert len(fetches) == 1 and "cert-manager.yaml" in fetches[0], log
+    applies = [c for c in log if c.startswith("kubectl apply -f ")]
+    assert len(applies) == 1 and "https://" not in applies[0], log
+    waits = [c for c in log if c.startswith("kubectl wait") and "-n cert-manager" in c]
+    assert waits, log
+    assert log.index(applies[0]) < log.index(waits[0])
+    assert list(scratch.iterdir()) == []
+
+
+def test_addon_refuses_a_manifest_with_the_wrong_checksum(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "CERT_MANAGER_MANIFEST_SHA256", "0" * 64)
+    result = run(tmp_path, repo, ["tests/addon.sh", "cert-manager"])
+    assert result.returncode != 0
+    assert "checksum" in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith("kubectl apply")]
+
+
+def test_addon_refuses_other_context(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    result = run(tmp_path, repo, ["tests/addon.sh", "cert-manager"], context="aks-prod")
+    assert result.returncode == 2
+    assert REFUSAL in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith(("curl", "kubectl apply"))]
+
+
+def test_addon_rejects_unknown_names(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    for args in ([], ["bogus"], ["cert-manager", "extra"]):
+        result = run(tmp_path, repo, ["tests/addon.sh", *args])
+        assert result.returncode == 64, (args, result.stderr)
+        assert "usage:" in result.stderr

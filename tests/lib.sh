@@ -31,3 +31,15 @@ require_test_cluster() {
 wait_for() {
   kubectl wait --timeout=180s "$@"
 }
+
+# Download a pinned file to $3 and fail unless its sha256 is $2. Used for every
+# third-party manifest, so a changed upstream file never reaches the cluster.
+fetch_verified() {
+  local url="$1" want="$2" dest="$3" sum
+  curl -fsSL -o "$dest" "$url"
+  sum="$(shasum -a 256 "$dest" | cut -d ' ' -f 1)"
+  if [[ "$sum" != "$want" ]]; then
+    echo "checksum mismatch for $url: got $sum, want $want" >&2
+    return 1
+  fi
+}
