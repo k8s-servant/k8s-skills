@@ -25,7 +25,7 @@ kubectl logs -n flux-system deployment/kustomize-controller --tail=100 | grep my
 | `BuildFailed` | `kustomize build failed: ...` | kustomize itself fails: a missing file in `kustomization.yaml`, duplicate resources (`ID conflict`), a bad patch. |
 | `ReconciliationFailed` | (apply error) | The API server refused an object: a missing CRD, an admission webhook or policy, an immutable field. |
 | `DependencyNotReady` | `dependency '<ns>/<name>' is not ready` | A Kustomization in `spec.dependsOn` is not Ready. Fix that one first. |
-| `HealthCheckFailed` (also on `Healthy`) | `timeout waiting for: [Deployment/<ns>/<name> status: 'InProgress']` | Flux applied the objects, but they did not become ready in time. The workload is the problem: continue with `k8s-workload-troubleshooting`. |
+| `HealthCheckFailed` (on both `Ready` and `Healthy`) | `timeout waiting for: [Deployment/<ns>/<name> status: 'InProgress']` | Flux applied the objects, but they did not become ready in time. The workload is the problem: continue with `k8s-workload-troubleshooting`. |
 | `PruneFailed` | (delete error) | Flux could not delete a removed object (finalizer, permissions). |
 
 - `lastAttemptedRevision` newer than `lastAppliedRevision`: Flux tried the new commit
