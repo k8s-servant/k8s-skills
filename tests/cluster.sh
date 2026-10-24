@@ -74,14 +74,9 @@ up() {
 
 # Download the pinned Calico manifest and check its checksum, before any cluster exists.
 fetch_calico() {
-  local sum
-  curl -fsSL -o "$1" \
-    "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml"
-  sum="$(shasum -a 256 "$1" | cut -d ' ' -f 1)"
-  if [[ "$sum" != "$CALICO_MANIFEST_SHA256" ]]; then
-    echo "Calico manifest checksum mismatch: got $sum, want $CALICO_MANIFEST_SHA256" >&2
-    exit 1
-  fi
+  fetch_verified \
+    "https://raw.githubusercontent.com/projectcalico/calico/${CALICO_VERSION}/manifests/calico.yaml" \
+    "$CALICO_MANIFEST_SHA256" "$1"
 }
 
 down() {

@@ -5,9 +5,10 @@
 #
 # Usage: tests/agent-kubeconfig.sh [--namespace NS]
 # Without a flag the agent has `view` in every namespace plus read access to the
-# cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses and
-# the CSI objects. With --namespace it has `view` in NS only, like a developer
-# with access to one namespace.
+# cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
+# the CSI objects, admission webhook configurations and cert-manager ClusterIssuers.
+# With --namespace it has `view` in NS only, like a developer with access to one
+# namespace.
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -90,6 +91,16 @@ rules:
       - csidrivers
       - csinodes
       - volumeattachments
+    verbs: [get, list, watch]
+  - apiGroups: [admissionregistration.k8s.io]
+    resources:
+      - validatingwebhookconfigurations
+      - mutatingwebhookconfigurations
+    verbs: [get, list, watch]
+  # cert-manager's own view role leaves ClusterIssuers out.
+  - apiGroups: [cert-manager.io]
+    resources:
+      - clusterissuers
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

@@ -42,9 +42,10 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
 | `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
 | `k8s-storage-troubleshooting` | Storage blocks a workload: PVCs stuck Pending, missing StorageClasses or unsupported access modes, attach and mount errors, full volumes |
+| `k8s-cert-manager-troubleshooting` | cert-manager does not issue or renew: Certificates not Ready, issuers not Ready, a wrong `issuerRef`, ACME challenges stuck, the cert-manager webhook unreachable |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
-Planned: ecosystem and cloud skills.
+Planned: more ecosystem skills (Flux, Argo CD, Helm, Kyverno and others) and cloud skills.
 
 ## Install
 
