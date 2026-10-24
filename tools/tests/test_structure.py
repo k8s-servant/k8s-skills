@@ -70,6 +70,11 @@ def test_links_ignored_or_fragment_stripped(tmp_path):
     assert check_structure(make(tmp_path, body(extra=extra))) == []
 
 
+def test_other_url_schemes_are_not_relative_links(tmp_path):
+    extra = "[a](ftp://example.com/f) [b](tel:+10000000000) [c](data:text/plain,hi)\n"
+    assert check_structure(make(tmp_path, body(extra=extra))) == []
+
+
 def test_reference_links_resolve_relative_to_their_file(tmp_path):
     refs = {"a.md": "[back](../SKILL.md) [bad](nope.md)\n"}
     found = check_structure(make(tmp_path, body(extra="[a](references/a.md)\n"), refs))
