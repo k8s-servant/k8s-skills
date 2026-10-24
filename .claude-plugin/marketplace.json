@@ -13,6 +13,14 @@
       "description": "All k8s-skills: Kubernetes troubleshooting skills that read first and ask before changing anything"
     },
     {
+      "name": "k8s-argocd-troubleshooting",
+      "source": "./",
+      "description": "Use when Argo CD does not deploy or update an application in Kubernetes: an Application that is OutOfSync, Unknown, Degraded, Missing or Progressing, a ComparisonError (\"app path does not exist\", \"unable to resolve ... to a commit SHA\"), an InvalidSpecError (\"do not match any of the allowed destinations in project\"), a sync that fails (\"one or more objects failed to apply\"), auto-sync that never runs, resources that stay OutOfSync after a sync, or ApplicationSets that generate nothing. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-argocd-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-cert-manager-troubleshooting",
       "source": "./",
       "description": "Use when cert-manager does not issue or renew a certificate in Kubernetes: a Certificate that stays READY False, a CertificateRequest that is Pending, Denied or Failed, an Issuer or ClusterIssuer that is not Ready (\"Error getting keypair for CA issuer\"), \"Referenced \\\"Issuer\\\" not found\", ACME Orders or Challenges stuck pending (HTTP-01, DNS-01, rate limits), a certificate that expired or did not renew, or \"failed calling webhook \\\"webhook.cert-manager.io\\\"\" when applying resources. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",

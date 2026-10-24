@@ -6,7 +6,8 @@
 # Usage: tests/agent-kubeconfig.sh [--namespace NS]
 # Without a flag the agent has `view` in every namespace plus read access to the
 # cluster-scoped objects `view` leaves out: nodes, PersistentVolumes, StorageClasses,
-# the CSI objects, admission webhook configurations and cert-manager ClusterIssuers.
+# the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
+# plus Argo CD's objects, which no aggregated role covers.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -101,6 +102,13 @@ rules:
   - apiGroups: [cert-manager.io]
     resources:
       - clusterissuers
+    verbs: [get, list, watch]
+  # Argo CD aggregates nothing to `view`.
+  - apiGroups: [argoproj.io]
+    resources:
+      - applications
+      - applicationsets
+      - appprojects
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

@@ -23,6 +23,7 @@ if [[ "$1 $2 $3" == "apply -f -" ]]; then cat >> "$FAKE_STDIN"; fi
 case "$1 $2" in
   "config current-context") echo "${FAKE_CONTEXT:-}" ;;
   "create token") echo "fake-token" ;;
+  "get namespace") exit 1 ;;  # the fake cluster has no namespaces yet
   "config view") echo "client-certificate-data: FAKE-ADMIN-CERT" ;;
   "config --kubeconfig")
     # Record whether the agent's final path holds admin credentials at this moment.
@@ -199,6 +200,9 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "clusterissuers",
         "validatingwebhookconfigurations",
         "mutatingwebhookconfigurations",
+        "applications",
+        "applicationsets",
+        "appprojects",
     ):
         assert f"- {resource}" in yaml_text, resource
 
@@ -423,6 +427,7 @@ def pin_version(repo: Path, key: str, value: str) -> None:
 ADDONS = [
     ("cert-manager", "CERT_MANAGER_MANIFEST_SHA256", "cert-manager.yaml", "cert-manager"),
     ("flux", "FLUX_MANIFEST_SHA256", "install.yaml", "flux-system"),
+    ("argocd", "ARGOCD_MANIFEST_SHA256", "install.yaml", "argocd"),
 ]
 
 
@@ -438,8 +443,13 @@ def test_addon_applies_a_verified_manifest_and_waits(tmp_path, name, sha_key, as
     log = calls(tmp_path)
     fetches = [c for c in log if c.startswith("curl ")]
     assert len(fetches) == 1 and asset in fetches[0], log
-    applies = [c for c in log if c.startswith("kubectl apply -f ")]
+    applies = [c for c in log if c.startswith("kubectl apply ") and " -f " in c]
     assert len(applies) == 1 and "https://" not in applies[0], log
+    # Server-side, so CRDs over the client-side annotation limit apply; into the
+    # add-on's namespace, which exists first, for manifests whose objects carry none.
+    assert "--server-side" in applies[0] and f"-n {namespace}" in applies[0], log
+    creates = [c for c in log if f"create namespace {namespace}" in c]
+    assert creates and log.index(creates[0]) < log.index(applies[0]), log
     waits = [c for c in log if c.startswith("kubectl wait") and f"-n {namespace}" in c]
     assert waits, log
     assert log.index(applies[0]) < log.index(waits[0])
