@@ -158,10 +158,14 @@ docs, and the PR says so.
 The kit creates a throwaway [kind](https://kind.sigs.k8s.io) cluster named
 `k8s-skills-test`, with its own kubeconfig in `.kube/`. It never touches your other
 clusters or your current context. The agent under test gets a view-only kubeconfig, so it
-cannot change the cluster even by mistake.
+cannot change the cluster even by mistake: the built-in `view` role in every namespace,
+plus read access to nodes, which `view` leaves out. To test what an agent with access to
+one namespace sees, put an `agent-scope` file in the case folder with the namespace name
+on its first line. The agent then gets `view` in that namespace only, and no node access,
+and its kubeconfig context points at that namespace, as a developer's usually does.
 
 ```bash
-tests/cluster.sh up                       # create the cluster (add --cni calico for NetworkPolicy cases)
+tests/cluster.sh up                       # create the cluster (--cni calico for NetworkPolicy cases, --workers N for node cases)
 tests/run.sh <skill> <case>               # set up and break the scenario, print the prompt and KUBECONFIG
 # Give the agent the prompt and the printed KUBECONFIG, then compare its answer with expected.md.
 tests/run.sh --cleanup <skill> <case>     # undo the scenario
