@@ -41,13 +41,16 @@ image that cannot be pulled takes the app down.
   the user upgrades again.
 - To restore service first, the user rolls back to the last good revision (see the
   main skill); the failed revision stays in the history.
-- An immutable field: the user deletes the object so the next upgrade can create it
-  again. This interrupts what the object serves:
+- An immutable field: the user saves the object, deletes it, and upgrades again with
+  the corrected values file (not `--reuse-values`, which would keep a bad value of the
+  failed revision). The delete interrupts what the object serves until the upgrade
+  recreates it:
 
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
+kubectl get deployment my-app-podinfo -n my-namespace -o yaml > my-app-podinfo.yaml
 kubectl delete deployment my-app-podinfo -n my-namespace
-helm upgrade my-app <chart> -n my-namespace --reuse-values --wait
-# Undo: none for the delete; the upgrade recreates the Deployment from the chart, with new pods
+helm upgrade my-app <chart> -n my-namespace -f my-values.yaml --wait
+# Undo: kubectl apply -f my-app-podinfo.yaml (after removing status, uid and resourceVersion) restores the old Deployment; helm rollback my-app <previous revision> undoes the upgrade
 ```

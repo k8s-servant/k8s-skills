@@ -18,12 +18,11 @@ helm status my-app -n my-namespace
 # Undo: nothing to undo, these only read (they are for the user because Helm reads its release records)
 ```
 
-With kubectl, check whether something is really still running, and what was applied:
+With kubectl, check what the interrupted operation applied:
 
 ```bash
 kubectl get pods -n my-namespace -o wide
 kubectl rollout status deployment/my-app-podinfo -n my-namespace --timeout=10s
-kubectl get pods -A | grep -i -E "helm|ci|runner"
 kubectl events -n my-namespace
 ```
 
@@ -49,7 +48,7 @@ and unlocks the release; then they run the upgrade again:
 
 ```bash
 helm rollback my-app 1 -n my-namespace --wait --timeout 5m
-# Undo: helm rollback my-app <the pending revision> -n my-namespace, or run the upgrade again
+# Undo: run the upgrade again (rolling back to the pending revision would restore its half-applied state)
 ```
 
 For `pending-install` with nothing to roll back to, the user uninstalls the release and
