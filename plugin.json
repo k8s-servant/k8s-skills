@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "k8s-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Kubernetes troubleshooting skills for any AI agent: read first, ask before changing anything",
   "license": "Apache-2.0",
   "repository": "https://github.com/k8s-servant/k8s-skills",
