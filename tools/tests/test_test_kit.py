@@ -205,6 +205,7 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "appprojects",
         "constrainttemplates",
         "validatingadmissionpolicies",
+        "clusterexternalsecrets",
     ):
         assert f"- {resource}" in yaml_text, resource
 
@@ -432,6 +433,8 @@ ADDONS = [
     ("argocd", "ARGOCD_MANIFEST_SHA256", "install.yaml", "argocd"),
     ("kyverno", "KYVERNO_MANIFEST_SHA256", "install.yaml", "kyverno"),
     ("gatekeeper", "GATEKEEPER_MANIFEST_SHA256", "gatekeeper.yaml", "gatekeeper-system"),
+    # The release manifest is `helm template` output pinned to the default namespace.
+    ("external-secrets", "EXTERNAL_SECRETS_MANIFEST_SHA256", "external-secrets.yaml", "default"),
 ]
 
 

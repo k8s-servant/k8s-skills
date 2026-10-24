@@ -5,7 +5,7 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager, flux, argocd, kyverno, gatekeeper
+# Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets" >&2
   exit 64
 }
 
@@ -45,6 +45,12 @@ case "$1" in
     url="https://raw.githubusercontent.com/open-policy-agent/gatekeeper/${GATEKEEPER_VERSION}/deploy/gatekeeper.yaml"
     sum="$GATEKEEPER_MANIFEST_SHA256"
     namespace="gatekeeper-system"
+    ;;
+  external-secrets)
+    url="https://github.com/external-secrets/external-secrets/releases/download/${EXTERNAL_SECRETS_VERSION}/external-secrets.yaml"
+    sum="$EXTERNAL_SECRETS_MANIFEST_SHA256"
+    # The release manifest is rendered with every object in the default namespace.
+    namespace="default"
     ;;
   *) usage ;;
 esac
