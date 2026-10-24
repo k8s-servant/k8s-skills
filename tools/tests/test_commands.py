@@ -659,6 +659,10 @@ def ask(*lines: str) -> str:
         ("kubectl exec my-pod -n my-namespace -c app -- cat /etc/resolv.conf",),
         ("kubectl exec my-pod -n my-namespace -- wget -qO- http://my-app:8080/",),
         ("kubectl exec my-pod -n my-namespace -- curl -sS -m 5 http://my-app:8080/healthz",),
+        ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- cilium-dbg status",),
+        ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- cilium-dbg endpoint list",),
+        ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- cilium-health status",),
+        ("kubectl exec cilium-abcde -n kube-system -c cilium-agent -- hubble observe --last 50",),
         (
             "kubectl rollout undo deployment/my-app -n my-namespace",
             "# Undo: kubectl rollout undo deployment/my-app -n my-namespace",
