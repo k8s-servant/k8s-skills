@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.4.0](https://github.com/k8s-servant/k8s-skills/compare/v0.3.1...v0.4.0) (2026-10-24)
+
+
+### Features
+
+* **skills:** add k8s-argocd-troubleshooting ([#47](https://github.com/k8s-servant/k8s-skills/issues/47)) ([1d1d765](https://github.com/k8s-servant/k8s-skills/commit/1d1d765704a3fe495a6b33a421fb18e8b3d1659c))
+* **skills:** add k8s-cert-manager-troubleshooting ([#45](https://github.com/k8s-servant/k8s-skills/issues/45)) ([482781a](https://github.com/k8s-servant/k8s-skills/commit/482781add52c2d473f0000c30f8632c3f4293a4c))
+* **skills:** add k8s-external-secrets-troubleshooting ([#53](https://github.com/k8s-servant/k8s-skills/issues/53)) ([6050d36](https://github.com/k8s-servant/k8s-skills/commit/6050d36ffd9252df8efac95ec08f5dc7eaec4b25))
+* **skills:** add k8s-flux-troubleshooting ([#46](https://github.com/k8s-servant/k8s-skills/issues/46)) ([6d10670](https://github.com/k8s-servant/k8s-skills/commit/6d10670a3ff6e95fd2d4c92b741744b78a2a670c))
+* **skills:** add k8s-gatekeeper-troubleshooting ([#51](https://github.com/k8s-servant/k8s-skills/issues/51)) ([4faf836](https://github.com/k8s-servant/k8s-skills/commit/4faf8366b5e30a0162b03cfc5d186bed5173950f))
+* **skills:** add k8s-grafana-troubleshooting ([#55](https://github.com/k8s-servant/k8s-skills/issues/55)) ([161b979](https://github.com/k8s-servant/k8s-skills/commit/161b979bb1da9efe8aa7be81b920e391aa880b64))
+* **skills:** add k8s-helm-troubleshooting ([#49](https://github.com/k8s-servant/k8s-skills/issues/49)) ([02a7975](https://github.com/k8s-servant/k8s-skills/commit/02a7975f7e875c01ca54d92e635282cde4fb011e))
+* **skills:** add k8s-kyverno-troubleshooting ([#50](https://github.com/k8s-servant/k8s-skills/issues/50)) ([976c038](https://github.com/k8s-servant/k8s-skills/commit/976c038ff523b325e557d44c4f9d8e4ff636b9d2))
+* **skills:** add k8s-prometheus-troubleshooting ([#54](https://github.com/k8s-servant/k8s-skills/issues/54)) ([b2bfbd1](https://github.com/k8s-servant/k8s-skills/commit/b2bfbd123ab35bc53f6b867e2638c7ac3390a695))
+
+
+### Bug fixes
+
+* **skillcheck:** report unreadable files instead of crashing ([#42](https://github.com/k8s-servant/k8s-skills/issues/42)) ([dfeaa5a](https://github.com/k8s-servant/k8s-skills/commit/dfeaa5a6a63e27c69ff2f9eb2b7bac9d1738c7e8))
+* **tests:** never write admin credentials to the agent kubeconfig ([#41](https://github.com/k8s-servant/k8s-skills/issues/41)) ([f8062ba](https://github.com/k8s-servant/k8s-skills/commit/f8062ba35fc6df50c77b4c58ad14ea6ae6f4d222))
+
+
+### Documentation
+
+* plan the ecosystem skills ([#44](https://github.com/k8s-servant/k8s-skills/issues/44)) ([0054a27](https://github.com/k8s-servant/k8s-skills/commit/0054a27bf46d076293023a2ab067133d4f89cf2b))
+
 ## [0.3.1](https://github.com/k8s-servant/k8s-skills/compare/v0.3.0...v0.3.1) (2026-10-24)
 
 
