@@ -21,6 +21,14 @@
       ]
     },
     {
+      "name": "k8s-flux-troubleshooting",
+      "source": "./",
+      "description": "Use when Flux does not deploy or update something in Kubernetes: a GitRepository, OCIRepository or HelmRepository that is not Ready (\"couldn't find remote ref\", \"authentication required\"), a Kustomization that is not Ready (\"kustomization path not found\", \"kustomize build failed\", \"dependency ... is not ready\", health check timeouts), a HelmRelease that is not Ready (HelmChart \"invalid chart reference\", InstallFailed, UpgradeFailed, RetriesExceeded), changes in Git that never reach the cluster, or suspended Flux objects. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-flux-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-network-troubleshooting",
       "source": "./",
       "description": "Use when traffic does not reach a workload in Kubernetes although its pods are running: a Service with no endpoints, a wrong selector or targetPort, connection refused or time-outs between pods, DNS names that do not resolve (NXDOMAIN, \"server can't find\"), a NetworkPolicy blocking traffic, or an Ingress or Gateway API route that does not route. Investigates with kubectl get and describe, asks before checks inside a container, and proposes fixes. Reads first and asks before changing anything.",
