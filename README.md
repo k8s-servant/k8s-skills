@@ -28,18 +28,19 @@ skills are written and checked to keep to these tiers, but that is not a 100% gu
 "ask first" is an instruction the agent follows, not a lock, and an agent in an
 auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
 RBAC of the credentials you give it. If you want it to only investigate, give it a
-read-only identity, for example one bound to the built-in `view` ClusterRole. Give it
-more only if you want it to apply the changes you approve
+read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
+cannot read nodes, so for `k8s-triage` on a whole cluster also allow `get`, `list` and
+`watch` on `nodes`. Give it more only if you want it to apply the changes you approve
 (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
 | Skill | Use it when |
 |---|---|
+| `k8s-triage` | Something is wrong in the cluster and it is not clear where: a ranked first look at nodes, pods, events and resource use, with a first fix and the skill that goes deeper |
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
 
-Planned: `k8s-triage` (something is wrong and it is not clear where),
-`k8s-node-troubleshooting`, `k8s-network-troubleshooting`, `k8s-storage-troubleshooting`,
+Planned: `k8s-node-troubleshooting`, `k8s-network-troubleshooting`, `k8s-storage-troubleshooting`,
 then ecosystem and cloud skills.
 
 ## Install
