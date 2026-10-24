@@ -5,7 +5,7 @@
 # their setup.sh.
 #
 # Usage: tests/addon.sh <name>
-# Names: cert-manager, flux
+# Names: cert-manager, flux, argocd
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd" >&2
   exit 64
 }
 
@@ -31,6 +31,11 @@ case "$1" in
     sum="$FLUX_MANIFEST_SHA256"
     namespace="flux-system"
     ;;
+  argocd)
+    url="https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml"
+    sum="$ARGOCD_MANIFEST_SHA256"
+    namespace="argocd"
+    ;;
   *) usage ;;
 esac
 
@@ -40,5 +45,13 @@ manifest=""
 trap 'rm -f "$manifest"' EXIT
 manifest="$(mktemp)"
 fetch_verified "$url" "$sum" "$manifest"
-kubectl apply -f "$manifest" >&2
+# Some manifests (Argo CD) leave their objects' namespace to `kubectl apply -n`.
+if ! kubectl get namespace "$namespace" >/dev/null 2>&1; then
+  kubectl create namespace "$namespace" >&2
+fi
+# Server-side apply: some CRDs are larger than the client-side annotation limit.
+kubectl apply --server-side --force-conflicts -n "$namespace" -f "$manifest" >&2
 kubectl wait --for=condition=Available deployment --all -n "$namespace" --timeout=300s >&2
+for statefulset in $(kubectl get statefulsets -n "$namespace" -o name); do
+  kubectl rollout status "$statefulset" -n "$namespace" --timeout=300s >&2
+done
