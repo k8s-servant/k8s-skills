@@ -16,6 +16,12 @@ usage() {
   exit 64
 }
 
+if [[ -n "${K8S_SKILLS_CLOUD_CONTEXT:-}" ]]; then
+  echo "refusing to run: this script manages the kind test cluster only;" \
+    "unset K8S_SKILLS_CLOUD_CONTEXT" >&2
+  exit 2
+fi
+
 up() {
   local cni="" workers=0 i
   # Temp files, removed on every exit path (globals, so the EXIT trap still sees them).

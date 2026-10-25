@@ -742,3 +742,12 @@ def test_addon_refuses_a_cloud_cluster(tmp_path):
     assert result.returncode == 2
     assert "kind" in result.stderr
     assert not any(c.startswith("kubectl apply") for c in calls(tmp_path))
+
+
+def test_cluster_script_refuses_a_cloud_context(tmp_path):
+    repo = make_repo(tmp_path)
+    for action in ("up", "down"):
+        result = run(tmp_path, repo, ["tests/cluster.sh", action], K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+        assert result.returncode == 2, (action, result.stderr)
+        assert "kind" in result.stderr
+    assert not any(c.startswith("kind ") for c in calls(tmp_path))

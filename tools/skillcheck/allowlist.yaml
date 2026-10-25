@@ -17,6 +17,11 @@ commands:
        "vm list-usage", "vm list-skus", "monitor metrics list", "disk show", "disk list", "monitor activity-log list",
        "identity show", "identity list", "identity federated-credential list",
        "role assignment list", "account show"]
+# az command groups: in prose, `az <group> ...` is checked as a command, while other
+# words after az ("the `az cli` tool") are a mention.
+az_groups: [account, acr, ad, aks, appconfig, disk, group, identity, keyvault, login,
+            logout, monitor, network, policy, resource, role, rest, snapshot, sql, storage,
+            vm, vmss]
 # Flags an az command may use; any other flag is a finding. An argument starting with `@`
 # would make az read it from a local file, so it is a finding too.
 az_flags: [-g, --resource-group, -n, --name, --cluster-name, --nodepool-name, --lb-name,

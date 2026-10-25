@@ -47,7 +47,6 @@ LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
 # and `/api/v1/namespaces/x/secrets` are all seen as mentioning the word `secrets`.
 WORD_SPLIT = re.compile(r"""[\s,/{}=:;|&()<>"'`$]+""")
 SECRET_WORDS = {"secret", "secrets"}
-AZ_GROUP = re.compile(r"^[a-z][a-z-]*$")
 SECRET_PREFIXES = ("secret.", "secrets.")
 VARIABLE_START = re.compile(r"[A-Za-z_{0-9@*#?!$-]")
 # Short kubectl flag letters after the subcommand: those that take a value (the rest of
@@ -142,6 +141,7 @@ def _parse_markdown(
     first_line: int,
     keys: frozenset[str] = frozenset(),
     subcommands: frozenset[str] = frozenset(),
+    az_groups: frozenset[str] = frozenset(),
 ) -> tuple[list[Block], list[tuple[int, str]]]:
     """Find the code blocks and the prose commands of a Markdown text.
 
@@ -151,6 +151,7 @@ def _parse_markdown(
         keys: The allow-listed program names that make prose a command.
         subcommands: The kubectl command names; prose is a command only when its second
             word is one of them.
+        az_groups: The az command groups, which play the same part for az.
 
     Returns:
         The fenced and indented code blocks, and (line, text) candidates from prose:
@@ -183,10 +184,17 @@ def _parse_markdown(
                 prose.append((start + offset, line))
             prose += _code_spans(token, start)
     candidates = [(n, t.strip().removeprefix("$ ").strip()) for n, t in prose]
-    return blocks, [(n, t) for n, t in candidates if _reads_as_command(t, keys, subcommands)]
+    return blocks, [
+        (n, t) for n, t in candidates if _reads_as_command(t, keys, subcommands, az_groups)
+    ]
 
 
-def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[str]) -> bool:
+def _reads_as_command(
+    text: str,
+    keys: frozenset[str],
+    subcommands: frozenset[str],
+    az_groups: frozenset[str] = frozenset(),
+) -> bool:
     """True if a piece of prose is a command rather than a mention of a program.
 
     Prose in a Kubernetes repository names kubectl all the time ("the `kubectl`
@@ -198,8 +206,7 @@ def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[st
     if len(words) < 2 or words[0] not in keys:
         return False
     if words[0] == "az":
-        # az command groups are plain lowercase words: `az aks show`, not "az CLI".
-        return bool(AZ_GROUP.match(words[1]))
+        return words[1] in az_groups or words[1].startswith("-")
     return words[1] in subcommands or words[1].startswith("-")
 
 
@@ -776,6 +783,7 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             first_line,
             frozenset(allowlist["commands"]),
             frozenset(allowlist["kubectl_commands"]),
+            frozenset(allowlist["az_groups"]),
         )
         for block in blocks:
             if block.lang is None:

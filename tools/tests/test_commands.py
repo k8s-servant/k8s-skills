@@ -925,3 +925,10 @@ def test_az_capacity_and_metrics_commands_pass(tmp_path):
         "az network lb outbound-rule list -g my-node-resource-group --lb-name kubernetes -o table",
     ]
     assert run(tmp_path, bash(*lines)) == []
+
+
+def test_lowercase_az_mentions_are_not_commands(tmp_path):
+    assert run(tmp_path, "Install the `az cli` tool, then run `az login`.\n") != []
+    assert run(tmp_path / "ok", "Install the `az cli` tool; it is the `az tool`.\n") == []
+    found = run(tmp_path / "kv", "Never run `az keyvault secret show` here.\n")
+    assert any(m.startswith("not on the allow-list") for m in messages(found))
