@@ -59,6 +59,8 @@ would help:
   `k8s-cert-manager-troubleshooting`.
 - Another Gateway API implementation (Istio, Cilium, a cloud controller) owns the
   GatewayClass: `k8s-network-troubleshooting` and that implementation's skill.
+- What an Envoy response flag, reset reason or cluster statistic means in general:
+  `k8s-envoy-troubleshooting` (the proxy itself; Envoy Gateway writes its config).
 
 ## Investigate
 
