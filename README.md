@@ -45,6 +45,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-loki-troubleshooting` | Loki rejects, drops or cannot query logs: pushes refused with 400, 401 or 429 (old timestamps, missing tenant, rate and stream limits), crashes on schema errors, storage flushes, rings, query limits |
 | `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
 | `k8s-storage-troubleshooting` | Storage blocks a workload: PVCs stuck Pending, missing StorageClasses or unsupported access modes, attach and mount errors, full volumes |
+| `k8s-autoscaling-troubleshooting` | Autoscaling does not scale: HPA targets `<unknown>` (missing requests, no metrics), stuck at `maxReplicas`, metrics-server and `kubectl top`, KEDA ScaledObjects not Ready or without an HPA, the VPA |
 | `k8s-cert-manager-troubleshooting` | cert-manager does not issue or renew: Certificates not Ready, issuers not Ready, a wrong `issuerRef`, ACME challenges stuck, the cert-manager webhook unreachable |
 | `k8s-flux-troubleshooting` | Flux does not deploy: sources not Ready (missing branch, credentials, chart version), Kustomizations with a wrong path or failed build, HelmReleases stalled, suspended objects |
 | `k8s-argocd-troubleshooting` | Argo CD does not deploy: comparison errors (wrong path or revision), destinations not allowed by the project, no automated sync, failed syncs, drift, health |
@@ -87,6 +88,7 @@ A skill is merged only after four checks:
 | Skill | Verified with | Scenarios |
 |---|---|---|
 | `k8s-argocd-troubleshooting` | kubernetes 1.37, argo-cd 3.5 | `app-path-missing`, `auto-sync-off`, `project-destination-denied` |
+| `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
 | `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
 | `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
 | `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |

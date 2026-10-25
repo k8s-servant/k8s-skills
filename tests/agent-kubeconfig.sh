@@ -9,7 +9,7 @@
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
-# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, and the
+# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, APIServices, and the
 # prometheus-operated and alertmanager-operated service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
@@ -162,6 +162,12 @@ rules:
       - rolebindings
       - clusterroles
       - clusterrolebindings
+    verbs: [get, list, watch]
+  # APIServices show whether metrics-server or KEDA serve metrics.k8s.io and
+  # external.metrics.k8s.io; `view` leaves them out.
+  - apiGroups: [apiregistration.k8s.io]
+    resources:
+      - apiservices
     verbs: [get, list, watch]
   # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
   - apiGroups: [admissionregistration.k8s.io]

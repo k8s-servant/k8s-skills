@@ -169,7 +169,7 @@ role in every namespace, plus read access to the cluster-scoped objects `view` l
 (nodes, PersistentVolumes, StorageClasses, the CSI objects, admission webhook
 configurations and cert-manager ClusterIssuers), to Argo CD's and Gatekeeper's objects,
 which no aggregated role covers, and to ClusterExternalSecrets,
-ValidatingAdmissionPolicies and the RBAC objects (Roles, ClusterRoles and their bindings).
+ValidatingAdmissionPolicies and the RBAC objects (Roles, ClusterRoles and their bindings) and APIServices.
 To test what an agent with access to one namespace sees, put an `agent-scope` file in the
 case folder with the namespace name on its first line. The agent then gets `view` in that
 namespace only, and no node access, and its kubeconfig context points at that namespace,
