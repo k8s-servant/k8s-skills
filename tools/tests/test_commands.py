@@ -916,3 +916,12 @@ def test_az_changes_are_proposed_fixes_not_ask_first(tmp_path):
     assert run(tmp_path, fix) == []
     ask = f"{ASK_MARKER}\n```bash\naz aks update -g my-resource-group -n my-cluster\n# Undo: none\n```\n"
     assert run(tmp_path / "ask", ask) != []
+
+
+def test_az_capacity_and_metrics_commands_pass(tmp_path):
+    lines = [
+        "az vm list-skus -l westeurope --size Standard_D4s_v5 --zone -o table",
+        "az monitor metrics list --resource my-lb-id --metric UsedSnatPorts --interval PT1M",
+        "az network lb outbound-rule list -g my-node-resource-group --lb-name kubernetes -o table",
+    ]
+    assert run(tmp_path, bash(*lines)) == []
