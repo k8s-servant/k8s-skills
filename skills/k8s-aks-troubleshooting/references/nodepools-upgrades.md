@@ -59,10 +59,11 @@ Upgrades:
   conflicting disruption budgets`**: two PDBs select the same pod.
 - **`UpgradeBlockedOnDeprecatedAPIUsage`**: workloads still call APIs that the target
   version removes; the upgrade is held until they stop or the user overrides it.
-- **No upgrade target in `get-upgrades`**: the next minor version must be taken one step
-  at a time (1.33 to 1.34 to 1.35). In October 2026 AKS supports 1.34 to 1.37; older
-  versions run only with paid long-term support, and from June 2027 AKS upgrades
-  unsupported clusters itself.
+- **No upgrade target in `get-upgrades`**: minor versions are taken one step at a time
+  (for example 1.33 to 1.34, then 1.35). `az aks get-versions -l my-region -o table` lists
+  what AKS supports in the region now; a version that has left standard support runs only
+  with paid long-term support, and AKS will upgrade unsupported clusters itself (see the
+  supported versions page in Sources for the current dates).
 - Node pools can be one minor version behind the control plane at most.
 
 Capacity:
