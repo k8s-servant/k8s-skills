@@ -93,6 +93,7 @@ Order: the most used tools first, and those easy to run on kind before the heavy
 | 3. Observability | `k8s-prometheus-troubleshooting` (Operator, Alertmanager, rules), `k8s-grafana-troubleshooting` |
 | 4. Networking | `k8s-cilium-troubleshooting`, `k8s-istio-troubleshooting`, `k8s-envoy-gateway-troubleshooting` |
 | 5. Access, scaling, telemetry | `k8s-rbac-troubleshooting`, `k8s-autoscaling-troubleshooting` (HPA, metrics-server, KEDA, VPA), `k8s-fluent-bit-troubleshooting`, `k8s-opentelemetry-collector-troubleshooting`, `k8s-loki-troubleshooting`, `k8s-envoy-troubleshooting` |
+| 6. Core API and DNS | `k8s-api-troubleshooting`, `k8s-coredns-troubleshooting` |
 | Later candidates | Velero, CloudNativePG, Strimzi, Karpenter (with the cloud skills), Crossplane, Linkerd, Traefik |
 
 Rules for every ecosystem skill (decided with the maintainer, after #42):
@@ -120,6 +121,13 @@ Rules for every ecosystem skill (decided with the maintainer, after #42):
   Emissary or Gloo): access-log response flags, reset reasons, the read-only admin
   endpoints. Istio and Envoy Gateway keep their control-plane parts and hand off to it
   for the proxy. The Gateway API itself stays in `k8s-network-troubleshooting`.
+- **The API server and CoreDNS are core subjects too** (batch 6):
+  `k8s-api-troubleshooting` covers what fails inside the API server for any tool
+  (webhooks, APIServices, CRD versions, stuck deletion, 401, 429, etcd and size limits);
+  the tool skills keep their own webhooks and hand off to it otherwise.
+  `k8s-coredns-troubleshooting` covers CoreDNS itself (the Corefile, upstreams, stub
+  domains, NodeLocal DNSCache); `k8s-network-troubleshooting` keeps the client side of
+  DNS and hands off to it.
 - **Scenarios** install the tool on kind from a pinned version in `tests/versions.env`,
   with the manifest checked against a pinned checksum, as for Calico. Tools that
   replace the CNI (Cilium) get their own `tests/cluster.sh up --cni cilium`, since a

@@ -217,6 +217,10 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "clusterrolebindings",
         # Whether metrics-server or KEDA serve their aggregated APIs.
         "apiservices",
+        # The API skill reads CRD versions and API Priority and Fairness objects.
+        "customresourcedefinitions",
+        "flowschemas",
+        "prioritylevelconfigurations",
     ):
         assert f"- {resource}" in yaml_text, resource
     # Prometheus' and Alertmanager's HTTP APIs, through the API server's service proxy,

@@ -44,6 +44,9 @@ would help:
   `k8s-storage-troubleshooting`.
 - The pods are healthy and Ready, but traffic still does not arrive (Service, DNS,
   NetworkPolicy, Ingress): `k8s-network-troubleshooting`.
+- A controller cannot create its pods at all (`FailedCreate` with `failed calling
+  webhook` or `denied the request`), or a namespace stays `Terminating`:
+  `k8s-api-troubleshooting`.
 
 ## Investigate
 
