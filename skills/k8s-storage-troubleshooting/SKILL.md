@@ -47,6 +47,9 @@ would help:
   `k8s-node-troubleshooting`.
 - The volume is mounted and the app still fails (crash, permissions it logs, probes):
   `k8s-workload-troubleshooting`.
+- On AKS, Azure refuses the disk or share (an Azure error code in `ProvisioningFailed` or
+  `FailedAttachVolume`, a disk zone conflict, Azure Files mount errors):
+  `k8s-aks-troubleshooting`.
 
 ## Investigate
 

@@ -54,6 +54,9 @@ below, then tell the user which skill would help, and stop there:
   `k8s-storage-troubleshooting`.
 - The API server refuses requests (`failed calling webhook`, an APIService that is not
   `True`, a namespace stuck `Terminating`): `k8s-api-troubleshooting`.
+- On AKS, the error comes from Azure (`SyncLoadBalancerFailed`, a `ProvisioningFailed`
+  with an Azure error code, `AADSTS` errors, a cluster or node pool `Failed`):
+  `k8s-aks-troubleshooting`.
 
 ## Investigate
 
@@ -158,6 +161,7 @@ kubectl get endpointslices -n my-namespace
 | Service with no ready endpoints while its pods are healthy, DNS failures | 3 | `k8s-network-troubleshooting` |
 | CoreDNS pods crashing or not Ready, CoreDNS errors in its logs | 2 | `k8s-coredns-troubleshooting` |
 | `FailedCreate` events that name a webhook, an APIService that is not `True`, a namespace stuck `Terminating` | 3 | `k8s-api-troubleshooting` |
+| On AKS: `SyncLoadBalancerFailed`, Azure error codes in `ProvisioningFailed` or `FailedAttachVolume`, `AADSTS` errors in logs | 3 | `k8s-aks-troubleshooting` |
 
 A short first look inside a container can confirm a network issue. Ask first: show the
 command, and run it only after the user agrees (pick a running pod in the namespace that
