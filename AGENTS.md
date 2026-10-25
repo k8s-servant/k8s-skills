@@ -50,8 +50,10 @@ current context.
   personal data.
 - **Never create or edit `CHANGELOG.md`** and never bump versions by hand: release-please
   does both.
-- **Manifests are generated** (`.claude-plugin/marketplace.json`, `gemini-extension.json`,
-  `plugin.json`). Run `manifests --write`, do not edit them by hand.
+- **Manifests are generated** (`.claude-plugin/marketplace.json` and `plugin.json`,
+  `skills/*/.claude-plugin/plugin.json`, `gemini-extension.json`, `plugin.json`, and the
+  `extra-files` in `release-please-config.json`). Run `manifests --write`, do not edit them
+  by hand.
 - **One copy of each skill**, in `skills/`. No duplicated skill files.
 - **Skill shape:** name `k8s-<subject>-<job>` equal to the folder, frontmatter limited to
   the portable fields, `SKILL.md` at most 500 lines, H2 sections in order: When to use,

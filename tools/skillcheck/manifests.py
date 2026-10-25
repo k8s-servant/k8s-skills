@@ -18,6 +18,14 @@ DESCRIPTION = (
 )
 SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 REPOSITORY = "https://github.com/k8s-servant/k8s-skills"
+# Fields every Claude plugin.json shares, for the directory listing.
+ABOUT = {
+    "author": {"name": "k8s-servant", "url": "https://github.com/k8s-servant"},
+    "homepage": REPOSITORY,
+    "repository": REPOSITORY,
+    "license": "Apache-2.0",
+}
+RELEASE_CONFIG = Path("release-please-config.json")
 STALE = "{path} is out of date: run python -m tools.skillcheck manifests --write"
 
 
@@ -49,6 +57,7 @@ def render_manifests(repo: Path) -> dict[Path, str]:
     manifest = json.loads((repo / ".release-please-manifest.json").read_text(encoding="utf-8"))
     version = manifest["."]
     plugins: list[dict] = [{"name": NAME, "source": "./", "description": BUNDLE_DESCRIPTION}]
+    skill_plugins: dict[Path, str] = {}
     problems: list[str] = []
     for folder in skill_dirs(repo):
         path = (folder / "SKILL.md").relative_to(repo).as_posix()
@@ -61,14 +70,17 @@ def render_manifests(repo: Path) -> dict[Path, str]:
         if not isinstance(description, str) or not description.strip():
             problems.append(f"{path}: description must be a non-empty string")
             continue
-        plugins.append(
-            {
-                "name": folder.name,
-                "source": "./",
-                "description": description.strip(),
-                "skills": [f"./skills/{folder.name}"],
-            }
-        )
+        source = f"./skills/{folder.name}"
+        plugins.append({"name": folder.name, "source": source, "description": description.strip()})
+        # Each skill folder is its own plugin root, so its plugin.json points at "./".
+        one = {
+            "name": folder.name,
+            "version": version,
+            "description": description.strip(),
+            **ABOUT,
+            "skills": ["./"],
+        }
+        skill_plugins[Path(f"skills/{folder.name}/.claude-plugin/plugin.json")] = _dump(one)
     if problems:
         raise ManifestError(problems)
     marketplace = {
@@ -87,11 +99,28 @@ def render_manifests(repo: Path) -> dict[Path, str]:
         "keywords": ["kubernetes", "k8s", "sre", "troubleshooting", "agent-skills"],
     }
     gemini = {"name": NAME, "version": version, "description": DESCRIPTION}
-    return {
+    bundle = {"name": NAME, "version": version, "description": DESCRIPTION, **ABOUT}
+    files = {
         Path(".claude-plugin/marketplace.json"): _dump(marketplace),
+        Path(".claude-plugin/plugin.json"): _dump(bundle),
+        **skill_plugins,
         Path("plugin.json"): _dump(plugin),
         Path("gemini-extension.json"): _dump(gemini),
     }
+    files[RELEASE_CONFIG] = _release_config(repo, files)
+    return files
+
+
+def _release_config(repo: Path, files: dict[Path, str]) -> str:
+    """release-please's config, with `extra-files` listing every manifest that has a version."""
+    config = json.loads((repo / RELEASE_CONFIG).read_text(encoding="utf-8"))
+    versioned = sorted(
+        rel.as_posix() for rel, text in files.items() if "version" in json.loads(text)
+    )
+    config["packages"]["."]["extra-files"] = [
+        {"type": "json", "path": path, "jsonpath": "$.version"} for path in versioned
+    ]
+    return _dump(config)
 
 
 def write_manifests(repo: Path) -> int:
