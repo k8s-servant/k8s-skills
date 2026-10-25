@@ -117,6 +117,15 @@ a scenario yourself, see [Scenarios and the test kit](CONTRIBUTING.md#scenarios-
 Install with the [`skills` CLI](https://github.com/vercel-labs/skills), or copy the
 folders yourself. Both work for one skill or all of them.
 
+**All skills or one?** We recommend installing all of them. The skills hand off to each
+other by name (`k8s-triage` to the workload, network or node skill, a tool's skill to
+`k8s-network-troubleshooting` or `k8s-cert-manager-troubleshooting`), and a hand-off
+works best when the target is installed. It costs little: agents load only each skill's
+name and description at startup and read the rest when a skill is used ([progressive
+disclosure](https://agentskills.io/specification#progressive-disclosure)); a description
+is at most 1,024 characters, so the whole set costs a few thousand tokens. Install one
+skill when you only run that tool, or when your agent limits how many skills it loads.
+
 ```bash
 # All skills, for Claude Code (use -a codex, ... for other agents)
 npx skills add k8s-servant/k8s-skills -a claude-code
