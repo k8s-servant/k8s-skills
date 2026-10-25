@@ -154,7 +154,8 @@ help.
 
 ## Contributing
 
-New skills and fixes are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Report
+New skills and fixes are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. What
+runs on each pull request is described in [docs/ci.md](docs/ci.md). Report
 security problems as described in [SECURITY.md](SECURITY.md).
 
 ## License

@@ -189,6 +189,13 @@ An ecosystem skill's scenarios install the tool with `tests/addon.sh <name>` fro
 to `tests/addon.sh` with the manifest URL and the namespace to wait for. The script
 refuses a manifest whose checksum does not match.
 
+## CI
+
+Every pull request runs the checks described in [docs/ci.md](docs/ci.md): lint,
+tests, `skillcheck`, shellcheck, markdownlint, link and plugin checks, gitleaks, zizmor,
+actionlint, the PR title check and a Claude review. The kind scenarios do not run in CI;
+run them yourself as described above.
+
 ## Review checklist
 
 A skill is merged only when:
