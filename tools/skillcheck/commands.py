@@ -401,14 +401,18 @@ def _output_problems(value: str) -> list[str]:
     return [f"{BLOCKING_MESSAGE}-o {fmt}"] if fmt.endswith("-file") else []
 
 
-def _check_flags(args: list[str], allowlist: dict) -> list[str]:
+def _check_flags(
+    args: list[str], allowlist: dict, extra: frozenset[str] = frozenset()
+) -> list[str]:
     """Check the flags of a kubectl command after its subcommand.
 
-    Global flags must be on the allowed list. Short flags are walked letter by letter,
-    so `-As https://example.com` is seen as `-A` plus `-s`; a letter that is neither a
-    known switch nor a known value flag fails closed.
+    Global flags must be on the allowed list, or in `extra`: the ones this subcommand
+    may use (subcommand_flags_allowed in allowlist.yaml). Short flags are walked letter
+    by letter, so `-As https://example.com` is seen as `-A` plus `-s`; a letter that is
+    neither a known switch nor a known value flag fails closed.
     """
-    every, allowed = set(allowlist["global_flags"]), set(allowlist["global_flags_allowed"])
+    every = set(allowlist["global_flags"])
+    allowed = set(allowlist["global_flags_allowed"]) | extra
     problems: list[str] = []
     for i, token in enumerate(args):
         if token == "--":
@@ -470,15 +474,19 @@ def _check_kubectl(words: list[str], allowlist: dict) -> list[str]:
             i += 1
     word = words[i] if i < len(words) else ""
     nxt = words[i + 1] if i + 1 < len(words) else ""
+    subcommand = ""
     if f"{word} {nxt}" in listed:
+        subcommand = f"{word} {nxt}"
         i += 2
     elif word in listed:
+        subcommand = word
         i += 1
     else:
         shown = f"{words[0]} {word}".strip()
         problems.append(f"not on the allow-list: {shown}")
         i += 1
-    return problems + _check_flags(words[i:], allowlist)
+    extra = frozenset(allowlist.get("subcommand_flags_allowed", {}).get(subcommand, []))
+    return problems + _check_flags(words[i:], allowlist, extra)
 
 
 def _check_filter(words: list[str], allowlist: dict) -> list[str]:

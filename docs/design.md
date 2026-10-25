@@ -92,7 +92,8 @@ Order: the most used tools first, and those easy to run on kind before the heavy
 | 2. Policy and secrets | `k8s-kyverno-troubleshooting`, `k8s-gatekeeper-troubleshooting`, `k8s-external-secrets-troubleshooting` |
 | 3. Observability | `k8s-prometheus-troubleshooting` (Operator, Alertmanager, rules), `k8s-grafana-troubleshooting` |
 | 4. Networking | `k8s-cilium-troubleshooting`, `k8s-istio-troubleshooting`, `k8s-envoy-gateway-troubleshooting` |
-| Later candidates | KEDA, Velero, Crossplane, Linkerd, Traefik, CloudNativePG |
+| 5. Access, scaling, telemetry | `k8s-rbac-troubleshooting`, `k8s-autoscaling-troubleshooting` (HPA, metrics-server, KEDA, VPA), `k8s-fluent-bit-troubleshooting`, `k8s-opentelemetry-collector-troubleshooting`, `k8s-loki-troubleshooting`, `k8s-envoy-troubleshooting` |
+| Later candidates | Velero, CloudNativePG, Strimzi, Karpenter (with the cloud skills), Crossplane, Linkerd, Traefik |
 
 Rules for every ecosystem skill (decided with the maintainer, after #42):
 
@@ -110,9 +111,15 @@ Rules for every ecosystem skill (decided with the maintainer, after #42):
   because they read Secrets, not because they change anything, and the skill says so.
 - **Secrets stay unread** in External Secrets too: the skill reads `ExternalSecret`,
   `SecretStore` and `ClusterSecretStore` status, never the target Secret.
-- **No separate Envoy skill.** Envoy is the proxy inside Istio and Envoy Gateway; reading
-  its config belongs to those two skills. The Gateway API itself stays in
-  `k8s-network-troubleshooting`.
+- **RBAC and autoscaling are core subjects**, like networking: `k8s-rbac-troubleshooting`
+  covers the built-in authorization objects, and `k8s-autoscaling-troubleshooting` covers
+  the HorizontalPodAutoscaler with what feeds it (metrics-server, KEDA, which drives an
+  HPA, and the VPA). The telemetry tools each get their own skill.
+- **Envoy itself gets its own skill** (added in batch 5): `k8s-envoy-troubleshooting`
+  reads a standalone Envoy (a Deployment with its own bootstrap, or under Contour,
+  Emissary or Gloo): access-log response flags, reset reasons, the read-only admin
+  endpoints. Istio and Envoy Gateway keep their control-plane parts and hand off to it
+  for the proxy. The Gateway API itself stays in `k8s-network-troubleshooting`.
 - **Scenarios** install the tool on kind from a pinned version in `tests/versions.env`,
   with the manifest checked against a pinned checksum, as for Calico. Tools that
   replace the CNI (Cilium) get their own `tests/cluster.sh up --cni cilium`, since a

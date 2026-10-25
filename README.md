@@ -32,7 +32,9 @@ read-only identity, for example one bound to the built-in `view` ClusterRole. `v
 cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
 node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 `persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
-`csinodes` and `volumeattachments`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+`csinodes` and `volumeattachments`. `view` cannot read RBAC objects either, so for
+`k8s-rbac-troubleshooting` allow `get` and `list` on `roles`, `rolebindings`,
+`clusterroles` and `clusterrolebindings`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
@@ -54,6 +56,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-cilium-troubleshooting` | Traffic fails on a Cilium cluster: CiliumNetworkPolicy drops and default deny, DNS blocked by egress policies, L7 403s, Hubble flows, agent, endpoint and IPAM problems |
 | `k8s-istio-troubleshooting` | Requests fail in an Istio mesh: Envoy access logs and response flags (UH, NR, filter_chain_not_found), AuthorizationPolicy 403s, subsets without pods, STRICT mTLS, injection, ambient |
 | `k8s-envoy-gateway-troubleshooting` | Envoy Gateway does not route: Gateways not Programmed, HTTPRoutes not Accepted (hostnames, allowedRoutes), unresolved backends and missing ReferenceGrants, 404/500/503, policies |
+| `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
 Planned: cloud skills (AKS, EKS, GKE) and more ecosystem skills.
@@ -96,6 +99,7 @@ A skill is merged only after four checks:
 | `k8s-network-troubleshooting` | kubernetes 1.37, gateway-api 1.6 | `networkpolicy-blocks-namespace`, `selector-mismatch`, `wrong-target-port` |
 | `k8s-node-troubleshooting` | kubernetes 1.37 | `node-not-ready`, `requests-full`, `untolerated-taint` |
 | `k8s-prometheus-troubleshooting` | kubernetes 1.37, prometheus-operator 0.94, prometheus 3.14 | `servicemonitor-not-selected`, `servicemonitor-port-name-wrong`, `target-path-404` |
+| `k8s-rbac-troubleshooting` | kubernetes 1.37 | `clusterrole-bound-in-namespace`, `role-missing-verb`, `subject-namespace-wrong` |
 | `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
 | `k8s-triage` | kubernetes 1.37 | `crashloop-somewhere`, `healthy-cluster`, `namespace-only-access`, `node-not-ready` |
 | `k8s-workload-troubleshooting` | kubernetes 1.37 | `image-pull-wrong-tag`, `oom-killed`, `readiness-probe-failing` |
