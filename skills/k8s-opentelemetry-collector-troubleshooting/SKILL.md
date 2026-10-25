@@ -6,11 +6,11 @@ description: >-
   "references receiver ... which is not configured", "unknown type"), applications get
   "connection refused" on 4317 or 4318 (a receiver listening on localhost, or not in a
   pipeline), exporters fail ("Exporting failed. Will retry the request after interval",
-  "Dropping data", "sending queue is full", "no such host"), the memory_limiter refuses
-  data, k8s_attributes lacks RBAC, or the OpenTelemetry Operator does not create a
-  collector or inject auto-instrumentation. Investigates with kubectl get, logs and the
-  collector's own metrics, and proposes fixes. Reads first and asks before changing
-  anything.
+  "Exporting failed. Dropping data.", "sending queue is full", "no children to pick
+  from"), the memory_limiter refuses data, k8s_attributes lacks RBAC, or the
+  OpenTelemetry Operator does not create a collector or inject auto-instrumentation.
+  Investigates with kubectl get, logs and the collector's own metrics, and proposes
+  fixes. Reads first and asks before changing anything.
 license: Apache-2.0
 metadata:
   verified-with: "kubernetes 1.37, opentelemetry-collector 0.163"
@@ -90,7 +90,7 @@ config.
 
 ```bash
 kubectl get deployment my-collector -n my-namespace -o jsonpath='{.spec.template.spec.containers[0].args}{"\n"}{range .spec.template.spec.volumes[*]}{.name}{" "}{.configMap.name}{.secret.secretName}{"\n"}{end}'
-kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E 'receivers:|exporters:|processors:|pipelines:|endpoint:|grpc|http|traces:|metrics:|logs:'
+kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E '^ *(receivers|exporters|processors|pipelines|protocols|grpc|http|endpoint|traces|metrics|logs):'
 ```
 
 **4. If the OpenTelemetry Operator manages the collector**, read its resource and its

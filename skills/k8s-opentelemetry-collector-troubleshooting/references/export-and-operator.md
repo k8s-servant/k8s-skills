@@ -4,7 +4,7 @@
 
 ```bash
 kubectl logs -n my-namespace deployment/my-collector --tail=500 | grep -E 'Exporting failed|Dropping data|Rejecting data|memory|Failed to watch|forbidden'
-kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E -B2 -A1 'endpoint:'
+kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E '^ *[a-z_]+(/[a-z0-9_-]+)?:$|^ *endpoint:'
 kubectl get endpointslices -n my-namespace -l kubernetes.io/service-name=my-backend
 kubectl logs -n my-namespace deployment/my-backend --tail=50
 kubectl auth can-i list pods --as=system:serviceaccount:my-namespace:my-collector
