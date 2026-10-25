@@ -32,11 +32,11 @@ its bootstrap once at start, so a config error stops it and an edited ConfigMap 
 restart.
 
 The commands use placeholders: `my-namespace`, `my-envoy` (the Envoy workload and its
-ConfigMap), `my-envoy-admin` (a Service in front of the admin port, if there is one)
-and `my-app` (the backend). Replace them with the real names. Never read Secrets. The
-bootstrap can hold TLS keys inline (`inline_string`): never repeat them. Never fetch a
-full `/config_dump`, any `*_secrets` resource, or `/certs`; use `config_dump` with
-`?resource=` for clusters, listeners and routes only.
+ConfigMap), `my-envoy-admin` (a Service in front of the admin port, if there is one),
+`my-app` (the backend) and `my-web` (a client). Replace them with the real names. Never
+read Secrets. The bootstrap can hold TLS keys inline (`inline_string`): never repeat
+them. Never fetch a full `/config_dump`, any `*_secrets` resource, or `/certs`; use
+`config_dump` with `?resource=` for clusters, listeners and routes only.
 
 ## When to use
 

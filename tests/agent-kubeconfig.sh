@@ -143,8 +143,10 @@ rules:
                     "alertmanager-operated", "alertmanager-operated:web"]
     verbs: [get]
   # Envoy's admin interface in the standalone Envoy scenarios. Envoy answers a GET to any
-  # admin endpoint that changes state with 405, so this proxy can only read; the skill
-  # keeps the agent off the full config_dump and /certs.
+  # admin endpoint that changes state with 405, so this proxy cannot change Envoy. RBAC
+  # cannot limit the path, though: the role also reaches the full /config_dump and /certs,
+  # which can show keys. Only the skill's instructions keep the agent off them, so do not
+  # grant this on a real cluster without accepting that.
   - apiGroups: [""]
     resources:
       - services/proxy
