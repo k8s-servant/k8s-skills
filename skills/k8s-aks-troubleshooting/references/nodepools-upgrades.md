@@ -95,8 +95,8 @@ Autoscaler and nodes:
 ## Proposed fix
 
 A PodDisruptionBudget that blocks the drain: give the workload more replicas than the
-budget's `minAvailable` (or fewer than all of them covered by `maxUnavailable: 0`), or
-relax the budget in its manifest or chart, then retry the upgrade. Note the current
+budget's `minAvailable` (a budget with `maxUnavailable: 0` blocks every eviction whatever
+the count), or relax the budget in its manifest or chart, then retry the upgrade. Note the current
 replica count first (`kubectl get deployment my-app -n my-namespace`); raising it is
 reversible:
 
