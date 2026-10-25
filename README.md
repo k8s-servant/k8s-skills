@@ -42,6 +42,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 |---|---|
 | `k8s-triage` | Something is wrong in the cluster and it is not clear where: a ranked first look at nodes, pods, events and resource use, with a first fix and the skill that goes deeper |
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
+| `k8s-loki-troubleshooting` | Loki rejects, drops or cannot query logs: pushes refused with 400, 401 or 429 (old timestamps, missing tenant, rate and stream limits), crashes on schema errors, storage flushes, rings, query limits |
 | `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
 | `k8s-storage-troubleshooting` | Storage blocks a workload: PVCs stuck Pending, missing StorageClasses or unsupported access modes, attach and mount errors, full volumes |
 | `k8s-autoscaling-troubleshooting` | Autoscaling does not scale: HPA targets `<unknown>` (missing requests, no metrics), stuck at `maxReplicas`, metrics-server and `kubectl top`, KEDA ScaledObjects not Ready or without an HPA, the VPA |
@@ -100,6 +101,7 @@ A skill is merged only after four checks:
 | `k8s-helm-troubleshooting` | kubernetes 1.37, helm 4.3 | `ownership-conflict`, `release-stuck-pending`, `upgrade-timeout-bad-image` |
 | `k8s-istio-troubleshooting` | kubernetes 1.37, istio 1.31 | `authorizationpolicy-denies`, `strict-mtls-plaintext-client`, `subset-without-pods` |
 | `k8s-kyverno-troubleshooting` | kubernetes 1.37, kyverno 1.19 | `audit-does-not-block`, `enforce-blocks-deployment`, `validatingpolicy-denies` |
+| `k8s-loki-troubleshooting` | kubernetes 1.37, loki 3.7 | `missing-tenant`, `old-timestamps`, `schema-tsdb-period` |
 | `k8s-network-troubleshooting` | kubernetes 1.37, gateway-api 1.6 | `networkpolicy-blocks-namespace`, `selector-mismatch`, `wrong-target-port` |
 | `k8s-node-troubleshooting` | kubernetes 1.37 | `node-not-ready`, `requests-full`, `untolerated-taint` |
 | `k8s-prometheus-troubleshooting` | kubernetes 1.37, prometheus-operator 0.94, prometheus 3.14 | `servicemonitor-not-selected`, `servicemonitor-port-name-wrong`, `target-path-404` |
