@@ -51,6 +51,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-argocd-troubleshooting` | Argo CD does not deploy: comparison errors (wrong path or revision), destinations not allowed by the project, no automated sync, failed syncs, drift, health |
 | `k8s-helm-troubleshooting` | Helm installs or upgrades fail or a release is stuck: `--wait` timeouts, ownership conflicts, `another operation is in progress`, hooks, immutable fields; helm commands are left to the user |
 | `k8s-kyverno-troubleshooting` | Kyverno denies or fails to police resources: Enforce denials, Audit-only policies and PolicyReports, ClusterPolicy and CEL ValidatingPolicy, mutate and generate rules, webhooks down |
+| `k8s-fluent-bit-troubleshooting` | Fluent Bit does not deliver logs: config errors that crash the DaemonSet, outputs that cannot connect or drop chunks, records without Kubernetes metadata, tail paths and CRI parsers, backpressure, the Fluent Operator |
 | `k8s-gatekeeper-troubleshooting` | OPA Gatekeeper denies or fails to police resources: constraint denials and actions, templates that do not compile, a webhook that fails open, exemptions, sync, mutation |
 | `k8s-external-secrets-troubleshooting` | External Secrets does not create or update a Secret: sync errors from the controller log, stores not Ready, targets owned by another ExternalSecret, refresh; never reads the Secrets |
 | `k8s-prometheus-troubleshooting` | Prometheus does not scrape or alert: ServiceMonitors not selected, wrong port names, targets down, rules not loaded, alerts not reaching Alertmanager, memory and disk |
@@ -94,6 +95,7 @@ A skill is merged only after four checks:
 | `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |
 | `k8s-external-secrets-troubleshooting` | kubernetes 1.37, external-secrets 2.14 | `provider-key-missing`, `store-name-wrong`, `target-owned-by-other` |
 | `k8s-flux-troubleshooting` | kubernetes 1.37, flux 2.9 | `git-branch-missing`, `helm-chart-version-missing`, `kustomization-path-missing` |
+| `k8s-fluent-bit-troubleshooting` | kubernetes 1.37, fluent-bit 5.1 | `config-plugin-typo`, `kubernetes-filter-rbac`, `output-host-wrong` |
 | `k8s-gatekeeper-troubleshooting` | kubernetes 1.37, gatekeeper 3.23 | `constraint-denies-deployment`, `template-rego-error`, `webhook-down-fails-open` |
 | `k8s-grafana-troubleshooting` | kubernetes 1.37, grafana 13.2 | `dashboard-json-invalid`, `datasource-two-defaults`, `datasource-url-wrong` |
 | `k8s-helm-troubleshooting` | kubernetes 1.37, helm 4.3 | `ownership-conflict`, `release-stuck-pending`, `upgrade-timeout-bad-image` |
