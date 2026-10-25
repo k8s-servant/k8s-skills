@@ -141,6 +141,7 @@ def _parse_markdown(
     first_line: int,
     keys: frozenset[str] = frozenset(),
     subcommands: frozenset[str] = frozenset(),
+    az_groups: frozenset[str] = frozenset(),
 ) -> tuple[list[Block], list[tuple[int, str]]]:
     """Find the code blocks and the prose commands of a Markdown text.
 
@@ -150,6 +151,7 @@ def _parse_markdown(
         keys: The allow-listed program names that make prose a command.
         subcommands: The kubectl command names; prose is a command only when its second
             word is one of them.
+        az_groups: The az command groups, which play the same part for az.
 
     Returns:
         The fenced and indented code blocks, and (line, text) candidates from prose:
@@ -182,10 +184,17 @@ def _parse_markdown(
                 prose.append((start + offset, line))
             prose += _code_spans(token, start)
     candidates = [(n, t.strip().removeprefix("$ ").strip()) for n, t in prose]
-    return blocks, [(n, t) for n, t in candidates if _reads_as_command(t, keys, subcommands)]
+    return blocks, [
+        (n, t) for n, t in candidates if _reads_as_command(t, keys, subcommands, az_groups)
+    ]
 
 
-def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[str]) -> bool:
+def _reads_as_command(
+    text: str,
+    keys: frozenset[str],
+    subcommands: frozenset[str],
+    az_groups: frozenset[str] = frozenset(),
+) -> bool:
     """True if a piece of prose is a command rather than a mention of a program.
 
     Prose in a Kubernetes repository names kubectl all the time ("the `kubectl`
@@ -196,6 +205,8 @@ def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[st
     words = text.split(None, 2)
     if len(words) < 2 or words[0] not in keys:
         return False
+    if words[0] == "az":
+        return words[1] in az_groups or words[1].startswith("-")
     return words[1] in subcommands or words[1].startswith("-")
 
 
@@ -489,6 +500,30 @@ def _check_kubectl(words: list[str], allowlist: dict) -> list[str]:
     return problems + _check_flags(words[i:], allowlist, extra)
 
 
+def _check_az(words: list[str], allowlist: dict) -> list[str]:
+    """Check one az invocation: the subcommand comes first, then only allow-listed flags."""
+    listed = set(allowlist["commands"]["az"])
+    found = next(
+        (n for n in range(4, 0, -1) if " ".join(words[1 : 1 + n]) in listed and len(words) > n),
+        0,
+    )
+    if not found:
+        shown = " ".join(w for w in words[:4] if not _is_flag(w))
+        return [f"not on the allow-list: {shown}"]
+    problems: list[str] = []
+    allowed = set(allowlist["az_flags"])
+    for token in words[1 + found :]:
+        if token.startswith("@"):
+            problems.append(BLOCKING_MESSAGE + "@")
+        elif _is_flag(token):
+            name, _, value = token.partition("=")
+            if name not in allowed:
+                problems.append(f"flag not allowed for az: {name}")
+            if value.startswith("@"):
+                problems.append(BLOCKING_MESSAGE + "@")
+    return problems
+
+
 def _check_filter(words: list[str], allowlist: dict) -> list[str]:
     """Check one filter after a pipe: only allow-listed flags, stdin only.
 
@@ -546,6 +581,8 @@ def _check_command(command: str, allowlist: dict) -> list[str]:
     problems: list[str] = []
     if not first or first[0] not in allowlist["commands"]:
         problems.append(f"not on the allow-list: {command}")
+    elif first[0] == "az":
+        problems += _check_az(first, allowlist)
     else:
         problems += _check_kubectl(first, allowlist)
     for words in segments[1:]:
@@ -746,6 +783,7 @@ def check_commands(skill_dir: Path, allowlist: dict) -> list[Finding]:
             first_line,
             frozenset(allowlist["commands"]),
             frozenset(allowlist["kubectl_commands"]),
+            frozenset(allowlist["az_groups"]),
         )
         for block in blocks:
             if block.lang is None:

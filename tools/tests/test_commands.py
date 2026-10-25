@@ -856,3 +856,79 @@ def test_auth_can_i_may_impersonate(tmp_path):
 )
 def test_impersonation_elsewhere_is_still_a_finding(tmp_path, line):
     assert "global flag not allowed" in messages(run(tmp_path, bash(line))), line
+
+
+# Azure CLI, for the AKS skill: read-only show/list/get commands only.
+
+
+def test_read_only_az_commands_pass(tmp_path):
+    lines = [
+        "az aks show -g my-resource-group -n my-cluster --query provisioningState -o tsv",
+        "az aks nodepool list -g my-resource-group --cluster-name my-cluster -o table",
+        "az network lb show -g my-node-resource-group -n kubernetes",
+        'az monitor activity-log list -g my-resource-group --offset 1d --status Failed --query "[].operationName.value"',
+        "az identity federated-credential list -g my-resource-group --identity-name my-identity",
+        "az aks show -g my-resource-group -n my-cluster | jq -r .provisioningState",
+    ]
+    assert run(tmp_path, bash(*lines)) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "az aks update -g my-resource-group -n my-cluster",
+        "az aks get-credentials -g my-resource-group -n my-cluster",
+        "az aks command invoke -g my-resource-group -n my-cluster --command ls",
+        "az aks nodepool delete -g my-resource-group --cluster-name my-cluster -n pool2",
+        "az keyvault secret show --vault-name my-vault -n my-secret",
+        "az",
+    ],
+)
+def test_changing_or_unlisted_az_commands_fail(tmp_path, line):
+    assert any(m.startswith("not on the allow-list") for m in messages(run(tmp_path, bash(line))))
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "az aks show -g my-resource-group -n my-cluster --query @query.txt",
+        "az aks show --debug -g my-resource-group -n my-cluster",
+        "az aks show -g my-resource-group -n my-cluster --bogus-flag x",
+        "az --subscription my-sub aks show -g my-resource-group -n my-cluster",
+    ],
+)
+def test_az_flags_are_checked(tmp_path, line):
+    assert run(tmp_path, bash(line)) != []
+
+
+def test_az_in_prose_is_checked(tmp_path):
+    found = run(tmp_path, "Reconcile it with `az aks update -g my-resource-group -n my-cluster`.\n")
+    assert any(m.startswith("not on the allow-list") for m in messages(found))
+    assert run(tmp_path / "ok", "Check `az aks show -g my-resource-group -n my-cluster`.\n") == []
+
+
+def test_az_mentions_in_prose_are_fine(tmp_path):
+    assert run(tmp_path, "The `az` CLI and the az login session.\n") == []
+
+
+def test_az_changes_are_proposed_fixes_not_ask_first(tmp_path):
+    fix = f"{MARKER}\n```bash\naz aks update -g my-resource-group -n my-cluster\n# Undo: none needed\n```\n"
+    assert run(tmp_path, fix) == []
+    ask = f"{ASK_MARKER}\n```bash\naz aks update -g my-resource-group -n my-cluster\n# Undo: none\n```\n"
+    assert run(tmp_path / "ask", ask) != []
+
+
+def test_az_capacity_and_metrics_commands_pass(tmp_path):
+    lines = [
+        "az vm list-skus -l westeurope --size Standard_D4s_v5 --zone -o table",
+        "az monitor metrics list --resource my-lb-id --metric UsedSnatPorts --interval PT1M",
+        "az network lb outbound-rule list -g my-node-resource-group --lb-name kubernetes -o table",
+    ]
+    assert run(tmp_path, bash(*lines)) == []
+
+
+def test_lowercase_az_mentions_are_not_commands(tmp_path):
+    assert run(tmp_path, "Install the `az cli` tool, then run `az login`.\n") != []
+    assert run(tmp_path / "ok", "Install the `az cli` tool; it is the `az tool`.\n") == []
+    found = run(tmp_path / "kv", "Never run `az keyvault secret show` here.\n")
+    assert any(m.startswith("not on the allow-list") for m in messages(found))

@@ -4,7 +4,8 @@ A skill is only trusted once it has been run against a broken cluster. Each scen
 sets a failure up, breaks it, cleans up, and says what a correct answer looks like.
 The scripts must refuse to run against anything but the throwaway test cluster, so the
 guard call is checked here rather than trusted. Cloud skills (AKS, EKS, GKE) need a
-real cloud account, so they are exempt.
+real cloud account, so they need no minimum number of scenarios; the ones they have run
+on a real cluster, so each names its platform and the one namespace it may use.
 """
 
 import os
@@ -21,6 +22,9 @@ SOURCE_LINE = 'source "$(dirname "$0")/../../lib.sh"'
 GUARD_CALL = "require_test_cluster"
 EXPECTED_SECTIONS = ["Prompt", "Cause", "Evidence", "Acceptable fixes", "Wrong answers"]
 MIN_SCENARIOS = 2
+NO_PLATFORM = "a cloud scenario needs a platform file (aks, eks or gke)"
+NO_SCOPE = "a cloud scenario must run in one namespace: add agent-scope"
+KIND_ONLY = "only cloud skills (k8s-aks-*, k8s-eks-*, k8s-gke-*) run on a real cluster"
 
 
 def is_cloud_skill(name: str) -> bool:
@@ -65,12 +69,11 @@ def check_scenarios(repo: Path, skill_dir: Path) -> list[Finding]:
     Returns:
         One Finding per broken rule, with paths relative to the repository root.
     """
-    if is_cloud_skill(skill_dir.name):
-        return []
+    cloud = is_cloud_skill(skill_dir.name)
     tests_dir = repo / "tests" / skill_dir.name
     cases = sorted(p for p in tests_dir.iterdir() if p.is_dir()) if tests_dir.is_dir() else []
     found: list[Finding] = []
-    if len(cases) < MIN_SCENARIOS:
+    if not cloud and len(cases) < MIN_SCENARIOS:
         rel = tests_dir.relative_to(repo)
         found.append(Finding(rel, None, f"needs at least two scenarios in {rel}/"))
 
@@ -88,6 +91,16 @@ def check_scenarios(repo: Path, skill_dir: Path) -> list[Finding]:
                 found.append(Finding(rel, None, "must source lib.sh"))
             if GUARD_CALL not in text.replace(SOURCE_LINE, ""):
                 found.append(Finding(rel, None, f"must call {GUARD_CALL}"))
+
+        if cloud:
+            platform = case / "platform"
+            words = platform.read_text(encoding="utf-8").split() if platform.is_file() else []
+            if words[:1] not in (["aks"], ["eks"], ["gke"]):
+                found.append(Finding(platform.relative_to(repo), None, NO_PLATFORM))
+            if not (case / "agent-scope").is_file():
+                found.append(Finding((case / "agent-scope").relative_to(repo), None, NO_SCOPE))
+        elif (case / "platform").exists():
+            found.append(Finding((case / "platform").relative_to(repo), None, KIND_ONLY))
 
         expected = case / "expected.md"
         rel = expected.relative_to(repo)

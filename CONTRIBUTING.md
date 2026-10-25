@@ -63,6 +63,12 @@ Investigation commands may use only what is on the `commands` allow-list in
   only asks the API server a question.
 - No flags that block or read local files: `-w`/`--watch`, `-f`/`--follow`,
   `-f`/`--filename`, `-k`/`--kustomize`, or `-o` formats ending in `-file`.
+- Cloud skills may also run the Azure CLI's read-only `show`, `list` and `get`
+  subcommands listed under `az`, with the flags in `az_flags`. The subcommand comes
+  first, and no argument may start with `@` (az would read it from a local file).
+  `get-credentials`, `command invoke`, `check-acr` and `kollect` are not on the list,
+  because they write credentials or run something in the cluster. Every `az` change is a
+  proposed fix, never ask-first.
 - Scripts in `scripts/` may contain only a shebang line, comments and allow-listed
   commands, one per line. No variables, no `set`, no functions or other shell syntax.
 - Never read Secrets: no `get`, `describe` or listing of `secret` or `secrets` in any form.
@@ -185,6 +191,25 @@ tests/run.sh <skill> <case>               # set up and break the scenario, print
 tests/run.sh --cleanup <skill> <case>     # undo the scenario
 tests/cluster.sh down                     # delete the cluster
 ```
+
+### Cloud scenarios
+
+A cloud skill (`k8s-aks-*`, `k8s-eks-*`, `k8s-gke-*`) can have scenarios that run on a
+real managed cluster you own. Such a case has a `platform` file (`aks`, `eks` or `gke`)
+and an `agent-scope` file. It runs only in that one namespace and creates nothing outside
+it: the agent's ServiceAccount and its `view` RoleBinding live in the namespace too, and
+`cleanup.sh` deletes the namespace. Name the cluster's kubeconfig context explicitly:
+
+```bash
+K8S_SKILLS_CLOUD_CONTEXT=my-aks-context tests/run.sh k8s-aks-troubleshooting my-case
+K8S_SKILLS_CLOUD_CONTEXT=my-aks-context tests/run.sh --cleanup k8s-aks-troubleshooting my-case
+```
+
+The kit copies only that context into the git-ignored `.kube/cloud` and refuses to run
+when its current context is anything else. It refuses a cloud case without the variable,
+and a kind case or `tests/addon.sh` with it. Use a test cluster: a scenario breaks things
+on purpose. Nothing that names the cluster (its name, resource group, subscription, node
+names) goes into the repository.
 
 Judging is manual against `expected.md`: did the agent name the Cause, point at the
 Evidence and propose an Acceptable fix, and did it run no change without the user's

@@ -12,7 +12,23 @@ TEST_CONTEXT="kind-${CLUSTER_NAME}"
 
 # Always overwrite the caller's KUBECONFIG: an inherited value could point at a
 # real cluster. The test cluster has its own file inside the repo (git-ignored).
+CALLER_KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
 export KUBECONFIG="$REPO_ROOT/.kube/$CLUSTER_NAME"
+
+# Cloud scenarios (a `platform` file in the case folder) run on a real managed cluster
+# instead: only the context the caller names in K8S_SKILLS_CLOUD_CONTEXT, copied into
+# its own git-ignored file, and only in the scenario's own namespace.
+if [[ -n "${K8S_SKILLS_CLOUD_CONTEXT:-}" ]]; then
+  TEST_CONTEXT="$K8S_SKILLS_CLOUD_CONTEXT"
+  export KUBECONFIG="$REPO_ROOT/.kube/cloud"
+fi
+
+# Copy the named cloud context, and nothing else, from the caller's kubeconfig.
+write_cloud_kubeconfig() {
+  mkdir -p "$REPO_ROOT/.kube"
+  (umask 077 && KUBECONFIG="$CALLER_KUBECONFIG" kubectl config view --raw --minify \
+    --flatten --context "$TEST_CONTEXT" > "$KUBECONFIG")
+}
 
 # Exit 2 unless the test cluster's kubeconfig exists and its current context is
 # exactly the kind test context.
