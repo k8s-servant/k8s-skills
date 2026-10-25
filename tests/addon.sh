@@ -21,6 +21,10 @@ usage() {
   exit 64
 }
 
+if [[ -n "${K8S_SKILLS_CLOUD_CONTEXT:-}" ]]; then
+  echo "refusing to run: add-ons are installed on the kind test cluster only" >&2
+  exit 2
+fi
 [[ $# -eq 1 ]] || usage
 own_namespaces=false
 case "$1" in

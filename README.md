@@ -55,7 +55,7 @@ allow-lists in `tools/skillcheck/allowlist.yaml`.
 
 | Tier | What | What the agent does |
 |---|---|---|
-| Run freely | Read-only commands: `get`, `describe`, `logs`, `events`, `top` and a short list of others | Runs them while it investigates |
+| Run freely | Read-only commands: `get`, `describe`, `logs`, `events`, `top` and a short list of others, plus read-only `az ... show`/`list` for the AKS skill | Runs them while it investigates |
 | Ask first | Reversible changes (`set image`, `set resources`, `rollout undo`, `scale`, `patch`, `cordon`, `uncordon` and a few more) and one read-only program run in a container with `exec` (`nslookup`, `curl`, `cat`, ...) | Shows the command, what it changes and how to undo it, under `> Ask first: the agent runs this only after the user approves it.`, and runs it only after you say yes |
 | Never run | Anything destructive or hard to undo (`delete`, `drain`, `replace`, `apply`, ...) | Proposes it under `> Proposed fix: review before running. The agent does not run this.`, with an `# Undo:` line, for you to review and run |
 

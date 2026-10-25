@@ -28,7 +28,9 @@ npx --yes markdownlint-cli2@0.24.0 "**/*.md" "#.venv" "#node_modules"   # markdo
 
 The test kit only creates and deletes the cluster `k8s-skills-test` (context
 `kind-k8s-skills-test`, kubeconfig in `.kube/`). It never touches other clusters or the
-current context.
+current context. The one exception is a cloud scenario (a case with a `platform` file):
+it runs only on the context named in `K8S_SKILLS_CLOUD_CONTEXT`, and only in its own
+namespace (see CONTRIBUTING.md, "Cloud scenarios").
 
 ## Rules (must follow)
 

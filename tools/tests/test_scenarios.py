@@ -121,3 +121,25 @@ def test_no_tests_folder_means_no_orphans(tmp_path):
     from tools.skillcheck.scenarios import check_orphan_tests
 
     assert check_orphan_tests(tmp_path) == []
+
+
+def test_cloud_scenarios_are_checked_and_need_platform_and_scope(tmp_path):
+    sk = skill(tmp_path, "k8s-aks-troubleshooting")
+    make_case(tmp_path, sk.name, "good", platform="aks\n", **{"agent-scope": "my-namespace\n"})
+    make_case(tmp_path, sk.name, "bare", **{"break.sh": None})
+    found = {(f.path.as_posix(), f.message) for f in check_scenarios(tmp_path, sk)}
+    base = "tests/k8s-aks-troubleshooting/bare"
+    assert found == {
+        (f"{base}/break.sh", "missing"),
+        (f"{base}/platform", "a cloud scenario needs a platform file (aks, eks or gke)"),
+        (f"{base}/agent-scope", "a cloud scenario must run in one namespace: add agent-scope"),
+    }
+
+
+def test_kind_scenario_cannot_name_a_platform(tmp_path):
+    sk = skill(tmp_path)
+    make_case(tmp_path, sk.name, "one")
+    make_case(tmp_path, sk.name, "two", platform="aks\n")
+    assert messages(check_scenarios(tmp_path, sk)) == [
+        "only cloud skills (k8s-aks-*, k8s-eks-*, k8s-gke-*) run on a real cluster"
+    ]

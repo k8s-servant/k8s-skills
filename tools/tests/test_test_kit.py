@@ -622,3 +622,123 @@ def test_addon_istio_refuses_a_chart_with_the_wrong_checksum(tmp_path):
     result = run(tmp_path, repo, ["tests/addon.sh", "istio"])
     assert result.returncode != 0
     assert not [c for c in calls(tmp_path) if c.startswith("helm ")]
+
+
+# Cloud scenarios (AKS, EKS, GKE): a case with a `platform` file runs only against the
+# kubeconfig context named in K8S_SKILLS_CLOUD_CONTEXT, and only in its own namespace.
+
+CLOUD = "aks-test-admin"
+
+
+def make_case(repo: Path, platform: str | None = "aks", scope: str | None = "my-namespace") -> Path:
+    case = repo / "tests" / "k8s-aks-troubleshooting" / "case-one"
+    case.mkdir(parents=True)
+    for name in ("setup.sh", "break.sh", "cleanup.sh"):
+        script = case / name
+        script.write_text(f'#!/usr/bin/env bash\necho "{name} $KUBECONFIG" >> "$FAKE_LOG"\n')
+        script.chmod(0o755)
+    (case / "expected.md").write_text("## Prompt\n\nIs it broken?\n", encoding="utf-8")
+    if platform:
+        (case / "platform").write_text(f"{platform}\n", encoding="utf-8")
+    if scope:
+        (case / "agent-scope").write_text(f"{scope}\n", encoding="utf-8")
+    return case
+
+
+def run_case(tmp_path: Path, repo: Path, *args: str, **env: str):
+    return run(
+        tmp_path, repo, ["tests/run.sh", *args, "k8s-aks-troubleshooting", "case-one"], **env
+    )
+
+
+def test_cloud_case_needs_a_cloud_context(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    make_case(repo)
+    result = run_case(tmp_path, repo)
+    assert result.returncode == 2
+    assert "needs a real aks cluster" in result.stderr
+    assert "K8S_SKILLS_CLOUD_CONTEXT" in result.stderr
+    assert not any("setup.sh" in c for c in calls(tmp_path))
+
+
+def test_kind_case_refuses_a_cloud_context(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo, platform=None)
+    result = run_case(tmp_path, repo, context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+    assert result.returncode == 2
+    assert "runs on kind only" in result.stderr
+    assert not any("setup.sh" in c for c in calls(tmp_path))
+
+
+def test_cloud_case_needs_agent_scope(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo, scope=None)
+    result = run_case(tmp_path, repo, context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+    assert result.returncode == 2
+    assert "agent-scope" in result.stderr
+    assert not any("setup.sh" in c for c in calls(tmp_path))
+
+
+def test_cloud_run_uses_only_the_named_context_and_one_namespace(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo)
+    result = run_case(
+        tmp_path, repo, context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD, KUBECONFIG="/home/me/kube"
+    )
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    cloud = repo / ".kube" / "cloud"
+    assert f"kubectl config view --raw --minify --flatten --context {CLOUD}" in log
+    assert cloud.exists() and (cloud.stat().st_mode & 0o077) == 0
+    assert f"setup.sh {cloud}" in log and f"break.sh {cloud}" in log
+    yaml_text = applied(tmp_path)
+    assert "kind: ServiceAccount" in yaml_text and "namespace: my-namespace" in yaml_text
+    assert "kube-system" not in yaml_text
+    assert "ClusterRole" not in yaml_text.replace("kind: ClusterRole\n  name: view", "")
+    assert not any("clusterrolebinding" in c or "--all-namespaces" in c for c in log)
+    assert any(
+        c.startswith("kubectl create token skill-agent --namespace my-namespace") for c in log
+    )
+    agent = repo / ".kube" / "agent"
+    assert "FAKE-ADMIN-CERT" not in agent.read_text()
+    assert f"KUBECONFIG={agent}" in result.stdout
+
+
+def test_cloud_cleanup_runs_in_the_named_context(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo)
+    result = run_case(tmp_path, repo, "--cleanup", context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+    assert result.returncode == 0, result.stderr
+    assert f"cleanup.sh {repo / '.kube' / 'cloud'}" in calls(tmp_path)
+
+
+def test_cloud_guard_refuses_a_different_context(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo)
+    result = run_case(tmp_path, repo, context="aks-prod-admin", K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+    assert result.returncode == 2
+    assert f"refusing to run: current context is not {CLOUD}" in result.stderr
+    assert not any("setup.sh" in c for c in calls(tmp_path))
+
+
+def test_agent_kubeconfig_needs_a_namespace_on_a_cloud_cluster(tmp_path):
+    repo = make_repo(tmp_path)
+    (repo / ".kube").mkdir()
+    (repo / ".kube" / "cloud").write_text("fake", encoding="utf-8")
+    result = run(
+        tmp_path, repo, ["tests/agent-kubeconfig.sh"], context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD
+    )
+    assert result.returncode == 64
+    assert "--namespace" in result.stderr
+    assert not any(c.startswith("kubectl apply") for c in calls(tmp_path))
+
+
+def test_addon_refuses_a_cloud_cluster(tmp_path):
+    repo = make_repo(tmp_path)
+    result = run(
+        tmp_path, repo, ["tests/addon.sh", "keda"], context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD
+    )
+    assert result.returncode == 2
+    assert "kind" in result.stderr
+    assert not any(c.startswith("kubectl apply") for c in calls(tmp_path))

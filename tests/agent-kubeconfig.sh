@@ -35,19 +35,34 @@ require_test_cluster
 
 AGENT_KUBECONFIG="$REPO_ROOT/.kube/agent"
 
-kubectl apply -f - >&2 <<'YAML'
+# On a real cloud cluster the agent's ServiceAccount and binding live in the scenario's
+# own namespace, and nothing cluster-wide is created or deleted.
+cloud=false
+sa_namespace="kube-system"
+if [[ -n "${K8S_SKILLS_CLOUD_CONTEXT:-}" ]]; then
+  if [[ -z "$namespace" ]]; then
+    echo "a cloud cluster needs --namespace: the agent only gets view in one namespace" >&2
+    exit 64
+  fi
+  cloud=true
+  sa_namespace="$namespace"
+fi
+
+kubectl apply -f - >&2 <<YAML
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: skill-agent
-  namespace: kube-system
+  namespace: ${sa_namespace}
 YAML
 
-# Remove every binding an earlier run made, so this run's scope is exactly what it asks
-# for (a namespace-only agent must not keep cluster-wide access from a previous case).
-kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader \
-  skill-agent-cluster-reader --ignore-not-found >&2
-kubectl delete rolebindings --all-namespaces --field-selector metadata.name=skill-agent-view --ignore-not-found >&2
+if [[ "$cloud" == false ]]; then
+  # Remove every binding an earlier run made, so this run's scope is exactly what it asks
+  # for (a namespace-only agent must not keep cluster-wide access from a previous case).
+  kubectl delete clusterrolebinding skill-agent-view skill-agent-node-reader \
+    skill-agent-cluster-reader --ignore-not-found >&2
+  kubectl delete rolebindings --all-namespaces --field-selector metadata.name=skill-agent-view --ignore-not-found >&2
+fi
 
 if [[ -n "$namespace" ]]; then
   kubectl apply -f - >&2 <<YAML
@@ -63,7 +78,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: skill-agent
-    namespace: kube-system
+    namespace: ${sa_namespace}
 YAML
 else
   kubectl apply -f - >&2 <<'YAML'
@@ -213,7 +228,12 @@ subjects:
 YAML
 fi
 
-token="$(kubectl create token skill-agent --namespace kube-system --duration=4h)"
+token="$(kubectl create token skill-agent --namespace "$sa_namespace" --duration=4h)"
+# The admin user to remove: kind names it after the context, a cloud kubeconfig does not.
+admin_user="$TEST_CONTEXT"
+if [[ "$cloud" == true ]]; then
+  admin_user="$(kubectl config view --minify -o jsonpath='{.contexts[0].context.user}')"
+fi
 
 # Start from the admin file for the server address and CA, then swap the admin
 # credentials for the token. This happens in a temp file next to the agent file, which
@@ -225,7 +245,7 @@ trap 'rm -f "$draft"' EXIT
 kubectl config view --raw --minify --flatten > "$draft"
 kubectl config --kubeconfig "$draft" set-credentials skill-agent --token="$token" >&2
 kubectl config --kubeconfig "$draft" set-context --current --user=skill-agent >&2
-kubectl config --kubeconfig "$draft" delete-user "$TEST_CONTEXT" >&2
+kubectl config --kubeconfig "$draft" delete-user "$admin_user" >&2
 if [[ -n "$namespace" ]]; then
   # A developer's kubeconfig usually points at their namespace; so does this one.
   kubectl config --kubeconfig "$draft" set-context --current --namespace="$namespace" >&2
