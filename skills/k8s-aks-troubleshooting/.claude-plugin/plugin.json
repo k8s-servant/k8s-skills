@@ -1,6 +1,6 @@
 {
   "name": "k8s-aks-troubleshooting",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Use when a problem is specific to Azure Kubernetes Service (AKS): a cluster or node pool in \"Failed\" state, an upgrade or scale that fails (\"UpgradeFailed\", \"violate the pod's disruption budget\", \"QuotaExceeded\", \"AllocationFailed\"), a LoadBalancer Service stuck at <pending> (\"SyncLoadBalancerFailed\", \"AuthorizationFailed\"), an Azure Disk or Files PVC that fails (\"ProvisioningFailed\", \"volume node affinity conflict\", \"Multi-Attach error\", \"Mount error(13)\"), workload identity errors (\"AADSTS700016\", \"AADSTS70021\"), CoreDNS edits that AKS reverts, \"error dialing backend\", Azure Policy denials, or API server access (authorized IP ranges, private clusters, kubelogin, \"User does not have access to the resource in Azure\"). Investigates with kubectl and read-only az commands, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

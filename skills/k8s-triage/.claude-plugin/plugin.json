@@ -1,6 +1,6 @@
 {
   "name": "k8s-triage",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Use when something is wrong in a cluster and it is not yet clear where: \"the cluster is broken\", \"a lot of pods are failing\", \"users say the app is down\", \"something is off after the upgrade\", or any problem report that names no workload. Sweeps nodes, pods in every namespace, recent Warning events and CPU and memory use, ranks what it finds by severity, proposes a first fix for each issue and names the skill that goes deeper. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
