@@ -82,12 +82,13 @@ kubectl logs -n my-namespace deployment/my-loki --previous --tail=50
 kubectl get events -n my-namespace --sort-by=.lastTimestamp
 ```
 
-**3. Check where the config lives and what it sets**: `auth_enabled`, `limits_config`,
-`schema_config`, `storage_config`. Check the kind of object first; a Secret is not read.
+**3. Check where the config lives and what it sets**: `auth_enabled`, the limits and
+the schema. Check the kind of object first; a Secret is not read. Match only the keys
+you need, so storage credentials near them are not printed.
 
 ```bash
 kubectl get deployment my-loki -n my-namespace -o jsonpath='{.spec.template.spec.containers[0].args}{"\n"}{range .spec.template.spec.volumes[*]}{.name}{" "}{.configMap.name}{.secret.secretName}{"\n"}{end}'
-kubectl get configmap my-loki -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E -A8 'auth_enabled|limits_config|schema_config'
+kubectl get configmap my-loki -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E 'auth_enabled|store:|schema:|period:|reject_old_samples|ingestion_rate|ingestion_burst|per_stream_rate|max_global_streams|max_line_size'
 ```
 
 **4. Ask Loki itself**, through the API server's service proxy, if your credentials
