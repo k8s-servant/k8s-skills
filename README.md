@@ -47,6 +47,7 @@ and `prioritylevelconfigurations`. Give it more only if you want it to apply the
 | `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
 | `k8s-loki-troubleshooting` | Loki rejects, drops or cannot query logs: pushes refused with 400, 401 or 429 (old timestamps, missing tenant, rate and stream limits), crashes on schema errors, storage flushes, rings, query limits |
 | `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
+| `k8s-coredns-troubleshooting` | Cluster DNS itself fails: CoreDNS crashing on Corefile errors or loops, reloads that fail, upstream timeouts and SERVFAIL, stub domains, rewrites and hosts, NodeLocal DNSCache, the AKS, EKS and GKE DNS ConfigMaps |
 | `k8s-storage-troubleshooting` | Storage blocks a workload: PVCs stuck Pending, missing StorageClasses or unsupported access modes, attach and mount errors, full volumes |
 | `k8s-autoscaling-troubleshooting` | Autoscaling does not scale: HPA targets `<unknown>` (missing requests, no metrics), stuck at `maxReplicas`, metrics-server and `kubectl top`, KEDA ScaledObjects not Ready or without an HPA, the VPA |
 | `k8s-cert-manager-troubleshooting` | cert-manager does not issue or renew: Certificates not Ready, issuers not Ready, a wrong `issuerRef`, ACME challenges stuck, the cert-manager webhook unreachable |
@@ -99,6 +100,7 @@ A skill is merged only after four checks:
 | `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
 | `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
 | `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
+| `k8s-coredns-troubleshooting` | kubernetes 1.37, coredns 1.14 | `corefile-typo`, `forward-unreachable`, `rewrite-target-wrong` |
 | `k8s-envoy-troubleshooting` | kubernetes 1.37, envoy 1.40 | `bootstrap-typo`, `dns-name-wrong`, `upstream-port-wrong` |
 | `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |
 | `k8s-external-secrets-troubleshooting` | kubernetes 1.37, external-secrets 2.14 | `provider-key-missing`, `store-name-wrong`, `target-owned-by-other` |

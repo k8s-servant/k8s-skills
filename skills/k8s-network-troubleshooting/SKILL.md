@@ -46,6 +46,8 @@ would help:
   `k8s-workload-troubleshooting`.
 - A node is `NotReady`, or the network plugin's pods fail on a node:
   `k8s-node-troubleshooting`.
+- CoreDNS itself fails (its pods crash, its logs show errors, external names or one
+  domain fail for every client, a Corefile edit): `k8s-coredns-troubleshooting`.
 
 ## Investigate
 

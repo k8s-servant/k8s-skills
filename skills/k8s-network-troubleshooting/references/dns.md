@@ -39,6 +39,8 @@ kubectl exec my-pod -n my-other-namespace -- nslookup my-app.my-namespace
   Service names do not resolve. `ClusterFirst` is the usual value.
 - **External names fail, cluster names work**: CoreDNS's upstream (`forward` in the
   `Corefile`) or the node's resolver is the problem; the CoreDNS logs show the errors.
+  Continue with `k8s-coredns-troubleshooting` for CoreDNS itself: its Corefile, upstreams,
+  stub domains, rewrites and NodeLocal DNSCache.
 - **A headless Service** (`clusterIP: None`) resolves to the pod addresses directly; no
   Ready pod means no records.
 
