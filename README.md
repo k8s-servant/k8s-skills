@@ -53,6 +53,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-kyverno-troubleshooting` | Kyverno denies or fails to police resources: Enforce denials, Audit-only policies and PolicyReports, ClusterPolicy and CEL ValidatingPolicy, mutate and generate rules, webhooks down |
 | `k8s-gatekeeper-troubleshooting` | OPA Gatekeeper denies or fails to police resources: constraint denials and actions, templates that do not compile, a webhook that fails open, exemptions, sync, mutation |
 | `k8s-external-secrets-troubleshooting` | External Secrets does not create or update a Secret: sync errors from the controller log, stores not Ready, targets owned by another ExternalSecret, refresh; never reads the Secrets |
+| `k8s-opentelemetry-collector-troubleshooting` | Telemetry does not get through the OpenTelemetry Collector: config errors that crash it, receivers on localhost or outside every pipeline, exporters that cannot reach the backend, queues, memory_limiter, k8s_attributes RBAC, the Operator and auto-instrumentation |
 | `k8s-prometheus-troubleshooting` | Prometheus does not scrape or alert: ServiceMonitors not selected, wrong port names, targets down, rules not loaded, alerts not reaching Alertmanager, memory and disk |
 | `k8s-grafana-troubleshooting` | Grafana fails: provisioning errors that crash the pod, dashboards that do not load, datasources pointing at the wrong Service, database locks, login, grafana-operator selectors |
 | `k8s-cilium-troubleshooting` | Traffic fails on a Cilium cluster: CiliumNetworkPolicy drops and default deny, DNS blocked by egress policies, L7 403s, Hubble flows, agent, endpoint and IPAM problems |
@@ -102,6 +103,7 @@ A skill is merged only after four checks:
 | `k8s-loki-troubleshooting` | kubernetes 1.37, loki 3.7 | `missing-tenant`, `old-timestamps`, `schema-tsdb-period` |
 | `k8s-network-troubleshooting` | kubernetes 1.37, gateway-api 1.6 | `networkpolicy-blocks-namespace`, `selector-mismatch`, `wrong-target-port` |
 | `k8s-node-troubleshooting` | kubernetes 1.37 | `node-not-ready`, `requests-full`, `untolerated-taint` |
+| `k8s-opentelemetry-collector-troubleshooting` | kubernetes 1.37, opentelemetry-collector 0.163 | `exporter-endpoint-wrong`, `pipeline-receiver-undefined`, `receiver-localhost` |
 | `k8s-prometheus-troubleshooting` | kubernetes 1.37, prometheus-operator 0.94, prometheus 3.14 | `servicemonitor-not-selected`, `servicemonitor-port-name-wrong`, `target-path-404` |
 | `k8s-rbac-troubleshooting` | kubernetes 1.37 | `clusterrole-bound-in-namespace`, `role-missing-verb`, `subject-namespace-wrong` |
 | `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
