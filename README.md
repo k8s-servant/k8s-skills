@@ -1,11 +1,48 @@
+# k8s-skills
+
 Kubernetes troubleshooting skills for any AI agent: read first, ask before changing
 anything.
+
+[![CI](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/releases)
+[![License](https://img.shields.io/github/license/k8s-servant/k8s-skills)](LICENSE)
+
+<p align="center">
+  <img src="docs/assets/demo.svg" alt="An agent with the k8s-workload-troubleshooting skill finds that my-app is OOMKilled with a 32Mi limit, and proposes kubectl set resources with an undo line, asking before it runs it" width="820">
+</p>
+
+<sub>A real run of the <code>oom-killed</code> scenario on a kind cluster, with a view-only
+kubeconfig. The commands and output are shortened, and the answer is the agent's own
+words.</sub>
 
 k8s-skills is a set of [Agent Skills](https://agentskills.io) that teach an AI agent to
 investigate Kubernetes problems the way an experienced SRE does: what to look at, in
 which order, what each finding means, and what to propose. The skills work in Claude
 Code, Codex, Gemini CLI, GitHub Copilot and any other agent that reads `SKILL.md`
 files and can run `kubectl`.
+
+## Quick start
+
+```bash
+npx skills add k8s-servant/k8s-skills -a claude-code   # or -a codex, ...
+gemini extensions install https://github.com/k8s-servant/k8s-skills   # Gemini CLI
+```
+
+Then describe the problem to your agent, for example *"my-app in my-namespace keeps
+restarting. Find out why."* For an agent that can only look, give it a read-only
+kubeconfig ([Your agent, your decision](#your-agent-your-decision)). More ways to install
+are under [Install](#install).
+
+## Why you can trust it
+
+- **25 skills, 76 scenarios.** Each scenario breaks something on purpose in a kind
+  cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
+  cause, point at the evidence and propose an acceptable fix, without changing anything.
+- **Quoted from a real cluster.** Every error message and log line a skill quotes was
+  reproduced on kind, at a pinned version. Where the cluster said something different
+  from the docs, the skill quotes the cluster.
+- **Checked on every change.** CI checks each command against its tier, requires an
+  `# Undo:` line for every change, and rejects any command that reads Secrets.
 
 ## Read first, ask before changing
 
@@ -20,24 +57,6 @@ allow-lists in `tools/skillcheck/allowlist.yaml`.
 
 Secrets are never read, in any tier. Every change, in either tier, comes with an
 `# Undo:` line.
-
-## Your agent, your decision
-
-How you run your agent, and with which permissions, is your decision and your risk. The
-skills are written and checked to keep to these tiers, but that is not a 100% guarantee:
-"ask first" is an instruction the agent follows, not a lock, and an agent in an
-auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
-RBAC of the credentials you give it. If you want it to only investigate, give it a
-read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
-cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
-node and storage skills also allow `get`, `list` and `watch` on `nodes`,
-`persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
-`csinodes` and `volumeattachments`. `view` cannot read RBAC objects either, so for
-`k8s-rbac-troubleshooting` allow `get` and `list` on `roles`, `rolebindings`,
-`clusterroles` and `clusterrolebindings`, and for `k8s-api-troubleshooting` on
-`validatingwebhookconfigurations`, `mutatingwebhookconfigurations`,
-`validatingadmissionpolicies`, `apiservices`, `customresourcedefinitions`, `flowschemas`
-and `prioritylevelconfigurations`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
@@ -181,6 +200,24 @@ In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copi
 Skills that hand over to each other still work alone: a hand-off to a skill that is not
 installed tells the agent to continue with the steps it has and name the skill that would
 help.
+
+## Your agent, your decision
+
+How you run your agent, and with which permissions, is your decision and your risk. The
+skills are written and checked to keep to these tiers, but that is not a 100% guarantee:
+"ask first" is an instruction the agent follows, not a lock, and an agent in an
+auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
+RBAC of the credentials you give it. If you want it to only investigate, give it a
+read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
+cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
+node and storage skills also allow `get`, `list` and `watch` on `nodes`,
+`persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
+`csinodes` and `volumeattachments`. `view` cannot read RBAC objects either, so for
+`k8s-rbac-troubleshooting` allow `get` and `list` on `roles`, `rolebindings`,
+`clusterroles` and `clusterrolebindings`, and for `k8s-api-troubleshooting` on
+`validatingwebhookconfigurations`, `mutatingwebhookconfigurations`,
+`validatingadmissionpolicies`, `apiservices`, `customresourcedefinitions`, `flowschemas`
+and `prioritylevelconfigurations`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Contributing
 
