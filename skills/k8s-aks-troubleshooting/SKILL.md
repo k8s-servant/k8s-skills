@@ -194,6 +194,7 @@ below, as of October 2026:
   and [ZonalAllocationFailed and AllocationFailed](https://learn.microsoft.com/troubleshoot/azure/azure-kubernetes/error-codes/zonalallocation-allocationfailed-error).
 - [Supported Kubernetes versions](https://learn.microsoft.com/azure/aks/supported-kubernetes-versions),
   [upgrade options](https://learn.microsoft.com/azure/aks/upgrade-options),
+  [upgrade rules and version skew](https://learn.microsoft.com/azure/aks/upgrade-aks-control-plane#kubernetes-version-upgrade-rules),
   [node auto-repair](https://learn.microsoft.com/azure/aks/node-auto-repair) and
   [cluster autoscaler](https://learn.microsoft.com/azure/aks/cluster-autoscaler).
 - [Standard load balancer](https://learn.microsoft.com/azure/aks/configure-load-balancer-standard),

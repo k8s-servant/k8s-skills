@@ -59,12 +59,17 @@ Upgrades:
   conflicting disruption budgets`**: two PDBs select the same pod.
 - **`UpgradeBlockedOnDeprecatedAPIUsage`**: workloads still call APIs that the target
   version removes; the upgrade is held until they stop or the user overrides it.
-- **No upgrade target in `get-upgrades`**: minor versions are taken one step at a time
-  (for example 1.33 to 1.34, then 1.35). `az aks get-versions -l my-region -o table` lists
+- **No upgrade target in `get-upgrades`**, or **`OperationNotAllowed: Upgrading Kubernetes
+  version ... is not allowed`**: a cluster on community support takes minor versions one
+  step at a time (for example 1.33 to 1.34, then 1.35); only long-term-support clusters
+  may skip to a higher LTS version. `az aks get-versions -l my-region -o table` lists
   what AKS supports in the region now; a version that has left standard support runs only
   with paid long-term support, and AKS will upgrade unsupported clusters itself (see the
   supported versions page in Sources for the current dates).
-- Node pools can be one minor version behind the control plane at most.
+- **`NodePoolMcVersionIncompatible ... Minor version of node pool cannot be more than 3
+  versions less than control plane's version`**: since Kubernetes 1.28 a node pool may be
+  up to three minor versions behind the control plane, and never ahead of it. Upgrade the
+  old pool first, then the control plane.
 
 Capacity:
 
