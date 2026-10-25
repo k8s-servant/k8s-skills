@@ -88,5 +88,5 @@ kubectl logs -n kube-system -l component=etcd --tail=50
 
 ```bash
 kubectl apply --server-side -f my-large-crd.yaml
-# Undo: kubectl apply -f my-large-crd-before.yaml (the object as it was, saved with kubectl get -o yaml)
+# Undo: kubectl apply --server-side --force-conflicts -f my-large-crd-before.yaml (the object as it was, saved with kubectl get -o yaml; a client-side apply would hit the same annotation limit)
 ```

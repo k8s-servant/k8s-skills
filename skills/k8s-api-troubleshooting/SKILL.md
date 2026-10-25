@@ -177,13 +177,15 @@ kubectl get validatingwebhookconfiguration my-webhook -o yaml
 kubectl get apiservice v1beta1.my-api.example.com -o yaml
 ```
 
-Bring a webhook's or an aggregated API's backend back, when it was scaled down:
+Bring a webhook's or an aggregated API's backend back, when it was scaled down. Note
+its current replica count first (`kubectl get deployment my-webhook -n
+my-webhook-system`), so the undo puts that number back:
 
 > Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl scale deployment my-webhook -n my-webhook-system --replicas=2
-# Undo: kubectl scale deployment my-webhook -n my-webhook-system --replicas=0
+# Undo: kubectl scale deployment my-webhook -n my-webhook-system --replicas=0 (the count you noted)
 ```
 
 If the webhook is no longer wanted, or must let requests through while it is fixed (its
