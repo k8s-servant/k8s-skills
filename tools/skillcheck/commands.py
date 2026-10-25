@@ -47,6 +47,7 @@ LANG = re.compile(r"[{.\s]*([A-Za-z0-9_+-]+)")
 # and `/api/v1/namespaces/x/secrets` are all seen as mentioning the word `secrets`.
 WORD_SPLIT = re.compile(r"""[\s,/{}=:;|&()<>"'`$]+""")
 SECRET_WORDS = {"secret", "secrets"}
+AZ_GROUP = re.compile(r"^[a-z][a-z-]*$")
 SECRET_PREFIXES = ("secret.", "secrets.")
 VARIABLE_START = re.compile(r"[A-Za-z_{0-9@*#?!$-]")
 # Short kubectl flag letters after the subcommand: those that take a value (the rest of
@@ -196,6 +197,9 @@ def _reads_as_command(text: str, keys: frozenset[str], subcommands: frozenset[st
     words = text.split(None, 2)
     if len(words) < 2 or words[0] not in keys:
         return False
+    if words[0] == "az":
+        # az command groups are plain lowercase words: `az aks show`, not "az CLI".
+        return bool(AZ_GROUP.match(words[1]))
     return words[1] in subcommands or words[1].startswith("-")
 
 
@@ -489,6 +493,30 @@ def _check_kubectl(words: list[str], allowlist: dict) -> list[str]:
     return problems + _check_flags(words[i:], allowlist, extra)
 
 
+def _check_az(words: list[str], allowlist: dict) -> list[str]:
+    """Check one az invocation: the subcommand comes first, then only allow-listed flags."""
+    listed = set(allowlist["commands"]["az"])
+    found = next(
+        (n for n in range(4, 0, -1) if " ".join(words[1 : 1 + n]) in listed and len(words) > n),
+        0,
+    )
+    if not found:
+        shown = " ".join(w for w in words[:4] if not _is_flag(w))
+        return [f"not on the allow-list: {shown}"]
+    problems: list[str] = []
+    allowed = set(allowlist["az_flags"])
+    for token in words[1 + found :]:
+        if token.startswith("@"):
+            problems.append(BLOCKING_MESSAGE + "@")
+        elif _is_flag(token):
+            name, _, value = token.partition("=")
+            if name not in allowed:
+                problems.append(f"flag not allowed for az: {name}")
+            if value.startswith("@"):
+                problems.append(BLOCKING_MESSAGE + "@")
+    return problems
+
+
 def _check_filter(words: list[str], allowlist: dict) -> list[str]:
     """Check one filter after a pipe: only allow-listed flags, stdin only.
 
@@ -546,6 +574,8 @@ def _check_command(command: str, allowlist: dict) -> list[str]:
     problems: list[str] = []
     if not first or first[0] not in allowlist["commands"]:
         problems.append(f"not on the allow-list: {command}")
+    elif first[0] == "az":
+        problems += _check_az(first, allowlist)
     else:
         problems += _check_kubectl(first, allowlist)
     for words in segments[1:]:

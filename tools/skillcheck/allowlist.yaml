@@ -2,6 +2,27 @@
 commands:
   kubectl: [get, describe, logs, events, top, explain, api-resources, api-versions,
             version, cluster-info, "auth can-i", "auth whoami", "rollout status", "rollout history"]
+  # Azure CLI, for the AKS skill: only show/list/get commands, which change nothing. Not
+  # here on purpose: get-credentials (writes a kubeconfig with credentials), command
+  # invoke (runs commands in the cluster), check-acr and kollect (run pods), and anything
+  # that reads Key Vault or other secrets. Changes are proposed fixes, never ask-first.
+  az: ["aks show", "aks list", "aks operation show-latest", "aks get-upgrades", "aks get-versions", "aks nodepool list",
+       "aks nodepool show", "aks nodepool get-upgrades", "aks addon list",
+       "network lb show", "network lb list", "network lb probe list", "network lb rule list",
+       "network lb frontend-ip list", "network public-ip show", "network public-ip list",
+       "network nsg show", "network nsg list", "network nsg rule list",
+       "network vnet subnet show", "network vnet subnet list", "network nic show",
+       "vmss list", "vmss show", "vmss list-instances", "vmss get-instance-view",
+       "vm list-usage", "disk show", "disk list", "monitor activity-log list",
+       "identity show", "identity list", "identity federated-credential list",
+       "role assignment list", "account show"]
+# Flags an az command may use; any other flag is a finding. An argument starting with `@`
+# would make az read it from a local file, so it is a finding too.
+az_flags: [-g, --resource-group, -n, --name, --cluster-name, --nodepool-name, --lb-name,
+           --vnet-name, --nsg-name, --identity-name, --instance-id, --query, -o, --output,
+           --subscription, --offset, --start-time, --end-time, --status, --max-events, -l,
+           --location, --assignee, --scope, --all, --include-inherited, --ids,
+           --only-show-errors]
 # Every top-level kubectl command (`kubectl --help` of kubectl v1.37, plus `options` and
 # `help`; plugins left out).
 # In prose, `kubectl <word>` is only treated as a command when <word> is one of these,
