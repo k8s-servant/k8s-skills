@@ -215,6 +215,8 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "rolebindings",
         "clusterroles",
         "clusterrolebindings",
+        # Whether metrics-server or KEDA serve their aggregated APIs.
+        "apiservices",
     ):
         assert f"- {resource}" in yaml_text, resource
     # Prometheus' and Alertmanager's HTTP APIs, through the API server's service proxy,
@@ -455,6 +457,7 @@ ADDONS = [
     ("external-secrets", "ESO_MANIFEST_SHA256", "external-secrets.yaml", "default"),
     ("prometheus-operator", "PROMETHEUS_OPERATOR_MANIFEST_SHA256", "bundle.yaml", "default"),
     ("envoy-gateway", "ENVOY_GATEWAY_MANIFEST_SHA256", "install.yaml", "envoy-gateway-system"),
+    ("metrics-server", "METRICS_SERVER_MANIFEST_SHA256", "components.yaml", "kube-system"),
 ]
 
 
@@ -481,6 +484,39 @@ def test_addon_applies_a_verified_manifest_and_waits(tmp_path, name, sha_key, as
     assert waits, log
     assert log.index(applies[0]) < log.index(waits[0])
     assert list(scratch.iterdir()) == []
+
+
+def test_addon_keda_applies_without_a_namespace_flag(tmp_path):
+    """KEDA's manifest names its own namespaces, one object in kube-system, so
+    `apply -n keda` would refuse it."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "KEDA_MANIFEST_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/addon.sh", "keda"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    fetches = [c for c in log if c.startswith("curl ")]
+    assert len(fetches) == 1 and "keda-2.21.0.yaml" in fetches[0], log
+    applies = [c for c in log if c.startswith("kubectl apply ") and " -f " in c]
+    assert len(applies) == 1 and "--server-side" in applies[0] and " -n " not in applies[0], log
+    waits = [c for c in log if c.startswith("kubectl wait") and "-n keda" in c]
+    assert waits and log.index(applies[0]) < log.index(waits[0]), log
+
+
+def test_addon_metrics_server_skips_kubelet_tls_on_kind(tmp_path):
+    """kind's kubelet certificates have no IP SANs, so metrics-server needs
+    --kubelet-insecure-tls before it can become Ready."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "METRICS_SERVER_MANIFEST_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/addon.sh", "metrics-server"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    patches = [c for c in log if c.startswith("kubectl patch deployment metrics-server")]
+    assert len(patches) == 1 and "--kubelet-insecure-tls" in patches[0], log
+    applies = [c for c in log if c.startswith("kubectl apply ") and " -f " in c]
+    waits = [c for c in log if c.startswith("kubectl wait")]
+    assert log.index(applies[0]) < log.index(patches[0]) < log.index(waits[0]), log
 
 
 def test_addon_refuses_a_manifest_with_the_wrong_checksum(tmp_path):

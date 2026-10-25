@@ -6,7 +6,8 @@
 #
 # Usage: tests/addon.sh <name>
 # Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets,
-# prometheus-operator, istio (Helm charts, so it needs helm), envoy-gateway
+# prometheus-operator, istio (Helm charts, so it needs helm), envoy-gateway, keda,
+# metrics-server
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -16,11 +17,12 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio|envoy-gateway" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio|envoy-gateway|keda|metrics-server" >&2
   exit 64
 }
 
 [[ $# -eq 1 ]] || usage
+own_namespaces=false
 case "$1" in
   cert-manager)
     url="https://github.com/cert-manager/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml"
@@ -64,6 +66,18 @@ case "$1" in
     sum="$ENVOY_GATEWAY_MANIFEST_SHA256"
     namespace="envoy-gateway-system"
     ;;
+  keda)
+    url="https://github.com/kedacore/keda/releases/download/${KEDA_VERSION}/keda-${KEDA_VERSION#v}.yaml"
+    sum="$KEDA_MANIFEST_SHA256"
+    namespace="keda"
+    # The manifest names its own namespaces, one object in kube-system.
+    own_namespaces=true
+    ;;
+  metrics-server)
+    url="https://github.com/kubernetes-sigs/metrics-server/releases/download/${METRICS_SERVER_VERSION}/components.yaml"
+    sum="$METRICS_SERVER_MANIFEST_SHA256"
+    namespace="kube-system"
+    ;;
   istio) ;;
   *) usage ;;
 esac
@@ -95,7 +109,17 @@ if ! kubectl get namespace "$namespace" >/dev/null 2>&1; then
   kubectl create namespace "$namespace" >&2
 fi
 # Server-side apply: some CRDs are larger than the client-side annotation limit.
-kubectl apply --server-side --force-conflicts -n "$namespace" -f "$manifest" >&2
+if [[ "$own_namespaces" == true ]]; then
+  kubectl apply --server-side --force-conflicts -f "$manifest" >&2
+else
+  kubectl apply --server-side --force-conflicts -n "$namespace" -f "$manifest" >&2
+fi
+if [[ "$1" == "metrics-server" ]]; then
+  # kind's kubelet serving certificates carry no IP SANs, so metrics-server cannot verify
+  # them and never becomes Ready ("For testing purposes only", its README says).
+  kubectl patch deployment metrics-server -n kube-system --type=json \
+    -p '[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]' >&2
+fi
 kubectl wait --for=condition=Available deployment --all -n "$namespace" --timeout=300s >&2
 for statefulset in $(kubectl get statefulsets -n "$namespace" -o name); do
   kubectl rollout status "$statefulset" -n "$namespace" --timeout=300s >&2

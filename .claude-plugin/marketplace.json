@@ -21,6 +21,14 @@
       ]
     },
     {
+      "name": "k8s-autoscaling-troubleshooting",
+      "source": "./",
+      "description": "Use when Kubernetes autoscaling does not scale as expected: a HorizontalPodAutoscaler whose TARGETS show \"<unknown>\", \"missing request for cpu\", \"unable to get metrics for resource cpu\" or \"FailedGetResourceMetric\", an HPA stuck at maxReplicas (\"TooManyReplicas\") or not scaling down, \"Metrics API not available\" from kubectl top, metrics-server not Ready, a KEDA ScaledObject that is not Ready (\"ScaledObjectCheckFailed\") or creates no HPA, KEDA scalers failing, two autoscalers on one workload, or a VerticalPodAutoscaler without recommendations. Investigates with kubectl get, describe, events, logs and top, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-autoscaling-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-cert-manager-troubleshooting",
       "source": "./",
       "description": "Use when cert-manager does not issue or renew a certificate in Kubernetes: a Certificate that stays READY False, a CertificateRequest that is Pending, Denied or Failed, an Issuer or ClusterIssuer that is not Ready (\"Error getting keypair for CA issuer\"), \"Referenced \\\"Issuer\\\" not found\", ACME Orders or Challenges stuck pending (HTTP-01, DNS-01, rate limits), a certificate that expired or did not renew, or \"failed calling webhook \\\"webhook.cert-manager.io\\\"\" when applying resources. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
