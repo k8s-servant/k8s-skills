@@ -14,203 +14,128 @@
     },
     {
       "name": "k8s-api-troubleshooting",
-      "source": "./",
-      "description": "Use when the Kubernetes API server itself refuses or fails a request, before any controller acts on it: \"failed calling webhook\", \"admission webhook ... denied the request\", \"ValidatingAdmissionPolicy ... denied request\", a ReplicaSet with FailedCreate and no pods, an APIService \"False (ServiceNotFound)\", \"FailedDiscoveryCheck\" or \"MissingEndpoints\", \"unable to retrieve the complete list of server APIs\", a namespace stuck in Terminating, \"no matches for kind\" or \"ensure CRDs are installed first\", \"strict decoding error: unknown field\", a conversion webhook failure, \"You must be logged in to the server (Unauthorized)\", 429 \"too many requests\", \"etcdserver:\" errors, \"Request entity too large\" or \"metadata.annotations: Too long\". Investigates with kubectl get, describe, events and the health endpoints, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-api-troubleshooting"
-      ]
+      "source": "./skills/k8s-api-troubleshooting",
+      "description": "Use when the Kubernetes API server itself refuses or fails a request, before any controller acts on it: \"failed calling webhook\", \"admission webhook ... denied the request\", \"ValidatingAdmissionPolicy ... denied request\", a ReplicaSet with FailedCreate and no pods, an APIService \"False (ServiceNotFound)\", \"FailedDiscoveryCheck\" or \"MissingEndpoints\", \"unable to retrieve the complete list of server APIs\", a namespace stuck in Terminating, \"no matches for kind\" or \"ensure CRDs are installed first\", \"strict decoding error: unknown field\", a conversion webhook failure, \"You must be logged in to the server (Unauthorized)\", 429 \"too many requests\", \"etcdserver:\" errors, \"Request entity too large\" or \"metadata.annotations: Too long\". Investigates with kubectl get, describe, events and the health endpoints, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-argocd-troubleshooting",
-      "source": "./",
-      "description": "Use when Argo CD does not deploy or update an application in Kubernetes: an Application that is OutOfSync, Unknown, Degraded, Missing or Progressing, a ComparisonError (\"app path does not exist\", \"unable to resolve ... to a commit SHA\"), an InvalidSpecError (\"do not match any of the allowed destinations in project\"), a sync that fails (\"one or more objects failed to apply\"), auto-sync that never runs, resources that stay OutOfSync after a sync, or ApplicationSets that generate nothing. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-argocd-troubleshooting"
-      ]
+      "source": "./skills/k8s-argocd-troubleshooting",
+      "description": "Use when Argo CD does not deploy or update an application in Kubernetes: an Application that is OutOfSync, Unknown, Degraded, Missing or Progressing, a ComparisonError (\"app path does not exist\", \"unable to resolve ... to a commit SHA\"), an InvalidSpecError (\"do not match any of the allowed destinations in project\"), a sync that fails (\"one or more objects failed to apply\"), auto-sync that never runs, resources that stay OutOfSync after a sync, or ApplicationSets that generate nothing. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-autoscaling-troubleshooting",
-      "source": "./",
-      "description": "Use when Kubernetes autoscaling does not scale as expected: a HorizontalPodAutoscaler whose TARGETS show \"<unknown>\", \"missing request for cpu\", \"unable to get metrics for resource cpu\" or \"FailedGetResourceMetric\", an HPA stuck at maxReplicas (\"TooManyReplicas\") or not scaling down, \"Metrics API not available\" from kubectl top, metrics-server not Ready, a KEDA ScaledObject that is not Ready (\"ScaledObjectCheckFailed\") or creates no HPA, KEDA scalers failing, two autoscalers on one workload, or a VerticalPodAutoscaler without recommendations. Investigates with kubectl get, describe, events, logs and top, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-autoscaling-troubleshooting"
-      ]
+      "source": "./skills/k8s-autoscaling-troubleshooting",
+      "description": "Use when Kubernetes autoscaling does not scale as expected: a HorizontalPodAutoscaler whose TARGETS show \"<unknown>\", \"missing request for cpu\", \"unable to get metrics for resource cpu\" or \"FailedGetResourceMetric\", an HPA stuck at maxReplicas (\"TooManyReplicas\") or not scaling down, \"Metrics API not available\" from kubectl top, metrics-server not Ready, a KEDA ScaledObject that is not Ready (\"ScaledObjectCheckFailed\") or creates no HPA, KEDA scalers failing, two autoscalers on one workload, or a VerticalPodAutoscaler without recommendations. Investigates with kubectl get, describe, events, logs and top, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-cert-manager-troubleshooting",
-      "source": "./",
-      "description": "Use when cert-manager does not issue or renew a certificate in Kubernetes: a Certificate that stays READY False, a CertificateRequest that is Pending, Denied or Failed, an Issuer or ClusterIssuer that is not Ready (\"Error getting keypair for CA issuer\"), \"Referenced \\\"Issuer\\\" not found\", ACME Orders or Challenges stuck pending (HTTP-01, DNS-01, rate limits), a certificate that expired or did not renew, or \"failed calling webhook \\\"webhook.cert-manager.io\\\"\" when applying resources. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-cert-manager-troubleshooting"
-      ]
+      "source": "./skills/k8s-cert-manager-troubleshooting",
+      "description": "Use when cert-manager does not issue or renew a certificate in Kubernetes: a Certificate that stays READY False, a CertificateRequest that is Pending, Denied or Failed, an Issuer or ClusterIssuer that is not Ready (\"Error getting keypair for CA issuer\"), \"Referenced \\\"Issuer\\\" not found\", ACME Orders or Challenges stuck pending (HTTP-01, DNS-01, rate limits), a certificate that expired or did not renew, or \"failed calling webhook \\\"webhook.cert-manager.io\\\"\" when applying resources. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-cilium-troubleshooting",
-      "source": "./",
-      "description": "Use when networking fails on a Kubernetes cluster that runs Cilium as its CNI: traffic between pods dropped or timing out after a CiliumNetworkPolicy or CiliumClusterwideNetworkPolicy, \"Policy denied\" drops in Hubble, DNS that stops resolving after an egress policy, HTTP 403 \"Access denied\" from an L7 rule, toFQDNs rules that do not match, pods stuck ContainerCreating with \"unable to connect to Cilium agent\", Cilium agent or operator pods not ready, CiliumEndpoints not ready, or IPAM exhaustion. Investigates with kubectl get, describe, events and logs, asks before running cilium-dbg or hubble inside the agent, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-cilium-troubleshooting"
-      ]
+      "source": "./skills/k8s-cilium-troubleshooting",
+      "description": "Use when networking fails on a Kubernetes cluster that runs Cilium as its CNI: traffic between pods dropped or timing out after a CiliumNetworkPolicy or CiliumClusterwideNetworkPolicy, \"Policy denied\" drops in Hubble, DNS that stops resolving after an egress policy, HTTP 403 \"Access denied\" from an L7 rule, toFQDNs rules that do not match, pods stuck ContainerCreating with \"unable to connect to Cilium agent\", Cilium agent or operator pods not ready, CiliumEndpoints not ready, or IPAM exhaustion. Investigates with kubectl get, describe, events and logs, asks before running cilium-dbg or hubble inside the agent, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-coredns-troubleshooting",
-      "source": "./",
-      "description": "Use when cluster DNS itself misbehaves on Kubernetes: CoreDNS pods in CrashLoopBackOff (\"Error during parsing: Unknown directive\", \"plugin/loop: Loop ... detected\"), \"reload failed\" after a Corefile edit, external names failing while Service names resolve (\";; connection timed out; no servers could be reached\", SERVFAIL, \"plugin/errors: 2 ... i/o timeout\"), one domain or stub domain failing, rewrite or hosts entries that do not work, \"Plugins not ready: \\\"kubernetes\\\"\", REFUSED or \"concurrent queries exceeded maximum\", slow lookups (ndots, 5 s delays), NodeLocal DNSCache (169.254.20.10), or the AKS coredns-custom, EKS add-on and GKE kube-dns ConfigMaps. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-coredns-troubleshooting"
-      ]
+      "source": "./skills/k8s-coredns-troubleshooting",
+      "description": "Use when cluster DNS itself misbehaves on Kubernetes: CoreDNS pods in CrashLoopBackOff (\"Error during parsing: Unknown directive\", \"plugin/loop: Loop ... detected\"), \"reload failed\" after a Corefile edit, external names failing while Service names resolve (\";; connection timed out; no servers could be reached\", SERVFAIL, \"plugin/errors: 2 ... i/o timeout\"), one domain or stub domain failing, rewrite or hosts entries that do not work, \"Plugins not ready: \\\"kubernetes\\\"\", REFUSED or \"concurrent queries exceeded maximum\", slow lookups (ndots, 5 s delays), NodeLocal DNSCache (169.254.20.10), or the AKS coredns-custom, EKS add-on and GKE kube-dns ConfigMaps. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-envoy-gateway-troubleshooting",
-      "source": "./",
-      "description": "Use when Envoy Gateway (the Gateway API implementation by the Envoy project) does not route traffic in Kubernetes: a Gateway that is not Programmed (\"AddressNotAssigned\"), an HTTPRoute that is not Accepted (\"NoMatchingListenerHostname\", \"NotAllowedByListeners\") or whose ResolvedRefs is False (\"BackendNotFound\", \"RefNotPermitted\" without a ReferenceGrant), clients getting 404, 500 or 503 \"no healthy upstream\" from the gateway, a GatewayClass that is not Accepted, or BackendTrafficPolicy, ClientTrafficPolicy, SecurityPolicy and EnvoyProxy resources that do not apply. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-envoy-gateway-troubleshooting"
-      ]
+      "source": "./skills/k8s-envoy-gateway-troubleshooting",
+      "description": "Use when Envoy Gateway (the Gateway API implementation by the Envoy project) does not route traffic in Kubernetes: a Gateway that is not Programmed (\"AddressNotAssigned\"), an HTTPRoute that is not Accepted (\"NoMatchingListenerHostname\", \"NotAllowedByListeners\") or whose ResolvedRefs is False (\"BackendNotFound\", \"RefNotPermitted\" without a ReferenceGrant), clients getting 404, 500 or 503 \"no healthy upstream\" from the gateway, a GatewayClass that is not Accepted, or BackendTrafficPolicy, ClientTrafficPolicy, SecurityPolicy and EnvoyProxy resources that do not apply. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-envoy-troubleshooting",
-      "source": "./",
-      "description": "Use when an Envoy proxy on Kubernetes fails requests: clients get 503 \"no healthy upstream\", 503 \"upstream connect error or disconnect/reset before headers. reset reason: remote connection failure\", 404 with an empty body, or 504 \"upstream request timeout\", access logs show response flags (UH, UF, NR, NC, UT, UO, URX, UC), or Envoy crashes at start (\"has unknown fields\", \"no such field\", \"route: unknown cluster\"). Covers Envoy run directly (a Deployment with its own bootstrap, a front proxy, a sidecar) and the proxy under Contour, Emissary or Gloo; reads the access log, the bootstrap and Envoy's read-only admin endpoints. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-envoy-troubleshooting"
-      ]
+      "source": "./skills/k8s-envoy-troubleshooting",
+      "description": "Use when an Envoy proxy on Kubernetes fails requests: clients get 503 \"no healthy upstream\", 503 \"upstream connect error or disconnect/reset before headers. reset reason: remote connection failure\", 404 with an empty body, or 504 \"upstream request timeout\", access logs show response flags (UH, UF, NR, NC, UT, UO, URX, UC), or Envoy crashes at start (\"has unknown fields\", \"no such field\", \"route: unknown cluster\"). Covers Envoy run directly (a Deployment with its own bootstrap, a front proxy, a sidecar) and the proxy under Contour, Emissary or Gloo; reads the access log, the bootstrap and Envoy's read-only admin endpoints. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-external-secrets-troubleshooting",
-      "source": "./",
-      "description": "Use when External Secrets Operator does not create or update a Kubernetes Secret: an ExternalSecret with SecretSyncedError (\"could not get secret data from provider\"), SecretOwnedByOther (\"target is owned by another ExternalSecret\"), SecretMissing or SecretImmutable, a SecretStore or ClusterSecretStore that is not Ready (InvalidProviderConfig, \"unable to validate store\"), a ClusterSecretStore not allowed from a namespace, a ClusterExternalSecret with failed namespaces, a value that does not refresh, or manifests on the removed v1beta1 API. Investigates with kubectl get, describe, events and controller logs, never reading the Secrets themselves, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-external-secrets-troubleshooting"
-      ]
+      "source": "./skills/k8s-external-secrets-troubleshooting",
+      "description": "Use when External Secrets Operator does not create or update a Kubernetes Secret: an ExternalSecret with SecretSyncedError (\"could not get secret data from provider\"), SecretOwnedByOther (\"target is owned by another ExternalSecret\"), SecretMissing or SecretImmutable, a SecretStore or ClusterSecretStore that is not Ready (InvalidProviderConfig, \"unable to validate store\"), a ClusterSecretStore not allowed from a namespace, a ClusterExternalSecret with failed namespaces, a value that does not refresh, or manifests on the removed v1beta1 API. Investigates with kubectl get, describe, events and controller logs, never reading the Secrets themselves, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-fluent-bit-troubleshooting",
-      "source": "./",
-      "description": "Use when Fluent Bit on Kubernetes does not deliver logs: the DaemonSet crashes on a config error (\"tried to instance a plugin name that doesn't exist\", \"unknown configuration property\", \"configuration file contains errors\"), an output fails (\"failed to flush chunk\", \"cannot be retried\", \"no upstream connections available\", \"getaddrinfo\", \"Connection refused\"), records arrive without Kubernetes metadata (\"could not get meta for POD\"), lines arrive unparsed or not at all (tail path, parser, CRI versus Docker format), or inputs pause (\"paused (mem buf overlimit\"). Covers the Helm chart and the Fluent Operator. Investigates with kubectl get, logs and Fluent Bit's read-only HTTP endpoints, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-fluent-bit-troubleshooting"
-      ]
+      "source": "./skills/k8s-fluent-bit-troubleshooting",
+      "description": "Use when Fluent Bit on Kubernetes does not deliver logs: the DaemonSet crashes on a config error (\"tried to instance a plugin name that doesn't exist\", \"unknown configuration property\", \"configuration file contains errors\"), an output fails (\"failed to flush chunk\", \"cannot be retried\", \"no upstream connections available\", \"getaddrinfo\", \"Connection refused\"), records arrive without Kubernetes metadata (\"could not get meta for POD\"), lines arrive unparsed or not at all (tail path, parser, CRI versus Docker format), or inputs pause (\"paused (mem buf overlimit\"). Covers the Helm chart and the Fluent Operator. Investigates with kubectl get, logs and Fluent Bit's read-only HTTP endpoints, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-flux-troubleshooting",
-      "source": "./",
-      "description": "Use when Flux does not deploy or update something in Kubernetes: a GitRepository, OCIRepository or HelmRepository that is not Ready (\"couldn't find remote ref\", \"authentication required\"), a Kustomization that is not Ready (\"kustomization path not found\", \"kustomize build failed\", \"dependency ... is not ready\", health check timeouts), a HelmRelease that is not Ready (HelmChart \"invalid chart reference\", InstallFailed, UpgradeFailed, RetriesExceeded), changes in Git that never reach the cluster, or suspended Flux objects. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-flux-troubleshooting"
-      ]
+      "source": "./skills/k8s-flux-troubleshooting",
+      "description": "Use when Flux does not deploy or update something in Kubernetes: a GitRepository, OCIRepository or HelmRepository that is not Ready (\"couldn't find remote ref\", \"authentication required\"), a Kustomization that is not Ready (\"kustomization path not found\", \"kustomize build failed\", \"dependency ... is not ready\", health check timeouts), a HelmRelease that is not Ready (HelmChart \"invalid chart reference\", InstallFailed, UpgradeFailed, RetriesExceeded), changes in Git that never reach the cluster, or suspended Flux objects. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-gatekeeper-troubleshooting",
-      "source": "./",
-      "description": "Use when OPA Gatekeeper blocks, warns about or fails to police resources in Kubernetes: \"admission webhook \\\"validation.gatekeeper.sh\\\" denied the request: [constraint] message\", warnings from constraints in warn mode, a constraint that should block but only shows violations in audit (dryrun), a ConstraintTemplate that does not compile (ingest_error, rego_parse_error), \"no matches for kind\" when applying a constraint, referential policies that never fire (sync), mutations that do not apply, or Gatekeeper that stopped enforcing because its webhook is down. Investigates with kubectl get, describe and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-gatekeeper-troubleshooting"
-      ]
+      "source": "./skills/k8s-gatekeeper-troubleshooting",
+      "description": "Use when OPA Gatekeeper blocks, warns about or fails to police resources in Kubernetes: \"admission webhook \\\"validation.gatekeeper.sh\\\" denied the request: [constraint] message\", warnings from constraints in warn mode, a constraint that should block but only shows violations in audit (dryrun), a ConstraintTemplate that does not compile (ingest_error, rego_parse_error), \"no matches for kind\" when applying a constraint, referential policies that never fire (sync), mutations that do not apply, or Gatekeeper that stopped enforcing because its webhook is down. Investigates with kubectl get, describe and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-grafana-troubleshooting",
-      "source": "./",
-      "description": "Use when Grafana on Kubernetes fails: the Grafana pod crash-loops after a change to its provisioning (\"Datasource provisioning error\", \"Only one datasource per organization can be marked as default\", \"failed to parse\"), a provisioned dashboard or datasource does not appear (\"failed to load dashboard from\", sidecar ConfigMap labels), panels show \"No data\" or the datasource returns \"Bad Gateway\" or \"connection refused\", \"database is locked\" with several replicas, permission errors on the data volume, admin login or sidecar \"401 Unauthorized\", or grafana-operator resources with \"NoMatchingInstance\". Investigates with kubectl get, describe, events and logs, never reading Grafana's Secrets, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-grafana-troubleshooting"
-      ]
+      "source": "./skills/k8s-grafana-troubleshooting",
+      "description": "Use when Grafana on Kubernetes fails: the Grafana pod crash-loops after a change to its provisioning (\"Datasource provisioning error\", \"Only one datasource per organization can be marked as default\", \"failed to parse\"), a provisioned dashboard or datasource does not appear (\"failed to load dashboard from\", sidecar ConfigMap labels), panels show \"No data\" or the datasource returns \"Bad Gateway\" or \"connection refused\", \"database is locked\" with several replicas, permission errors on the data volume, admin login or sidecar \"401 Unauthorized\", or grafana-operator resources with \"NoMatchingInstance\". Investigates with kubectl get, describe, events and logs, never reading Grafana's Secrets, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-helm-troubleshooting",
-      "source": "./",
-      "description": "Use when a Helm install, upgrade or rollback fails or a release is stuck: \"UPGRADE FAILED\" or \"INSTALLATION FAILED\", \"context deadline exceeded\" or \"resource ... not ready\" after --wait, \"another operation (install/upgrade/rollback) is in progress\", a release in pending-install, pending-upgrade or failed state, \"exists and cannot be imported into the current release: invalid ownership metadata\", \"cannot reuse a name that is still in use\", \"has no deployed releases\", hook failures, \"field is immutable\", or \"ensure CRDs are installed first\". Investigates the release's objects with kubectl, gives helm commands to the user to run, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-helm-troubleshooting"
-      ]
+      "source": "./skills/k8s-helm-troubleshooting",
+      "description": "Use when a Helm install, upgrade or rollback fails or a release is stuck: \"UPGRADE FAILED\" or \"INSTALLATION FAILED\", \"context deadline exceeded\" or \"resource ... not ready\" after --wait, \"another operation (install/upgrade/rollback) is in progress\", a release in pending-install, pending-upgrade or failed state, \"exists and cannot be imported into the current release: invalid ownership metadata\", \"cannot reuse a name that is still in use\", \"has no deployed releases\", hook failures, \"field is immutable\", or \"ensure CRDs are installed first\". Investigates the release's objects with kubectl, gives helm commands to the user to run, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-istio-troubleshooting",
-      "source": "./",
-      "description": "Use when traffic fails in an Istio service mesh on Kubernetes: HTTP 403 \"RBAC: access denied\" from an AuthorizationPolicy, 503 \"no healthy upstream\" or \"upstream connect error or disconnect/reset before headers\", 404 from a route that does not match, \"Connection reset by peer\" after PeerAuthentication STRICT, sidecars that are not injected, VirtualService, DestinationRule, Gateway or ServiceEntry rules that do not apply, or istiod and proxy problems. Reads Envoy's access log and response flags (UH, NR, UF, URX, filter_chain_not_found), covers sidecar mode and ambient mode, and proposes fixes. Investigates with kubectl get, describe, events and logs, asks before reading Envoy's admin API inside a proxy. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-istio-troubleshooting"
-      ]
+      "source": "./skills/k8s-istio-troubleshooting",
+      "description": "Use when traffic fails in an Istio service mesh on Kubernetes: HTTP 403 \"RBAC: access denied\" from an AuthorizationPolicy, 503 \"no healthy upstream\" or \"upstream connect error or disconnect/reset before headers\", 404 from a route that does not match, \"Connection reset by peer\" after PeerAuthentication STRICT, sidecars that are not injected, VirtualService, DestinationRule, Gateway or ServiceEntry rules that do not apply, or istiod and proxy problems. Reads Envoy's access log and response flags (UH, NR, UF, URX, filter_chain_not_found), covers sidecar mode and ambient mode, and proposes fixes. Investigates with kubectl get, describe, events and logs, asks before reading Envoy's admin API inside a proxy. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-kyverno-troubleshooting",
-      "source": "./",
-      "description": "Use when Kyverno blocks, changes or fails to police resources in Kubernetes: \"admission webhook \\\"validate.kyverno.svc-fail\\\" denied the request\", \"resource ... was blocked due to the following policies\", \"Policy ... failed\" from a ValidatingPolicy, a policy that should block but only reports (Audit), PolicyReports with failures, a policy that is not Ready, mutate or generate rules that do nothing, UpdateRequests stuck, or \"failed calling webhook\" for kyverno when its pods are down. Covers ClusterPolicy and Policy (kyverno.io) and the CEL policies (policies.kyverno.io). Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-kyverno-troubleshooting"
-      ]
+      "source": "./skills/k8s-kyverno-troubleshooting",
+      "description": "Use when Kyverno blocks, changes or fails to police resources in Kubernetes: \"admission webhook \\\"validate.kyverno.svc-fail\\\" denied the request\", \"resource ... was blocked due to the following policies\", \"Policy ... failed\" from a ValidatingPolicy, a policy that should block but only reports (Audit), PolicyReports with failures, a policy that is not Ready, mutate or generate rules that do nothing, UpdateRequests stuck, or \"failed calling webhook\" for kyverno when its pods are down. Covers ClusterPolicy and Policy (kyverno.io) and the CEL policies (policies.kyverno.io). Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-loki-troubleshooting",
-      "source": "./",
-      "description": "Use when Grafana Loki on Kubernetes rejects, drops or cannot query logs: clients getting 400, 401 or 429 from /loki/api/v1/push, \"write operation failed\", \"has timestamp too old\", \"entry too far behind\", \"Per stream rate limit exceeded\", \"ingestion rate limit exceeded\", \"maximum active stream limit exceeded\", \"no org id\" (missing X-Scope-OrgID tenant), Loki crashing at start with \"validating config\" or \"invalid schema config\", \"failed to flush chunks\", ring or memberlist errors (\"empty ring\", \"too many unhealthy instances in the ring\"), or queries failing with \"the query time range exceeds the limit\" or timing out. Investigates with kubectl get, logs and read-only Loki endpoints, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-loki-troubleshooting"
-      ]
+      "source": "./skills/k8s-loki-troubleshooting",
+      "description": "Use when Grafana Loki on Kubernetes rejects, drops or cannot query logs: clients getting 400, 401 or 429 from /loki/api/v1/push, \"write operation failed\", \"has timestamp too old\", \"entry too far behind\", \"Per stream rate limit exceeded\", \"ingestion rate limit exceeded\", \"maximum active stream limit exceeded\", \"no org id\" (missing X-Scope-OrgID tenant), Loki crashing at start with \"validating config\" or \"invalid schema config\", \"failed to flush chunks\", ring or memberlist errors (\"empty ring\", \"too many unhealthy instances in the ring\"), or queries failing with \"the query time range exceeds the limit\" or timing out. Investigates with kubectl get, logs and read-only Loki endpoints, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-network-troubleshooting",
-      "source": "./",
-      "description": "Use when traffic does not reach a workload in Kubernetes although its pods are running: a Service with no endpoints, a wrong selector or targetPort, connection refused or time-outs between pods, DNS names that do not resolve (NXDOMAIN, \"server can't find\"), a NetworkPolicy blocking traffic, or an Ingress or Gateway API route that does not route. Investigates with kubectl get and describe, asks before checks inside a container, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-network-troubleshooting"
-      ]
+      "source": "./skills/k8s-network-troubleshooting",
+      "description": "Use when traffic does not reach a workload in Kubernetes although its pods are running: a Service with no endpoints, a wrong selector or targetPort, connection refused or time-outs between pods, DNS names that do not resolve (NXDOMAIN, \"server can't find\"), a NetworkPolicy blocking traffic, or an Ingress or Gateway API route that does not route. Investigates with kubectl get and describe, asks before checks inside a container, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-node-troubleshooting",
-      "source": "./",
-      "description": "Use when a Kubernetes node is unhealthy or pods will not go onto it: a node NotReady or Unknown, MemoryPressure, DiskPressure or PIDPressure, pods Evicted, pods Pending with \"untolerated taint(s)\", \"Insufficient cpu\" or \"Insufficient memory\" while the node looks idle, a node cordoned (SchedulingDisabled), or the cluster autoscaler not adding or removing nodes. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-node-troubleshooting"
-      ]
+      "source": "./skills/k8s-node-troubleshooting",
+      "description": "Use when a Kubernetes node is unhealthy or pods will not go onto it: a node NotReady or Unknown, MemoryPressure, DiskPressure or PIDPressure, pods Evicted, pods Pending with \"untolerated taint(s)\", \"Insufficient cpu\" or \"Insufficient memory\" while the node looks idle, a node cordoned (SchedulingDisabled), or the cluster autoscaler not adding or removing nodes. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-opentelemetry-collector-troubleshooting",
-      "source": "./",
-      "description": "Use when telemetry (traces, metrics, logs) does not get through the OpenTelemetry Collector on Kubernetes: the collector crashes at start (\"invalid configuration\", \"references receiver ... which is not configured\", \"unknown type\"), applications get \"connection refused\" on 4317 or 4318 (a receiver listening on localhost, or not in a pipeline), exporters fail (\"Exporting failed. Will retry the request after interval\", \"Exporting failed. Dropping data.\", \"sending queue is full\", \"no children to pick from\"), the memory_limiter refuses data, k8s_attributes lacks RBAC, or the OpenTelemetry Operator does not create a collector or inject auto-instrumentation. Investigates with kubectl get, logs and the collector's own metrics, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-opentelemetry-collector-troubleshooting"
-      ]
+      "source": "./skills/k8s-opentelemetry-collector-troubleshooting",
+      "description": "Use when telemetry (traces, metrics, logs) does not get through the OpenTelemetry Collector on Kubernetes: the collector crashes at start (\"invalid configuration\", \"references receiver ... which is not configured\", \"unknown type\"), applications get \"connection refused\" on 4317 or 4318 (a receiver listening on localhost, or not in a pipeline), exporters fail (\"Exporting failed. Will retry the request after interval\", \"Exporting failed. Dropping data.\", \"sending queue is full\", \"no children to pick from\"), the memory_limiter refuses data, k8s_attributes lacks RBAC, or the OpenTelemetry Operator does not create a collector or inject auto-instrumentation. Investigates with kubectl get, logs and the collector's own metrics, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-prometheus-troubleshooting",
-      "source": "./",
-      "description": "Use when Prometheus on Kubernetes does not collect or alert as expected: a ServiceMonitor or PodMonitor whose targets never appear, targets that are down (\"server returned HTTP status 404 Not Found\", \"connection refused\", \"context deadline exceeded\"), a PrometheusRule that does not load or alerts that do not fire or reach Alertmanager, a Prometheus or Alertmanager custom resource that is not Available, \"InvalidConfiguration\" events from the Prometheus Operator, or Prometheus pods that are OOMKilled or out of disk. Covers the Prometheus Operator (kube-prometheus, kube-prometheus-stack). Investigates with kubectl get, describe, events, logs and Prometheus' HTTP API through the API server, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-prometheus-troubleshooting"
-      ]
+      "source": "./skills/k8s-prometheus-troubleshooting",
+      "description": "Use when Prometheus on Kubernetes does not collect or alert as expected: a ServiceMonitor or PodMonitor whose targets never appear, targets that are down (\"server returned HTTP status 404 Not Found\", \"connection refused\", \"context deadline exceeded\"), a PrometheusRule that does not load or alerts that do not fire or reach Alertmanager, a Prometheus or Alertmanager custom resource that is not Available, \"InvalidConfiguration\" events from the Prometheus Operator, or Prometheus pods that are OOMKilled or out of disk. Covers the Prometheus Operator (kube-prometheus, kube-prometheus-stack). Investigates with kubectl get, describe, events, logs and Prometheus' HTTP API through the API server, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-rbac-troubleshooting",
-      "source": "./",
-      "description": "Use when a Kubernetes request is refused by RBAC: \"Error from server (Forbidden)\", \"User ... cannot list resource ... in the namespace\" or \"at the cluster scope\", a ServiceAccount, controller, CI job or person getting 403, a RoleBinding that does not seem to apply (wrong namespace, wrong subject, a ClusterRole bound with a RoleBinding), \"is attempting to grant RBAC permissions not currently held\", \"roleRef ... field is immutable\", 401 Unauthorized versus 403 Forbidden, or a custom resource that `view` cannot read. Investigates with kubectl auth can-i, get and describe, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-rbac-troubleshooting"
-      ]
+      "source": "./skills/k8s-rbac-troubleshooting",
+      "description": "Use when a Kubernetes request is refused by RBAC: \"Error from server (Forbidden)\", \"User ... cannot list resource ... in the namespace\" or \"at the cluster scope\", a ServiceAccount, controller, CI job or person getting 403, a RoleBinding that does not seem to apply (wrong namespace, wrong subject, a ClusterRole bound with a RoleBinding), \"is attempting to grant RBAC permissions not currently held\", \"roleRef ... field is immutable\", 401 Unauthorized versus 403 Forbidden, or a custom resource that `view` cannot read. Investigates with kubectl auth can-i, get and describe, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-storage-troubleshooting",
-      "source": "./",
-      "description": "Use when Kubernetes storage blocks a workload: a PersistentVolumeClaim stuck in Pending, ProvisioningFailed events, a StorageClass that does not exist or a provisioner that cannot provide the access mode, pods Pending with \"unbound immediate PersistentVolumeClaims\", FailedAttachVolume, FailedMount or Multi-Attach errors, a PVC or PV stuck Terminating or Released, or a volume that is full or will not expand. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-storage-troubleshooting"
-      ]
+      "source": "./skills/k8s-storage-troubleshooting",
+      "description": "Use when Kubernetes storage blocks a workload: a PersistentVolumeClaim stuck in Pending, ProvisioningFailed events, a StorageClass that does not exist or a provisioner that cannot provide the access mode, pods Pending with \"unbound immediate PersistentVolumeClaims\", FailedAttachVolume, FailedMount or Multi-Attach errors, a PVC or PV stuck Terminating or Released, or a volume that is full or will not expand. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-triage",
-      "source": "./",
-      "description": "Use when something is wrong in a cluster and it is not yet clear where: \"the cluster is broken\", \"a lot of pods are failing\", \"users say the app is down\", \"something is off after the upgrade\", or any problem report that names no workload. Sweeps nodes, pods in every namespace, recent Warning events and CPU and memory use, ranks what it finds by severity, proposes a first fix for each issue and names the skill that goes deeper. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-triage"
-      ]
+      "source": "./skills/k8s-triage",
+      "description": "Use when something is wrong in a cluster and it is not yet clear where: \"the cluster is broken\", \"a lot of pods are failing\", \"users say the app is down\", \"something is off after the upgrade\", or any problem report that names no workload. Sweeps nodes, pods in every namespace, recent Warning events and CPU and memory use, ranks what it finds by severity, proposes a first fix for each issue and names the skill that goes deeper. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-workload-troubleshooting",
-      "source": "./",
-      "description": "Use when a pod or workload is unhealthy in Kubernetes: pods stuck in Pending, CrashLoopBackOff, ImagePullBackOff or ErrImagePull, containers OOMKilled (exit code 137), failing liveness, readiness or startup probes, pods Running but not Ready, a Deployment rollout that does not progress (ProgressDeadlineExceeded), or a Job or CronJob that fails. Investigates with kubectl get, describe, logs and events, and proposes fixes. Reads first and asks before changing anything.",
-      "skills": [
-        "./skills/k8s-workload-troubleshooting"
-      ]
+      "source": "./skills/k8s-workload-troubleshooting",
+      "description": "Use when a pod or workload is unhealthy in Kubernetes: pods stuck in Pending, CrashLoopBackOff, ImagePullBackOff or ErrImagePull, containers OOMKilled (exit code 137), failing liveness, readiness or startup probes, pods Running but not Ready, a Deployment rollout that does not progress (ProgressDeadlineExceeded), or a Job or CronJob that fails. Investigates with kubectl get, describe, logs and events, and proposes fixes. Reads first and asks before changing anything."
     }
   ]
 }

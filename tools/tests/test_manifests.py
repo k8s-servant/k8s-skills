@@ -7,10 +7,13 @@ from tools.skillcheck.__main__ import main
 from tools.skillcheck.manifests import render_manifests
 
 MARKET = Path(".claude-plugin/marketplace.json")
+RELEASE = Path("release-please-config.json")
 
 
 def make_repo(tmp_path: Path, skills: dict[str, str] | None = None, version: str = "0.0.0") -> Path:
     (tmp_path / ".release-please-manifest.json").write_text(json.dumps({".": version}))
+    config = {"release-type": "simple", "packages": {".": {"package-name": "k8s-skills"}}}
+    (tmp_path / RELEASE).write_text(json.dumps(config))
     for name, desc in (skills or {}).items():
         folder = tmp_path / "skills" / name
         folder.mkdir(parents=True)
@@ -26,11 +29,32 @@ def test_marketplace_has_bundle_then_one_entry_per_skill(tmp_path):
     assert [p["name"] for p in plugins] == ["k8s-skills", "k8s-a-x", "k8s-b-x"]
     assert plugins[1] == {
         "name": "k8s-a-x",
-        "source": "./",
+        "source": "./skills/k8s-a-x",
         "description": "Use when a",
-        "skills": ["./skills/k8s-a-x"],
     }
-    assert "skills" not in plugins[0]
+    assert plugins[0]["source"] == "./"
+
+
+def test_each_plugin_has_its_own_claude_plugin_json(tmp_path):
+    out = render_manifests(make_repo(tmp_path, {"k8s-a-x": "Use when a"}, version="1.2.3"))
+    bundle = json.loads(out[Path(".claude-plugin/plugin.json")])
+    assert bundle["name"] == "k8s-skills" and bundle["version"] == "1.2.3"
+    assert "skills" not in bundle  # the bundle finds every skill under skills/
+    one = json.loads(out[Path("skills/k8s-a-x/.claude-plugin/plugin.json")])
+    assert one["name"] == "k8s-a-x" and one["description"] == "Use when a"
+    assert one["skills"] == ["./"]  # the plugin root is the skill folder
+    assert one["version"] == "1.2.3"
+
+
+def test_release_please_bumps_every_versioned_manifest(tmp_path):
+    out = render_manifests(make_repo(tmp_path, {"k8s-b-x": "Use when b", "k8s-a-x": "Use when a"}))
+    versioned = sorted(rel.as_posix() for rel, text in out.items() if "version" in json.loads(text))
+    config = json.loads(out[RELEASE])
+    extra = config["packages"]["."]["extra-files"]
+    assert [f["path"] for f in extra] == versioned
+    assert all(f == {"type": "json", "path": f["path"], "jsonpath": "$.version"} for f in extra)
+    assert config["release-type"] == "simple"  # the rest of the config is kept
+    assert config["packages"]["."]["package-name"] == "k8s-skills"
 
 
 def test_versions_follow_release_manifest(tmp_path):

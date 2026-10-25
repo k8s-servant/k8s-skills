@@ -219,9 +219,12 @@ A skill is merged only when:
 - Use Conventional Commits and PR titles: `feat(skills): ...`, `fix: ...`, `docs: ...`.
   release-please builds the changelog and versions from them.
 - Never create or edit `CHANGELOG.md`, and never bump a version by hand.
-- The install manifests (`.claude-plugin/marketplace.json`, `gemini-extension.json`,
-  `plugin.json`) are generated. After adding or renaming a skill run
-  `python -m tools.skillcheck manifests --write` and commit the result.
+- The install manifests (`.claude-plugin/marketplace.json` and `plugin.json`, one
+  `skills/<name>/.claude-plugin/plugin.json` per skill, `gemini-extension.json`,
+  `plugin.json`) and the `extra-files` list in `release-please-config.json` are generated.
+  After adding or renaming a skill run `python -m tools.skillcheck manifests --write` and
+  commit the result. Each skill folder is its own Claude Code plugin, so
+  `/plugin install <skill>@k8s-skills` installs only that skill.
 - To try the release zips: `python -m tools.skillcheck package --out dist`.
 - To release, merge the release PR that release-please keeps open. It is opened with a
   GitHub App token so the required checks run on it. If the Release run fails at the

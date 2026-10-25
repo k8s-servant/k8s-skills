@@ -1,0 +1,15 @@
+{
+  "name": "k8s-cert-manager-troubleshooting",
+  "version": "0.4.0",
+  "description": "Use when cert-manager does not issue or renew a certificate in Kubernetes: a Certificate that stays READY False, a CertificateRequest that is Pending, Denied or Failed, an Issuer or ClusterIssuer that is not Ready (\"Error getting keypair for CA issuer\"), \"Referenced \\\"Issuer\\\" not found\", ACME Orders or Challenges stuck pending (HTTP-01, DNS-01, rate limits), a certificate that expired or did not renew, or \"failed calling webhook \\\"webhook.cert-manager.io\\\"\" when applying resources. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0",
+  "skills": [
+    "./"
+  ]
+}
