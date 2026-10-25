@@ -58,6 +58,8 @@ would help:
   and `k8s-workload-troubleshooting`.
 - A Kubernetes Gateway API route that Istio does not accept:
   `k8s-network-troubleshooting` (the Gateway API part) and the reference here.
+- What an Envoy response flag, reset reason or cluster statistic means in general:
+  `k8s-envoy-troubleshooting` (the proxy itself; Istio writes its config).
 
 ## Investigate
 

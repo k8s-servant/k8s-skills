@@ -10,7 +10,7 @@
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
 # Istio, Gateway API and Envoy Gateway objects, the RBAC objects, APIServices, and the
-# prometheus-operated and alertmanager-operated service proxies.
+# prometheus-operated, alertmanager-operated and my-envoy-admin service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -141,6 +141,15 @@ rules:
     # RBAC sees the proxied name with its port: "prometheus-operated:web".
     resourceNames: ["prometheus-operated", "prometheus-operated:web",
                     "alertmanager-operated", "alertmanager-operated:web"]
+    verbs: [get]
+  # Envoy's admin interface in the standalone Envoy scenarios. Envoy answers a GET to any
+  # admin endpoint that changes state with 405, so this proxy can only read; the skill
+  # keeps the agent off the full config_dump and /certs.
+  - apiGroups: [""]
+    resources:
+      - services/proxy
+    # RBAC sees the port as written in the request: by name or by number.
+    resourceNames: ["my-envoy-admin", "my-envoy-admin:admin", "my-envoy-admin:9901"]
     verbs: [get]
   # Cilium aggregates nothing to `view` either.
   - apiGroups: [cilium.io]

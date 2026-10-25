@@ -226,7 +226,14 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     assert "networking.istio.io" in yaml_text and "security.istio.io" in yaml_text
     assert "gateway.networking.k8s.io" in yaml_text and "gateway.envoyproxy.io" in yaml_text
     # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
-    for name in ("prometheus-operated", "prometheus-operated:web", "alertmanager-operated:web"):
+    for name in (
+        "prometheus-operated",
+        "prometheus-operated:web",
+        "alertmanager-operated:web",
+        # Envoy's admin interface, for the standalone Envoy scenarios.
+        "my-envoy-admin:admin",
+        "my-envoy-admin:9901",
+    ):
         assert f'"{name}"' in yaml_text, name
 
 
