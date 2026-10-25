@@ -1,4 +1,4 @@
-"""The README's verification table matches each skill's metadata and scenarios."""
+"""The README matches the skills: the verification table and the skill and scenario counts."""
 
 import re
 from pathlib import Path
@@ -39,3 +39,12 @@ def test_readme_lists_every_skill_with_its_versions_and_scenarios():
         assert name in rows, f"{name} is missing from the README verification table"
         assert rows[name] == (versions, cases), name
     assert set(rows) == set(skill_facts())
+
+
+def test_readme_counts_match_skills_and_scenarios():
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    found = re.search(r"\*\*(\d+) skills, (\d+) scenarios\.\*\*", text)
+    assert found, "README.md has no '**N skills, M scenarios.**' line"
+    facts = skill_facts()
+    scenarios = sum(len(cases) for _, cases in facts.values())
+    assert (int(found[1]), int(found[2])) == (len(facts), scenarios)
