@@ -9,7 +9,8 @@
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
-# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, APIServices, and the
+# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, APIServices, CRDs,
+# API Priority and Fairness objects, and the
 # prometheus-operated, alertmanager-operated and my-envoy-admin service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
@@ -185,6 +186,16 @@ rules:
     resources:
       - validatingadmissionpolicies
       - validatingadmissionpolicybindings
+    verbs: [get, list, watch]
+  # CRDs (which versions are served) and API Priority and Fairness, for the API skill.
+  - apiGroups: [apiextensions.k8s.io]
+    resources:
+      - customresourcedefinitions
+    verbs: [get, list, watch]
+  - apiGroups: [flowcontrol.apiserver.k8s.io]
+    resources:
+      - flowschemas
+      - prioritylevelconfigurations
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

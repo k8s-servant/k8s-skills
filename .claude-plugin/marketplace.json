@@ -13,6 +13,14 @@
       "description": "All k8s-skills: Kubernetes troubleshooting skills that read first and ask before changing anything"
     },
     {
+      "name": "k8s-api-troubleshooting",
+      "source": "./",
+      "description": "Use when the Kubernetes API server itself refuses or fails a request, before any controller acts on it: \"failed calling webhook\", \"admission webhook ... denied the request\", \"ValidatingAdmissionPolicy ... denied request\", a ReplicaSet with FailedCreate and no pods, an APIService \"False (ServiceNotFound)\", \"FailedDiscoveryCheck\" or \"MissingEndpoints\", \"unable to retrieve the complete list of server APIs\", a namespace stuck in Terminating, \"no matches for kind\" or \"ensure CRDs are installed first\", \"strict decoding error: unknown field\", a conversion webhook failure, \"You must be logged in to the server (Unauthorized)\", 429 \"too many requests\", \"etcdserver:\" errors, \"Request entity too large\" or \"metadata.annotations: Too long\". Investigates with kubectl get, describe, events and the health endpoints, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-api-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-argocd-troubleshooting",
       "source": "./",
       "description": "Use when Argo CD does not deploy or update an application in Kubernetes: an Application that is OutOfSync, Unknown, Degraded, Missing or Progressing, a ComparisonError (\"app path does not exist\", \"unable to resolve ... to a commit SHA\"), an InvalidSpecError (\"do not match any of the allowed destinations in project\"), a sync that fails (\"one or more objects failed to apply\"), auto-sync that never runs, resources that stay OutOfSync after a sync, or ApplicationSets that generate nothing. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",

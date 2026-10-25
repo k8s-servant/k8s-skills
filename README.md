@@ -34,7 +34,10 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 `persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
 `csinodes` and `volumeattachments`. `view` cannot read RBAC objects either, so for
 `k8s-rbac-troubleshooting` allow `get` and `list` on `roles`, `rolebindings`,
-`clusterroles` and `clusterrolebindings`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+`clusterroles` and `clusterrolebindings`, and for `k8s-api-troubleshooting` on
+`validatingwebhookconfigurations`, `mutatingwebhookconfigurations`,
+`validatingadmissionpolicies`, `apiservices`, `customresourcedefinitions`, `flowschemas`
+and `prioritylevelconfigurations`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Skills
 
@@ -62,6 +65,7 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 | `k8s-envoy-troubleshooting` | An Envoy proxy fails requests: 503 `no healthy upstream` or `upstream connect error`, 404 with an empty body, 504, response flags (UH, UF, NR, UT, UO), crashes on bootstrap errors, read-only admin endpoints; standalone or under Contour, Emissary, Gloo |
 | `k8s-envoy-gateway-troubleshooting` | Envoy Gateway does not route: Gateways not Programmed, HTTPRoutes not Accepted (hostnames, allowedRoutes), unresolved backends and missing ReferenceGrants, 404/500/503, policies |
 | `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
+| `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 
 Planned: cloud skills (AKS, EKS, GKE) and more ecosystem skills.
@@ -90,6 +94,7 @@ A skill is merged only after four checks:
 
 | Skill | Verified with | Scenarios |
 |---|---|---|
+| `k8s-api-troubleshooting` | kubernetes 1.37 | `apiservice-unavailable`, `crd-version-not-served`, `webhook-backend-down` |
 | `k8s-argocd-troubleshooting` | kubernetes 1.37, argo-cd 3.5 | `app-path-missing`, `auto-sync-off`, `project-destination-denied` |
 | `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
 | `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |

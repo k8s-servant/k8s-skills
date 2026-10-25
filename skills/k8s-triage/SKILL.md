@@ -52,6 +52,8 @@ below, then tell the user which skill would help, and stop there:
   NetworkPolicy, Ingress): `k8s-network-troubleshooting`.
 - A PersistentVolumeClaim is `Pending`, or volumes fail to attach or mount:
   `k8s-storage-troubleshooting`.
+- The API server refuses requests (`failed calling webhook`, an APIService that is not
+  `True`, a namespace stuck `Terminating`): `k8s-api-troubleshooting`.
 
 ## Investigate
 
@@ -154,6 +156,7 @@ kubectl get endpointslices -n my-namespace
 | `Pending`, `Running` but not ready, a controller short of replicas | 3 | `k8s-workload-troubleshooting` (or `k8s-storage-troubleshooting` for an unbound PVC) |
 | Warning events about objects that are still unhealthy, a node near its memory or CPU capacity, pods at their limits | 4 | the area the event belongs to |
 | Service with no ready endpoints while its pods are healthy, DNS failures | 3 | `k8s-network-troubleshooting` |
+| `FailedCreate` events that name a webhook, an APIService that is not `True`, a namespace stuck `Terminating` | 3 | `k8s-api-troubleshooting` |
 
 A short first look inside a container can confirm a network issue. Ask first: show the
 command, and run it only after the user agrees (pick a running pod in the namespace that
