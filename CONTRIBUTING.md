@@ -57,6 +57,10 @@ Investigation commands may use only what is on the `commands` allow-list in
 - Allow-listed commands and flags only, with literal placeholders such as `my-namespace`.
   No `$VAR` and no `<placeholder>`.
 - No `;`, `&&` or redirects. Pipes only to the listed filters, with the listed flags.
+- Global flags that change the identity, server or local files (`--as`, `--server`,
+  `--kubeconfig`, ...) are not allowed, except where `subcommand_flags_allowed` lists
+  them for one subcommand: `kubectl auth can-i` may use `--as` and `--as-group`, as it
+  only asks the API server a question.
 - No flags that block or read local files: `-w`/`--watch`, `-f`/`--follow`,
   `-f`/`--filename`, `-k`/`--kustomize`, or `-o` formats ending in `-file`.
 - Scripts in `scripts/` may contain only a shebang line, comments and allow-listed
@@ -165,7 +169,7 @@ cannot change the cluster even by mistake: the built-in `view` role in every nam
 plus read access to the cluster-scoped objects `view` leaves out (nodes, PersistentVolumes,
 StorageClasses, the CSI objects, admission webhook configurations and cert-manager
 ClusterIssuers), to Argo CD's and Gatekeeper's objects, which no aggregated role covers, and to
-ClusterExternalSecrets and ValidatingAdmissionPolicies. To test what an agent with access to
+ClusterExternalSecrets, ValidatingAdmissionPolicies and the RBAC objects (Roles, ClusterRoles and their bindings). To test what an agent with access to
 one namespace sees, put an `agent-scope` file in the case folder with the namespace name
 on its first line. The agent then gets `view` in that namespace only, and no node access,
 and its kubeconfig context points at that namespace, as a developer's usually does.

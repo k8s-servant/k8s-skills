@@ -9,7 +9,7 @@
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
-# Istio, Gateway API and Envoy Gateway objects, and the prometheus-operated and alertmanager-operated service proxies.
+# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, and the prometheus-operated and alertmanager-operated service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail
@@ -153,6 +153,14 @@ rules:
   # The Gateway API and Envoy Gateway ship no read role at all.
   - apiGroups: [gateway.networking.k8s.io, gateway.envoyproxy.io]
     resources: ["*"]
+    verbs: [get, list, watch]
+  # `view` leaves the RBAC objects out ("does not allow viewing roles or role bindings").
+  - apiGroups: [rbac.authorization.k8s.io]
+    resources:
+      - roles
+      - rolebindings
+      - clusterroles
+      - clusterrolebindings
     verbs: [get, list, watch]
   # Kubernetes' own admission policies, which Gatekeeper and Kyverno can generate.
   - apiGroups: [admissionregistration.k8s.io]

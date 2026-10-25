@@ -210,6 +210,11 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
         "constrainttemplates",
         "validatingadmissionpolicies",
         "clusterexternalsecrets",
+        # `view` leaves the RBAC objects out; the RBAC skill reads them.
+        "roles",
+        "rolebindings",
+        "clusterroles",
+        "clusterrolebindings",
     ):
         assert f"- {resource}" in yaml_text, resource
     # Prometheus' and Alertmanager's HTTP APIs, through the API server's service proxy,

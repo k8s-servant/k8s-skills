@@ -832,3 +832,27 @@ def test_ask_first_leaves_arguments_to_the_user_and_reviewers(tmp_path, line):
     # The user sees each ask-first command before it runs, so the checker only checks
     # the verb, the exec program and Secret access.
     assert run(tmp_path, ask(line, "# Undo: none")) == [], line
+
+
+def test_auth_can_i_may_impersonate(tmp_path):
+    """`auth can-i` only asks a question, so --as and --as-group are allowed there."""
+    body = bash(
+        "kubectl auth can-i list pods -n my-namespace --as=system:serviceaccount:my-namespace:my-app",
+        "kubectl auth can-i --list -n my-namespace --as system:serviceaccount:my-namespace:my-app",
+        "kubectl auth can-i get nodes --as=jane --as-group=my-group",
+    )
+    assert run(tmp_path, body) == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "kubectl get pods --as=system:admin",
+        "kubectl describe pod my-app --as-group=system:masters",
+        "kubectl auth whoami --as=jane",
+        "kubectl auth can-i list pods --as-uid=1",
+        "kubectl --as=jane auth can-i list pods",
+    ],
+)
+def test_impersonation_elsewhere_is_still_a_finding(tmp_path, line):
+    assert "global flag not allowed" in messages(run(tmp_path, bash(line))), line

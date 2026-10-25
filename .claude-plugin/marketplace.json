@@ -125,6 +125,14 @@
       ]
     },
     {
+      "name": "k8s-rbac-troubleshooting",
+      "source": "./",
+      "description": "Use when a Kubernetes request is refused by RBAC: \"Error from server (Forbidden)\", \"User ... cannot list resource ... in the namespace\" or \"at the cluster scope\", a ServiceAccount, controller, CI job or person getting 403, a RoleBinding that does not seem to apply (wrong namespace, wrong subject, a ClusterRole bound with a RoleBinding), \"is attempting to grant RBAC permissions not currently held\", \"roleRef ... field is immutable\", 401 Unauthorized versus 403 Forbidden, or a custom resource that `view` cannot read. Investigates with kubectl auth can-i, get and describe, and proposes fixes. Reads first and asks before changing anything.",
+      "skills": [
+        "./skills/k8s-rbac-troubleshooting"
+      ]
+    },
+    {
       "name": "k8s-storage-troubleshooting",
       "source": "./",
       "description": "Use when Kubernetes storage blocks a workload: a PersistentVolumeClaim stuck in Pending, ProvisioningFailed events, a StorageClass that does not exist or a provisioner that cannot provide the access mode, pods Pending with \"unbound immediate PersistentVolumeClaims\", FailedAttachVolume, FailedMount or Multi-Attach errors, a PVC or PV stuck Terminating or Released, or a volume that is full or will not expand. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",

@@ -38,6 +38,11 @@ global_flags: [-n, -s, -v, --as, --as-group, --as-uid, --as-user-extra, --cache-
                --log-flush-frequency, --match-server-version, --namespace, --password, --profile,
                --profile-output, --proxy-url, --request-timeout, --server, --tls-server-name,
                --token, --user, --username, --v, --vmodule, --warnings-as-errors]
+# Global flags a run-freely subcommand may use after it. `auth can-i` only asks the API
+# server a question, so it may ask it for another user or group; that needs the
+# `impersonate` verb, which a read-only identity usually lacks.
+subcommand_flags_allowed:
+  "auth can-i": [--as, --as-group]
 command_langs: [bash, sh, shell, console, zsh]
 # Commands an agent may run only after the user approves each one, in a block directly
 # under the ask-first marker. Extend only by PR review, like `commands`; never turn it
