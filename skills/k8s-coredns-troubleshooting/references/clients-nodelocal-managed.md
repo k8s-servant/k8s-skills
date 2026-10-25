@@ -70,7 +70,7 @@ the autoscaler's ConfigMap), as a proposed fix with the current values for the u
 
 ## Managed clusters
 
-- **AKS**: the `coredns` ConfigMap is managed and reset by AKS. Custom configuration goes
+- **AKS** (more in `k8s-aks-troubleshooting`): the `coredns` ConfigMap is managed and reset by AKS. Custom configuration goes
   in the ConfigMap `coredns-custom` in kube-system: keys ending in `.server` add server
   blocks, keys ending in `.override` add lines to the default block. CoreDNS needs a
   restart to read it.

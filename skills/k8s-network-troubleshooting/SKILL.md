@@ -48,6 +48,8 @@ would help:
   `k8s-node-troubleshooting`.
 - CoreDNS itself fails (its pods crash, its logs show errors, external names or one
   domain fail for every client, a Corefile edit): `k8s-coredns-troubleshooting`.
+- On AKS, a LoadBalancer Service stays `<pending>` with `SyncLoadBalancerFailed`, or its
+  IP does not take traffic: `k8s-aks-troubleshooting`.
 
 ## Investigate
 

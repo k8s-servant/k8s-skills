@@ -48,6 +48,8 @@ would help:
 - A volume cannot attach or mount on the node: `k8s-storage-troubleshooting`.
 - `NetworkUnavailable` is `True`, or the CNI pods on the node fail:
   `k8s-network-troubleshooting`.
+- On AKS, a node pool or the cluster is `Failed`, or an upgrade or scale fails in Azure
+  (quota, VM capacity, a drain blocked by a PodDisruptionBudget): `k8s-aks-troubleshooting`.
 
 ## Investigate
 

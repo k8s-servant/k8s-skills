@@ -39,7 +39,7 @@ are under [Install](#install).
 
 ## Why you can trust it
 
-- **25 skills, 76 scenarios.** Each scenario breaks something on purpose in a kind
+- **26 skills, 79 scenarios.** Each scenario breaks something on purpose in a kind
   cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
   cause, point at the evidence and propose an acceptable fix, without changing anything.
 - **Quoted from a real cluster.** Every error message and log line a skill quotes was
@@ -91,8 +91,9 @@ Secrets are never read, in any tier. Every change, in either tier, comes with an
 | `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
 | `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
+| `k8s-aks-troubleshooting` | A problem is specific to AKS: a cluster or node pool `Failed`, upgrades blocked by PDBs, quota and VM capacity, LoadBalancer Services `<pending>` (`SyncLoadBalancerFailed`), Azure Disk and Files PVCs, workload identity `AADSTS` errors, `coredns-custom`, `error dialing backend`, Azure Policy, API server access and Azure RBAC; uses read-only `az` commands |
 
-Planned: cloud skills (AKS, EKS, GKE) and more ecosystem skills.
+Planned: EKS and GKE skills, and more ecosystem skills.
 
 ## How each skill is verified
 
@@ -118,6 +119,7 @@ A skill is merged only after four checks:
 
 | Skill | Verified with | Scenarios |
 |---|---|---|
+| `k8s-aks-troubleshooting` | aks, kubernetes 1.33 | `azure-disk-too-large`, `internal-lb-subnet-missing`, `workload-identity-unknown-client-id` |
 | `k8s-api-troubleshooting` | kubernetes 1.37 | `apiservice-unavailable`, `crd-version-not-served`, `webhook-backend-down` |
 | `k8s-argocd-troubleshooting` | kubernetes 1.37, argo-cd 3.5 | `app-path-missing`, `auto-sync-off`, `project-destination-denied` |
 | `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
@@ -147,7 +149,10 @@ A skill is merged only after four checks:
 `verified-with` and `verified-on` in each `SKILL.md` record the same versions and the
 date. Other versions usually behave the same, but messages and defaults can change
 between releases. kind cannot reproduce cloud-only behaviour (load balancers, cloud
-storage, managed node pools), so those parts are checked against the docs only. To run
+storage, managed node pools). The cloud skills' scenarios run on a real managed test
+cluster instead, in one namespace and only when you name its context (see [Cloud
+scenarios](CONTRIBUTING.md#cloud-scenarios)); the rest of their content is checked
+against the provider's docs. To run
 a scenario yourself, see [Scenarios and the test kit](CONTRIBUTING.md#scenarios-and-the-test-kit).
 
 ## Install
@@ -221,7 +226,9 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 `clusterroles` and `clusterrolebindings`, and for `k8s-api-troubleshooting` on
 `validatingwebhookconfigurations`, `mutatingwebhookconfigurations`,
 `validatingadmissionpolicies`, `apiservices`, `customresourcedefinitions`, `flowschemas`
-and `prioritylevelconfigurations`. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+and `prioritylevelconfigurations`. `k8s-aks-troubleshooting` also runs read-only `az`
+commands, as whatever Azure login the agent's shell has: give that identity the
+**Reader** role on the cluster's resource groups, nothing more. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
 ## Contributing
 

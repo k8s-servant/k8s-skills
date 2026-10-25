@@ -13,6 +13,11 @@
       "description": "All k8s-skills: Kubernetes troubleshooting skills that read first and ask before changing anything"
     },
     {
+      "name": "k8s-aks-troubleshooting",
+      "source": "./skills/k8s-aks-troubleshooting",
+      "description": "Use when a problem is specific to Azure Kubernetes Service (AKS): a cluster or node pool in \"Failed\" state, an upgrade or scale that fails (\"UpgradeFailed\", \"violate the pod's disruption budget\", \"QuotaExceeded\", \"AllocationFailed\"), a LoadBalancer Service stuck at <pending> (\"SyncLoadBalancerFailed\", \"AuthorizationFailed\"), an Azure Disk or Files PVC that fails (\"ProvisioningFailed\", \"volume node affinity conflict\", \"Multi-Attach error\", \"Mount error(13)\"), workload identity errors (\"AADSTS700016\", \"AADSTS70021\"), CoreDNS edits that AKS reverts, \"error dialing backend\", Azure Policy denials, or API server access (authorized IP ranges, private clusters, kubelogin, \"User does not have access to the resource in Azure\"). Investigates with kubectl and read-only az commands, and proposes fixes. Reads first and asks before changing anything."
+    },
+    {
       "name": "k8s-api-troubleshooting",
       "source": "./skills/k8s-api-troubleshooting",
       "description": "Use when the Kubernetes API server itself refuses or fails a request, before any controller acts on it: \"failed calling webhook\", \"admission webhook ... denied the request\", \"ValidatingAdmissionPolicy ... denied request\", a ReplicaSet with FailedCreate and no pods, an APIService \"False (ServiceNotFound)\", \"FailedDiscoveryCheck\" or \"MissingEndpoints\", \"unable to retrieve the complete list of server APIs\", a namespace stuck in Terminating, \"no matches for kind\" or \"ensure CRDs are installed first\", \"strict decoding error: unknown field\", a conversion webhook failure, \"You must be logged in to the server (Unauthorized)\", 429 \"too many requests\", \"etcdserver:\" errors, \"Request entity too large\" or \"metadata.annotations: Too long\". Investigates with kubectl get, describe, events and the health endpoints, and proposes fixes. Reads first and asks before changing anything."

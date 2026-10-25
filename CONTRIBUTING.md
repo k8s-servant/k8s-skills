@@ -205,6 +205,11 @@ K8S_SKILLS_CLOUD_CONTEXT=my-aks-context tests/run.sh k8s-aks-troubleshooting my-
 K8S_SKILLS_CLOUD_CONTEXT=my-aks-context tests/run.sh --cleanup k8s-aks-troubleshooting my-case
 ```
 
+Scenarios that run a pod use `curlimages/curl:8.10.1`. If the cluster only admits images
+from its own registry (or only signed ones), set `K8S_SKILLS_TEST_IMAGE` to an allowed
+image with `sh` and `curl`, for example a mirror of that one. Its pods run as a non-root
+user.
+
 The kit copies only that context into the git-ignored `.kube/cloud` and refuses to run
 when its current context is anything else. It refuses a cloud case without the variable,
 and a kind case or `tests/addon.sh` with it. Use a test cluster: a scenario breaks things
