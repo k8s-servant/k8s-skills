@@ -751,3 +751,12 @@ def test_cluster_script_refuses_a_cloud_context(tmp_path):
         assert result.returncode == 2, (action, result.stderr)
         assert "kind" in result.stderr
     assert not any(c.startswith("kind ") for c in calls(tmp_path))
+
+
+def test_run_refuses_an_unknown_platform(tmp_path):
+    repo = make_repo(tmp_path)
+    make_case(repo, platform="azure")
+    result = run_case(tmp_path, repo, context=CLOUD, K8S_SKILLS_CLOUD_CONTEXT=CLOUD)
+    assert result.returncode == 2
+    assert "aks, eks or gke" in result.stderr
+    assert not any("setup.sh" in c for c in calls(tmp_path))

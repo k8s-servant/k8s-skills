@@ -35,6 +35,10 @@ platform=""
 if [[ -f "$case_dir/platform" ]]; then
   platform="$(head -n 1 "$case_dir/platform" | tr -d '[:space:]')"
 fi
+if [[ -n "$platform" && ! "$platform" =~ ^(aks|eks|gke)$ ]]; then
+  echo "refusing to run: tests/$1/$2/platform must be aks, eks or gke" >&2
+  exit 2
+fi
 if [[ -n "$platform" && -z "${K8S_SKILLS_CLOUD_CONTEXT:-}" ]]; then
   echo "refusing to run: tests/$1/$2 needs a real $platform cluster;" \
     "set K8S_SKILLS_CLOUD_CONTEXT to its kubeconfig context" >&2

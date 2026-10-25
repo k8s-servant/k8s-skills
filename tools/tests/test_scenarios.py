@@ -143,3 +143,11 @@ def test_kind_scenario_cannot_name_a_platform(tmp_path):
     assert messages(check_scenarios(tmp_path, sk)) == [
         "only cloud skills (k8s-aks-*, k8s-eks-*, k8s-gke-*) run on a real cluster"
     ]
+
+
+def test_cloud_platform_must_be_aks_eks_or_gke(tmp_path):
+    sk = skill(tmp_path, "k8s-aks-troubleshooting")
+    make_case(tmp_path, sk.name, "typo", platform="azure\n", **{"agent-scope": "my-namespace\n"})
+    assert messages(check_scenarios(tmp_path, sk)) == [
+        "a cloud scenario needs a platform file (aks, eks or gke)"
+    ]

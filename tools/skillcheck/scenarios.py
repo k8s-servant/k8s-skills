@@ -93,9 +93,12 @@ def check_scenarios(repo: Path, skill_dir: Path) -> list[Finding]:
                 found.append(Finding(rel, None, f"must call {GUARD_CALL}"))
 
         if cloud:
-            for name, message in (("platform", NO_PLATFORM), ("agent-scope", NO_SCOPE)):
-                if not (case / name).is_file():
-                    found.append(Finding((case / name).relative_to(repo), None, message))
+            platform = case / "platform"
+            words = platform.read_text(encoding="utf-8").split() if platform.is_file() else []
+            if words[:1] not in (["aks"], ["eks"], ["gke"]):
+                found.append(Finding(platform.relative_to(repo), None, NO_PLATFORM))
+            if not (case / "agent-scope").is_file():
+                found.append(Finding((case / "agent-scope").relative_to(repo), None, NO_SCOPE))
         elif (case / "platform").exists():
             found.append(Finding((case / "platform").relative_to(repo), None, KIND_ONLY))
 
