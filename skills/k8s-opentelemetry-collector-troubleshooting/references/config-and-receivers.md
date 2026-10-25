@@ -10,7 +10,7 @@ shell, only the collector binary.
 ```bash
 kubectl logs -n my-namespace deployment/my-collector --previous --tail=30
 kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E -A6 'pipelines:'
-kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E 'endpoint:'
+kubectl get configmap my-collector -n my-namespace -o jsonpath='{.data.config\.yaml}' | grep -E '^ *endpoint:'
 kubectl get service my-collector -n my-namespace -o jsonpath='{.spec.ports}{"\n"}'
 kubectl logs -n my-namespace deployment/my-collector --tail=200 | grep -E 'Starting (GRPC|HTTP) server|Everything is ready|alias is deprecated'
 ```

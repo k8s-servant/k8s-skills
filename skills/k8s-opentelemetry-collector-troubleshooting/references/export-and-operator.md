@@ -71,7 +71,8 @@ resource "pods" ...`; data flows on without the attributes, or stops with
 
 ```bash
 kubectl logs -n opentelemetry-operator-system deployment/opentelemetry-operator-controller-manager -c manager --tail=100
-kubectl get pods -n my-namespace -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.annotations}{" "}{range .spec.initContainers[*]}{.name}{" "}{end}{"\n"}{end}'
+kubectl get pods -n my-namespace -o jsonpath='{range .items[*]}{.metadata.name}{" "}{range .spec.initContainers[*]}{.name}{" "}{end}{"\n"}{end}'
+kubectl get deployment my-app -n my-namespace -o jsonpath='{.spec.template.metadata.annotations}' | grep -E -o '"(instrumentation|sidecar)\.opentelemetry\.io/[a-z-]+":"[^"]*"'
 ```
 
 ## Proposed fix
