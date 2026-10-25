@@ -1,6 +1,6 @@
 {
   "name": "k8s-istio-troubleshooting",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Use when traffic fails in an Istio service mesh on Kubernetes: HTTP 403 \"RBAC: access denied\" from an AuthorizationPolicy, 503 \"no healthy upstream\" or \"upstream connect error or disconnect/reset before headers\", 404 from a route that does not match, \"Connection reset by peer\" after PeerAuthentication STRICT, sidecars that are not injected, VirtualService, DestinationRule, Gateway or ServiceEntry rules that do not apply, or istiod and proxy problems. Reads Envoy's access log and response flags (UH, NR, UF, URX, filter_chain_not_found), covers sidecar mode and ambient mode, and proposes fixes. Investigates with kubectl get, describe, events and logs, asks before reading Envoy's admin API inside a proxy. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

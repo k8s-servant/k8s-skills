@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.5.0](https://github.com/k8s-servant/k8s-skills/compare/v0.4.0...v0.5.0) (2026-10-25)
+
+
+### Features
+
+* give every Claude Code plugin its own plugin.json ([#74](https://github.com/k8s-servant/k8s-skills/issues/74)) ([304d676](https://github.com/k8s-servant/k8s-skills/commit/304d676d1c73f4175f820ce41b2794299a5c960a))
+* read-only az commands and cloud scenarios for the AKS skill ([#76](https://github.com/k8s-servant/k8s-skills/issues/76)) ([6c26baa](https://github.com/k8s-servant/k8s-skills/commit/6c26baaad75067ad4852c9bc12b489b2d2a8aa43))
+* **skills:** add k8s-aks-troubleshooting ([#77](https://github.com/k8s-servant/k8s-skills/issues/77)) ([122bc9d](https://github.com/k8s-servant/k8s-skills/commit/122bc9dec56a46b4861e3de891ad991fd8476cbb))
+* **skills:** add k8s-api-troubleshooting ([#69](https://github.com/k8s-servant/k8s-skills/issues/69)) ([b852b9e](https://github.com/k8s-servant/k8s-skills/commit/b852b9e14736ff0c0a5072ff33f7f56c50cd3b09))
+* **skills:** add k8s-autoscaling-troubleshooting ([#64](https://github.com/k8s-servant/k8s-skills/issues/64)) ([f355dae](https://github.com/k8s-servant/k8s-skills/commit/f355dae897e9f71f9ba4dd26c0feb9d7f180a319))
+* **skills:** add k8s-coredns-troubleshooting ([#70](https://github.com/k8s-servant/k8s-skills/issues/70)) ([6531d71](https://github.com/k8s-servant/k8s-skills/commit/6531d7153414acdab8423cc270d39d41599527b2))
+* **skills:** add k8s-envoy-troubleshooting ([#68](https://github.com/k8s-servant/k8s-skills/issues/68)) ([2ed8c84](https://github.com/k8s-servant/k8s-skills/commit/2ed8c84688102f91803b0b284bcf2bf612bc58de))
+* **skills:** add k8s-fluent-bit-troubleshooting ([#66](https://github.com/k8s-servant/k8s-skills/issues/66)) ([ccfa9e2](https://github.com/k8s-servant/k8s-skills/commit/ccfa9e2dbad859e58db620eaf168317e1e564b23))
+* **skills:** add k8s-loki-troubleshooting ([#65](https://github.com/k8s-servant/k8s-skills/issues/65)) ([3daa848](https://github.com/k8s-servant/k8s-skills/commit/3daa848b89b5ec125f68dce1219691ef8686af0a))
+* **skills:** add k8s-opentelemetry-collector-troubleshooting ([#67](https://github.com/k8s-servant/k8s-skills/issues/67)) ([033cc6e](https://github.com/k8s-servant/k8s-skills/commit/033cc6e10f4db030f92aef28889b25932a429721))
+* **skills:** add k8s-rbac-troubleshooting ([#62](https://github.com/k8s-servant/k8s-skills/issues/62)) ([3c8f538](https://github.com/k8s-servant/k8s-skills/commit/3c8f53823264e5aedf9ed76ef8cbc9c7ac3b2f5b))
+
+
+### Documentation
+
+* add a demo, quick start and trust summary to the top of the README ([#71](https://github.com/k8s-servant/k8s-skills/issues/71)) ([23b91d9](https://github.com/k8s-servant/k8s-skills/commit/23b91d9c8effe43ae3fa1ad9ba679b5c1c53a62c))
+* describe the repository CI and automation ([#60](https://github.com/k8s-servant/k8s-skills/issues/60)) ([b19101b](https://github.com/k8s-servant/k8s-skills/commit/b19101be79fcd9a7a3df5d8a900d1ad2302cbb30))
+* link the launch blog post from the README ([#75](https://github.com/k8s-servant/k8s-skills/issues/75)) ([2b04a92](https://github.com/k8s-servant/k8s-skills/commit/2b04a92447c24dcd0128afcaf2f8b54670a95f7d))
+* recommend installing all skills and say why ([#63](https://github.com/k8s-servant/k8s-skills/issues/63)) ([7c4b90c](https://github.com/k8s-servant/k8s-skills/commit/7c4b90c8a2a20354087850211aaae51a2b21408f))
+* show how each skill is verified in the README ([#59](https://github.com/k8s-servant/k8s-skills/issues/59)) ([8840a4c](https://github.com/k8s-servant/k8s-skills/commit/8840a4c73889a12e38afee7aedb3762f92edb15c))
+
 ## [0.4.0](https://github.com/k8s-servant/k8s-skills/compare/v0.3.1...v0.4.0) (2026-10-24)
 
 
