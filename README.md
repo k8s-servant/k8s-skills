@@ -58,6 +58,54 @@ node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 
 Planned: cloud skills (AKS, EKS, GKE) and more ecosystem skills.
 
+## How each skill is verified
+
+A skill is merged only after four checks:
+
+1. **Official sources.** Facts come from the project's own documentation and, where the
+   docs are silent, its source code at the release named below. Each skill lists the
+   pages and files in its `Sources` section.
+2. **A real cluster.** Every status message, log line and response a skill quotes was
+   reproduced on a throwaway [kind](https://kind.sigs.k8s.io) cluster, with the tool
+   installed at a pinned version whose checksum is verified first (`tests/versions.env`).
+   Where the cluster printed something different from the docs, the skill quotes the
+   cluster.
+3. **Scenarios run by an agent.** Each scenario in `tests/<skill>/<case>/` breaks
+   something on purpose, and its `expected.md` names the cause, the evidence, the
+   acceptable fixes and the wrong answers. A fresh agent gets the skill, the prompt and a
+   view-only kubeconfig, and passes only if it names the cause, points at the evidence,
+   proposes an acceptable fix and changes nothing. The runs are recorded in the skill's
+   pull request.
+4. **CI on every change.** `skillcheck` checks each command against its tier, the
+   ask-first and fix blocks, the `# Undo:` lines and that no command reads Secrets; tests,
+   linters and a link check run as well.
+
+| Skill | Verified with | Scenarios |
+|---|---|---|
+| `k8s-argocd-troubleshooting` | kubernetes 1.37, argo-cd 3.5 | `app-path-missing`, `auto-sync-off`, `project-destination-denied` |
+| `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
+| `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
+| `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |
+| `k8s-external-secrets-troubleshooting` | kubernetes 1.37, external-secrets 2.14 | `provider-key-missing`, `store-name-wrong`, `target-owned-by-other` |
+| `k8s-flux-troubleshooting` | kubernetes 1.37, flux 2.9 | `git-branch-missing`, `helm-chart-version-missing`, `kustomization-path-missing` |
+| `k8s-gatekeeper-troubleshooting` | kubernetes 1.37, gatekeeper 3.23 | `constraint-denies-deployment`, `template-rego-error`, `webhook-down-fails-open` |
+| `k8s-grafana-troubleshooting` | kubernetes 1.37, grafana 13.2 | `dashboard-json-invalid`, `datasource-two-defaults`, `datasource-url-wrong` |
+| `k8s-helm-troubleshooting` | kubernetes 1.37, helm 4.3 | `ownership-conflict`, `release-stuck-pending`, `upgrade-timeout-bad-image` |
+| `k8s-istio-troubleshooting` | kubernetes 1.37, istio 1.31 | `authorizationpolicy-denies`, `strict-mtls-plaintext-client`, `subset-without-pods` |
+| `k8s-kyverno-troubleshooting` | kubernetes 1.37, kyverno 1.19 | `audit-does-not-block`, `enforce-blocks-deployment`, `validatingpolicy-denies` |
+| `k8s-network-troubleshooting` | kubernetes 1.37, gateway-api 1.6 | `networkpolicy-blocks-namespace`, `selector-mismatch`, `wrong-target-port` |
+| `k8s-node-troubleshooting` | kubernetes 1.37 | `node-not-ready`, `requests-full`, `untolerated-taint` |
+| `k8s-prometheus-troubleshooting` | kubernetes 1.37, prometheus-operator 0.94, prometheus 3.14 | `servicemonitor-not-selected`, `servicemonitor-port-name-wrong`, `target-path-404` |
+| `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
+| `k8s-triage` | kubernetes 1.37 | `crashloop-somewhere`, `healthy-cluster`, `namespace-only-access`, `node-not-ready` |
+| `k8s-workload-troubleshooting` | kubernetes 1.37 | `image-pull-wrong-tag`, `oom-killed`, `readiness-probe-failing` |
+
+`verified-with` and `verified-on` in each `SKILL.md` record the same versions and the
+date. Other versions usually behave the same, but messages and defaults can change
+between releases. kind cannot reproduce cloud-only behaviour (load balancers, cloud
+storage, managed node pools), so those parts are checked against the docs only. To run
+a scenario yourself, see [Scenarios and the test kit](CONTRIBUTING.md#scenarios-and-the-test-kit).
+
 ## Install
 
 Install with the [`skills` CLI](https://github.com/vercel-labs/skills), or copy the
