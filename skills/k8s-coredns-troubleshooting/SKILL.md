@@ -172,8 +172,9 @@ Save the Corefile before any change:
 kubectl get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'
 ```
 
-Apply the corrected Corefile (save it as `Corefile`); running pods reload it within about
-two minutes, and log `[INFO] Reloading complete`:
+Apply the corrected Corefile (save it as `Corefile`). Running pods reload it within about
+two minutes (up to a minute for the kubelet to update the mounted ConfigMap, then the
+`reload` plugin's check every 30 seconds or so), and log `[INFO] Reloading complete`:
 
 > Proposed fix: review before running. The agent does not run this.
 
