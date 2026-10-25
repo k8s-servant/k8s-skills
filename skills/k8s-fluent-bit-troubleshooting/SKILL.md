@@ -33,14 +33,14 @@ cause. The Helm chart keeps the config in a ConfigMap (`fluent-bit.conf`); the *
 Operator** builds it from custom resources into a Secret.
 
 The commands use placeholders: `my-namespace`, `my-fluent-bit` (the DaemonSet, its
-ConfigMap and its ServiceAccount) `my-fluent-bit-pod` (one of its pods) and `my-backend` (the Service an output sends
-to). Replace them
-with the real names. Never read Secrets: not the Fluent Operator's rendered config, not
-Secrets that outputs take credentials from. The ConfigMap may hold credentials inline
-(`HTTP_Passwd`, `http_api_key`, `cloud_auth`, `bearer_token`, AWS keys): read it, but
-never repeat those values. Avoid `kubectl describe pod` on Fluent Bit: it prints literal
-environment values. Never request `/api/v1/trace/...` (a GET turns tracing on) and never
-POST to `/api/v2/reload`.
+ConfigMap and its ServiceAccount), `my-fluent-bit-pod` (one of its pods) and
+`my-backend` (the Service an output sends to). Replace them with the real names. Never
+read Secrets: not the Fluent Operator's rendered config, not Secrets that outputs take
+credentials from. The ConfigMap may hold credentials inline (`HTTP_Passwd`,
+`http_api_key`, `cloud_auth`, `bearer_token`, AWS keys): read it, but never repeat those
+values. Avoid `kubectl describe pod` on Fluent Bit: it prints literal environment
+values. Never request `/api/v1/trace/...` (a GET turns tracing on) and never POST to
+`/api/v2/reload`.
 
 ## When to use
 
@@ -77,7 +77,7 @@ name the input, filter or output.
 ```bash
 kubectl logs -n my-namespace daemonset/my-fluent-bit --tail=100
 kubectl logs -n my-namespace daemonset/my-fluent-bit --previous --tail=50
-kubectl logs -n my-namespace daemonset/my-fluent-bit --tail=500 | grep -E '\[(error| warn)\]'
+kubectl logs -n my-namespace daemonset/my-fluent-bit --tail=500 | grep -E '\[ ?(error|warn)\]'
 ```
 
 **3. Read the config**: inputs (`Path`, parsers), filters, outputs (`Name`, `Host`,
