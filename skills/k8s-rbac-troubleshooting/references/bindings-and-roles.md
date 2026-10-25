@@ -52,4 +52,5 @@ refusal, in the namespace from the refusal. Do not bind `cluster-admin`, `admin`
 ```bash
 kubectl auth reconcile -f my-app-rbac.yaml
 # Undo: kubectl auth reconcile -f my-app-rbac-before.yaml --remove-extra-permissions --remove-extra-subjects
+# and kubectl delete for each object the fix created, which reconcile leaves in place
 ```

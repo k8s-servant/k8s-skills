@@ -9,7 +9,8 @@
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
-# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, and the prometheus-operated and alertmanager-operated service proxies.
+# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, and the
+# prometheus-operated and alertmanager-operated service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
 # namespace.
 set -euo pipefail

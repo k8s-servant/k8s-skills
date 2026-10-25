@@ -49,7 +49,9 @@ if it is not installed, keep going with the steps here and tell the user which s
 would help:
 
 - The 403 message has no `User "..." cannot` part and names an admission webhook or a
-  policy: `k8s-kyverno-troubleshooting`, `k8s-gatekeeper-troubleshooting`.
+  policy: `k8s-kyverno-troubleshooting`, `k8s-gatekeeper-troubleshooting`. (A webhook
+  authorizer's refusal keeps the `User "..." cannot` text and adds its own reason after
+  it.)
 - `violates PodSecurity`: `k8s-workload-troubleshooting`.
 - The workload fails for another reason once access works: `k8s-workload-troubleshooting`.
 
@@ -171,14 +173,19 @@ kubectl create clusterrolebinding my-app-node-reader --clusterrole=my-app-node-r
 ```
 
 A binding's `roleRef` cannot be changed (`field is immutable`); to point it at another
-role, delete it and create it again, which removes the access for a moment:
+role, delete it and create it again, which removes the access for a moment. Save the
+binding first, so the undo can restore it:
+
+```bash
+kubectl get rolebinding my-binding -n my-namespace -o yaml
+```
 
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
 kubectl delete rolebinding my-binding -n my-namespace
 kubectl create rolebinding my-binding -n my-namespace --role=my-app-config-reader --serviceaccount=my-namespace:my-app
-# Undo: kubectl delete rolebinding my-binding -n my-namespace, then apply the binding as it was
+# Undo: kubectl delete rolebinding my-binding -n my-namespace && kubectl apply -f my-binding-before.yaml
 ```
 
 Once access is fixed, a pod in CrashLoopBackOff recovers at its next restart. To retry

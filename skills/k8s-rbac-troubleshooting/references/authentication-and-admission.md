@@ -35,7 +35,7 @@ subject (users, groups, or `serviceaccounts` in its namespace). Without it the a
 a refusal about you, not about the subject, for example `cannot impersonate-on:
 serviceaccount:create resource "selfsubjectaccessreviews"` (Kubernetes 1.37, with
 constrained impersonation) or `cannot impersonate resource "serviceaccounts"`. Give the
-command to someone allowed to impersonate. Impersonating `system:masters` is refused.
+command to someone allowed to impersonate.
 
 ## Refusals that are not RBAC
 
