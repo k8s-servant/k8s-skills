@@ -94,15 +94,17 @@ Autoscaler and nodes:
 
 ## Proposed fix
 
-A PodDisruptionBudget that blocks the drain: give the workload enough replicas, or relax
-the budget in its manifest or chart, then retry the upgrade. Raising replicas is
+A PodDisruptionBudget that blocks the drain: give the workload more replicas than the
+budget's `minAvailable` (or fewer than all of them covered by `maxUnavailable: 0`), or
+relax the budget in its manifest or chart, then retry the upgrade. Note the current
+replica count first (`kubectl get deployment my-app -n my-namespace`); raising it is
 reversible:
 
 > Ask first: the agent runs this only after the user approves it.
 
 ```bash
 kubectl scale deployment/my-app --replicas=3 -n my-namespace
-# Undo: kubectl scale deployment/my-app --replicas=1 -n my-namespace
+# Undo: kubectl scale deployment/my-app --replicas=2 -n my-namespace (the count you noted before)
 ```
 
 Then retry the upgrade to the same target version; AKS continues from where it stopped:
@@ -110,18 +112,19 @@ Then retry the upgrade to the same target version; AKS continues from where it s
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
-az aks nodepool upgrade -g my-resource-group --cluster-name my-cluster -n my-nodepool --kubernetes-version 1.34.0
-# Undo: none; a node pool cannot be downgraded. Pick the version from az aks nodepool get-upgrades
+az aks nodepool upgrade -g my-resource-group --cluster-name my-cluster -n my-nodepool --kubernetes-version my-target-version
+# Undo: none; a node pool cannot be downgraded. my-target-version is the version the failed upgrade aimed at (az aks nodepool get-upgrades)
 ```
 
-Not enough room for surge nodes (quota or capacity): upgrade with fewer extra nodes, or
-none and some nodes taken out at a time instead:
+Not enough room for surge nodes (quota or capacity): upgrade with fewer extra nodes (as
+below), or with `--max-surge 0` and `--max-unavailable 1`, which takes a node out at a time
+instead. Note the current `maxSurge` from `az aks nodepool show` first:
 
 > Proposed fix: review before running. The agent does not run this.
 
 ```bash
 az aks nodepool update -g my-resource-group --cluster-name my-cluster -n my-nodepool --max-surge 1
-# Undo: az aks nodepool update -g my-resource-group --cluster-name my-cluster -n my-nodepool --max-surge 10%
+# Undo: the same command with the previous --max-surge from az aks nodepool show
 ```
 
 A quota increase is requested in the Azure portal (Quotas) by someone with rights on the
