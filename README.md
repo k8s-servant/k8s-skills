@@ -21,6 +21,10 @@ which order, what each finding means, and what to propose. The skills work in Cl
 Code, Codex, Gemini CLI, GitHub Copilot and any other agent that reads `SKILL.md`
 files and can run `kubectl`.
 
+How it works, how each skill is tested, and what breaking a kind cluster 76 ways showed
+about the docs: [k8s-skills: Teaching AI Agents to Troubleshoot Kubernetes Without
+Breaking It](https://sysadminas.eu/K8s-Skills-Read-First-Ask-Before-Changing/).
+
 ## Quick start
 
 ```bash
