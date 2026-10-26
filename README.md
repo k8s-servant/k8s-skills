@@ -217,7 +217,9 @@ skills are written and checked to keep to these tiers, but that is not a 100% gu
 "ask first" is an instruction the agent follows, not a lock, and an agent in an
 auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
 RBAC of the credentials you give it. If you want it to only investigate, give it a
-read-only identity, for example one bound to the built-in `view` ClusterRole. `view`
+read-only identity: [docs/read-only-agent.yaml](docs/read-only-agent.yaml) is a
+ServiceAccount with everything listed here, ready to apply. It is bound to the built-in
+`view` ClusterRole. `view`
 cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
 node and storage skills also allow `get`, `list` and `watch` on `nodes`,
 `persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
