@@ -64,6 +64,13 @@ rules:
   - apiGroups: [storage.k8s.io]
     resources: [storageclasses, csidrivers, csinodes, volumeattachments]
     verbs: [get, list, watch]
+  # IngressClasses for the network skill, node Leases (heartbeats) for the node skill.
+  - apiGroups: [networking.k8s.io]
+    resources: [ingressclasses]
+    verbs: [get, list, watch]
+  - apiGroups: [coordination.k8s.io]
+    resources: [leases]
+    verbs: [get, list, watch]
   # RBAC objects, for k8s-rbac-troubleshooting.
   - apiGroups: [rbac.authorization.k8s.io]
     resources: [roles, rolebindings, clusterroles, clusterrolebindings]
