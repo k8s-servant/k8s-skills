@@ -1,0 +1,137 @@
+# A read-only identity for an agent that uses these skills.
+#
+# The skills tell the agent to read first and ask before changing anything, but that is
+# an instruction, not a lock. This ServiceAccount is the lock: it can read what the skills
+# need and cannot change anything or read Secrets.
+#
+# It gets the built-in `view` ClusterRole in every namespace (no Secrets), plus read
+# access to the objects `view` leaves out: nodes, PersistentVolumes, storage and CSI
+# objects, RBAC objects, admission webhooks and policies, APIServices, CRDs, API Priority
+# and Fairness, and the custom resources of add-ons that add nothing to `view`. Rules for
+# add-ons you do not run are harmless; remove them if you prefer.
+#
+# Left out on purpose: `services/proxy`. The Prometheus and Envoy skills can read
+# Prometheus', Alertmanager's and Envoy's HTTP APIs through it, but RBAC cannot limit the
+# path, so it would also reach endpoints that show configuration or keys. Without it
+# those skills say the proxy is forbidden and ask you for what they need (for example
+# the Targets page of the Prometheus UI).
+#
+# Replace my-namespace with the namespace that should hold the ServiceAccount, then:
+#
+#   kubectl apply -f read-only-agent.yaml
+#   kubectl create token k8s-skills-agent -n my-namespace --duration=8h
+#
+# and give the agent a kubeconfig with that token as its only user. Check the result:
+#
+#   kubectl auth can-i --list --as=system:serviceaccount:my-namespace:k8s-skills-agent
+#
+# With this identity an "ask first" step fails even after you approve it (it cannot
+# scale, patch or exec), so you run approved changes yourself or with your own access.
+#
+# For one namespace only, bind `view` with a RoleBinding in that namespace instead and
+# leave out both ClusterRoleBindings; the agent then cannot see nodes or other namespaces.
+#
+# On AKS the AKS skill also runs read-only `az` commands as the agent's Azure login: give
+# that identity the Reader role on the cluster's resource groups, nothing more.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8s-skills-agent
+  namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-skills-agent-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: k8s-skills-agent
+    namespace: my-namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8s-skills-agent-reader
+rules:
+  # Nodes and storage, for k8s-triage on a whole cluster and the node and storage skills.
+  - apiGroups: [""]
+    resources: [nodes, persistentvolumes]
+    verbs: [get, list, watch]
+  - apiGroups: [storage.k8s.io]
+    resources: [storageclasses, csidrivers, csinodes, volumeattachments]
+    verbs: [get, list, watch]
+  # RBAC objects, for k8s-rbac-troubleshooting.
+  - apiGroups: [rbac.authorization.k8s.io]
+    resources: [roles, rolebindings, clusterroles, clusterrolebindings]
+    verbs: [get, list, watch]
+  # Admission, APIServices, CRDs and API Priority and Fairness, for k8s-api-troubleshooting.
+  - apiGroups: [admissionregistration.k8s.io]
+    resources:
+      - validatingwebhookconfigurations
+      - mutatingwebhookconfigurations
+      - validatingadmissionpolicies
+      - validatingadmissionpolicybindings
+    verbs: [get, list, watch]
+  - apiGroups: [apiregistration.k8s.io]
+    resources: [apiservices]
+    verbs: [get, list, watch]
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [get, list, watch]
+  - apiGroups: [flowcontrol.apiserver.k8s.io]
+    resources: [flowschemas, prioritylevelconfigurations]
+    verbs: [get, list, watch]
+  # Add-on objects that their own roles leave out of `view`.
+  - apiGroups: [cert-manager.io]
+    resources: [clusterissuers]
+    verbs: [get, list, watch]
+  - apiGroups: [external-secrets.io]
+    resources: [clusterexternalsecrets]
+    verbs: [get, list, watch]
+  - apiGroups: [argoproj.io]
+    resources: [applications, applicationsets, appprojects]
+    verbs: [get, list, watch]
+  - apiGroups: [templates.gatekeeper.sh]
+    resources: [constrainttemplates]
+    verbs: [get, list, watch]
+  # Gatekeeper's constraint kinds are generated, so these take the whole group.
+  - apiGroups:
+      - constraints.gatekeeper.sh
+      - config.gatekeeper.sh
+      - mutations.gatekeeper.sh
+      - syncset.gatekeeper.sh
+      - status.gatekeeper.sh
+      - expansion.gatekeeper.sh
+    resources: ["*"]
+    verbs: [get, list, watch]
+  - apiGroups: [monitoring.coreos.com, cilium.io]
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Istio's own reader role also grants Secrets, so it is not used here.
+  - apiGroups:
+      - networking.istio.io
+      - security.istio.io
+      - telemetry.istio.io
+      - extensions.istio.io
+    resources: ["*"]
+    verbs: [get, list, watch]
+  - apiGroups: [gateway.networking.k8s.io, gateway.envoyproxy.io]
+    resources: ["*"]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8s-skills-agent-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8s-skills-agent-reader
+subjects:
+  - kind: ServiceAccount
+    name: k8s-skills-agent
+    namespace: my-namespace

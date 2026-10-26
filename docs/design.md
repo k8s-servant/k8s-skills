@@ -17,9 +17,11 @@ diagnoses freely, runs a reversible change only after the user approves it, and 
 proposes anything destructive for a human to run (see "Changed after release").
 
 Why: existing Kubernetes skill collections mostly mix diagnosis with changes the agent
-makes itself. A set that reads first, never changes anything without the user's approval,
-never runs anything destructive, and is checked against upstream docs and tested on a real
-cluster is a gap, and safe to give to any agent.
+makes itself. A set that is written to read first, never change anything without the
+user's approval and never run anything destructive, and is checked against upstream docs
+and tested on a real cluster is a gap. The skills are instructions, not a lock: paired
+with read-only credentials ([read-only-agent.yaml](read-only-agent.yaml)), they are safe
+to give to any agent.
 
 ## Goals
 
