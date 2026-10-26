@@ -16,7 +16,9 @@
 # those skills say the proxy is forbidden and ask you for what they need (for example
 # the Targets page of the Prometheus UI).
 #
-# Replace my-namespace with the namespace that should hold the ServiceAccount, then:
+# Replace my-namespace with a namespace of its own that runs no workloads and where only
+# cluster administrators can create pods or tokens: anyone who can do either there can
+# use this ServiceAccount and read the whole cluster as it. Then:
 #
 #   kubectl apply -f read-only-agent.yaml
 #   kubectl create token k8s-skills-agent -n my-namespace --duration=8h
@@ -38,6 +40,8 @@ kind: ServiceAccount
 metadata:
   name: k8s-skills-agent
   namespace: my-namespace
+# Pods cannot mount its token by accident; the agent gets one from kubectl create token.
+automountServiceAccountToken: false
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
