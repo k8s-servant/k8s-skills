@@ -1,6 +1,6 @@
 {
   "name": "k8s-coredns-troubleshooting",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Use when cluster DNS itself misbehaves on Kubernetes: CoreDNS pods in CrashLoopBackOff (\"Error during parsing: Unknown directive\", \"plugin/loop: Loop ... detected\"), \"reload failed\" after a Corefile edit, external names failing while Service names resolve (\";; connection timed out; no servers could be reached\", SERVFAIL, \"plugin/errors: 2 ... i/o timeout\"), one domain or stub domain failing, rewrite or hosts entries that do not work, \"Plugins not ready: \\\"kubernetes\\\"\", REFUSED or \"concurrent queries exceeded maximum\", slow lookups (ndots, 5 s delays), NodeLocal DNSCache (169.254.20.10), or the AKS coredns-custom, EKS add-on and GKE kube-dns ConfigMaps. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

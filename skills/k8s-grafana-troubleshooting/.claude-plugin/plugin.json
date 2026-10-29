@@ -1,6 +1,6 @@
 {
   "name": "k8s-grafana-troubleshooting",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Use when Grafana on Kubernetes fails: the Grafana pod crash-loops after a change to its provisioning (\"Datasource provisioning error\", \"Only one datasource per organization can be marked as default\", \"failed to parse\"), a provisioned dashboard or datasource does not appear (\"failed to load dashboard from\", sidecar ConfigMap labels), panels show \"No data\" or the datasource returns \"Bad Gateway\" or \"connection refused\", \"database is locked\" with several replicas, permission errors on the data volume, admin login or sidecar \"401 Unauthorized\", or grafana-operator resources with \"NoMatchingInstance\". Investigates with kubectl get, describe, events and logs, never reading Grafana's Secrets, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

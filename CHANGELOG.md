@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/k8s-servant/k8s-skills/compare/v0.5.0...v0.6.0) (2026-10-29)
+
+
+### Features
+
+* add k8s-secret-guard, an optional hook that blocks Secret-reading commands ([#83](https://github.com/k8s-servant/k8s-skills/issues/83)) ([82fb6ff](https://github.com/k8s-servant/k8s-skills/commit/82fb6ffba50d06daf074ca3ba6be20b15f6fed99)), closes [#82](https://github.com/k8s-servant/k8s-skills/issues/82)
+
+
+### Documentation
+
+* add a read-only RBAC manifest for the agent ([#78](https://github.com/k8s-servant/k8s-skills/issues/78)) ([b716f77](https://github.com/k8s-servant/k8s-skills/commit/b716f7708c45a5af68cc2135783580f54e33ed61))
+
 ## [0.5.0](https://github.com/k8s-servant/k8s-skills/compare/v0.4.0...v0.5.0) (2026-10-25)
 
 
