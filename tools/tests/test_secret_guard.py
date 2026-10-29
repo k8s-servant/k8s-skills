@@ -78,6 +78,15 @@ _spec.loader.exec_module(secret_guard)
         "eval 'kubectl get secret my-secret'",
         "kubectl exec my-pod -- sudo env",
         "helm --burst-limit 5 get values my-release",
+        # Copying a directory that holds the Secret mounts, or a path that resolves to one.
+        "kubectl cp my-pod:/var/run ./out",
+        "kubectl cp my-pod:/ ./out",
+        "kubectl cp my-pod:/tmp/../var/run/secrets ./out",
+        "kubectl cp my-pod:var/run/secrets/kubernetes.io ./out",
+        "kubectl get -- secret my-secret",
+        "kubectl exec my-pod -- sh -c 'cat < /run/secrets/my-secret'",
+        "kubectl exec my-pod -- sudo -u root env",
+        "helm get --unknown-flag 1 values my-release",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
@@ -99,6 +108,8 @@ def test_blocks_commands_that_read_secrets(command):
         "aws --profile my-profile secretsmanager list-secrets",
         "kubectl cp my-namespace/my-pod:/tmp/my-app.log my-app.log",
         "kubectl exec my-pod -- ls /tmp",
+        "kubectl exec my-pod -- cat /app/env",
+        "kubectl get pods -n my-namespace > secret-report.txt",
         "kubectl logs my-pod -n my-namespace --tail=50",
         "kubectl exec my-pod -- cat /etc/my-app/config.yaml",
         "kubectl exec my-pod -- nslookup my-svc",
@@ -168,3 +179,9 @@ def test_hook_reports_bad_input_without_blocking():
     result = run_hook("not json")
     assert result.returncode == 1
     assert "k8s-secret-guard" in result.stderr
+
+
+def test_hook_blocks_when_nesting_is_too_deep_to_check():
+    command = "eval " * 2000 + "kubectl get secret my-secret"
+    result = run_hook({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert result.returncode == 2

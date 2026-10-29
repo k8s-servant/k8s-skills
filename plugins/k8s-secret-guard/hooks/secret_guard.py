@@ -18,6 +18,7 @@ Standard library only, Python 3.9 or newer.
 """
 
 import json
+import posixpath
 import re
 import shlex
 import sys
@@ -52,6 +53,7 @@ KUBECTL_VERBS = {
 }  # fmt: skip
 PROGRAMS = KUBECTL | SHELLS | {"helm", "az", "aws", "gcloud"}
 SECRET_KINDS = {"secret", "secrets"}
+SECRET_MOUNTS = ("/run/secrets", "/var/run/secrets")
 HELM_SECRET_VIEWS = {"values", "manifest", "all", "hooks"}
 # Words that, in a command the hook cannot parse, are reason enough to block it.
 WATCHED = re.compile(r"secret|environ|printenv|\benv\b|helm\s+get", re.IGNORECASE)
@@ -130,11 +132,8 @@ def _strip_wrappers(words: list) -> list:
 
 def _check_words(words: list, remote: bool) -> "str | None":
     if remote:
-        # `env` and `printenv` print the environment, also behind `sudo` or `nohup`.
-        first = next(
-            (w for w in words if _program(w) not in WRAPPERS - {"env"} and w[:1] != "-"), ""
-        )
-        if _program(first) in {"env", "printenv"}:
+        # `env` and `printenv` print the environment, also behind `sudo -u root` or `nohup`.
+        if any(w in {"env", "printenv"} or w.endswith(("bin/env", "bin/printenv")) for w in words):
             return "it prints a container's environment, which holds Secret values"
         if any("/run/secrets" in word for word in words):
             return "it reads a Secret mounted into a container"
@@ -155,9 +154,9 @@ def _check_words(words: list, remote: bool) -> "str | None":
         positional, _ = _parse(args)
         # `get` need not come first: an unknown flag's value can stand before it.
         if "get" in positional:
-            view = positional[positional.index("get") + 1 :][:1]
-            if view and view[0] in HELM_SECRET_VIEWS:
-                return f"helm get {view[0]} prints values from the release's Secret"
+            for view in positional[positional.index("get") + 1 :]:
+                if view in HELM_SECRET_VIEWS:
+                    return f"helm get {view} prints values from the release's Secret"
     # Global flags and their values can come before the subcommand
     # (`aws --profile my-profile secretsmanager ...`), so match the words in order.
     plain = [word for word in args if not word.startswith("-")]
@@ -199,7 +198,10 @@ def _parse(args: list) -> tuple:
     while index < len(args):
         word = args[index]
         if word == "--":
-            break
+            # kubectl reads words after `--` as positional too (`get -- secret`); exec's
+            # remote command is taken from the raw arguments instead.
+            index += 1
+            continue
         if word.startswith("--") and "=" in word:
             flag, value = word.split("=", 1)
             values[flag] = value
@@ -226,7 +228,7 @@ def _check_kubectl(args: list) -> "str | None":
                     return f"kubectl {verb} on a Secret"
     if verb == "view-secret":
         return "kubectl view-secret prints a Secret"
-    if verb == "cp" and any("/run/secrets" in word for word in positional):
+    if verb == "cp" and any(_copies_secret_mount(word) for word in positional):
         return "it copies a Secret mounted into a container"
     if verb == "exec":
         # `exec POD -- CMD`, or the old form without `--`: everything after the pod name.
@@ -234,6 +236,19 @@ def _check_kubectl(args: list) -> "str | None":
         if remote:
             return _check_words(remote, remote=True)
     return None
+
+
+def _copies_secret_mount(word: str) -> bool:
+    """Whether a `kubectl cp` pod path is, holds or lies under a Secret mount."""
+    _, colon, path = word.rpartition(":")
+    if not colon:
+        return False
+    path = posixpath.normpath("/" + path.lstrip("/"))
+    under = path.rstrip("/") + "/"
+    return any(
+        path == mount or path.startswith(mount + "/") or mount.startswith(under)
+        for mount in SECRET_MOUNTS
+    )
 
 
 def main() -> int:
@@ -246,7 +261,13 @@ def main() -> int:
         return 1
     if tool != "Bash":
         return 0
-    why = reason(command)
+    try:
+        why = reason(command)
+    except Exception as exc:  # noqa: BLE001 - even RecursionError: decide from the words
+        if not WATCHED.search(command):
+            print(f"{NAME}: could not check the command ({exc!r}); not blocking", file=sys.stderr)
+            return 1
+        why = "the command could not be checked and may read a Secret"
     if why is None:
         return 0
     print(
