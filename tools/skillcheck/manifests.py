@@ -26,6 +26,14 @@ ABOUT = {
     "license": "Apache-2.0",
 }
 RELEASE_CONFIG = Path("release-please-config.json")
+# Opt-in plugins that ship hooks, not skills: listed only when their folder exists.
+HOOK_PLUGINS = {
+    "k8s-secret-guard": (
+        "Optional hook for Claude Code that blocks shell commands reading Kubernetes Secrets "
+        "or cloud secret stores (kubectl, helm, Key Vault, Secrets Manager, Secret Manager). "
+        "A best-effort second layer: read-only RBAC stays the guarantee"
+    ),
+}
 STALE = "{path} is out of date: run python -m tools.skillcheck manifests --write"
 
 
@@ -83,6 +91,12 @@ def render_manifests(repo: Path) -> dict[Path, str]:
         skill_plugins[Path(f"skills/{folder.name}/.claude-plugin/plugin.json")] = _dump(one)
     if problems:
         raise ManifestError(problems)
+    for name, description in HOOK_PLUGINS.items():
+        if not (repo / "plugins" / name).is_dir():
+            continue
+        plugins.append({"name": name, "source": f"./plugins/{name}", "description": description})
+        one = {"name": name, "version": version, "description": description, **ABOUT}
+        skill_plugins[Path(f"plugins/{name}/.claude-plugin/plugin.json")] = _dump(one)
     marketplace = {
         "name": NAME,
         "owner": {"name": "k8s-servant"},

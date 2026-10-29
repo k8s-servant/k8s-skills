@@ -232,6 +232,14 @@ and `prioritylevelconfigurations`. `k8s-aks-troubleshooting` also runs read-only
 commands, as whatever Azure login the agent's shell has: give that identity the
 **Reader** role on the cluster's resource groups, nothing more. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
 
+For Claude Code there is also an optional hook, `k8s-secret-guard`, as a second layer: it
+blocks shell commands that read Secrets before they run (`kubectl get`, `describe` or
+`edit` on Secrets, `exec ... env`, files under `/var/run/secrets`, `helm get values`, and
+reads from Key Vault, AWS Secrets Manager and Google Secret Manager), and tells the agent
+to carry on without them. Install it with `/plugin install k8s-secret-guard@k8s-skills`;
+it needs `python3` (3.9 or newer). It is a best-effort filter, not a lock: a shell can always find
+another way, so RBAC stays the guarantee.
+
 ## Contributing
 
 New skills and fixes are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. What

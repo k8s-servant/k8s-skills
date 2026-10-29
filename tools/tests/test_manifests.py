@@ -129,3 +129,21 @@ def test_hidden_folders_ignored_and_description_stripped(tmp_path):
     plugins = json.loads(render_manifests(repo)[MARKET])["plugins"]
     assert [p["name"] for p in plugins] == ["k8s-skills", "k8s-a-x"]
     assert plugins[1]["description"] == "Use when a"
+
+
+def test_secret_guard_plugin_is_listed_when_present(tmp_path):
+    repo = make_repo(tmp_path, {"k8s-a-x": "Use when a"}, version="1.2.3")
+    (repo / "plugins/k8s-secret-guard/hooks").mkdir(parents=True)
+    out = render_manifests(repo)
+    plugins = json.loads(out[MARKET])["plugins"]
+    assert plugins[-1]["name"] == "k8s-secret-guard"
+    assert plugins[-1]["source"] == "./plugins/k8s-secret-guard"
+    own = json.loads(out[Path("plugins/k8s-secret-guard/.claude-plugin/plugin.json")])
+    assert own["version"] == "1.2.3"
+    assert "skills" not in own
+    extra = json.loads(out[RELEASE])["packages"]["."]["extra-files"]
+    assert {
+        "type": "json",
+        "path": "plugins/k8s-secret-guard/.claude-plugin/plugin.json",
+        "jsonpath": "$.version",
+    } in extra
