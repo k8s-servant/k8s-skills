@@ -8,7 +8,9 @@ runs, and tells the agent why. A shell can always find another way, so the Kuber
 RBAC of the agent's credentials stays the real guarantee.
 
 Known gaps, among others: a script that prints a variable (`sh -c 'echo $PASSWORD'`),
-`kubectl proxy` followed by `curl`, and a kubeconfig or token copied out of a pod.
+`kubectl proxy` followed by `curl`, and a kubeconfig or token copied out of a pod. It
+errs towards blocking: `kubectl get configmap secrets` is refused too, since every word
+after the verb is checked.
 
 Input: the hook's JSON on stdin. Exit 0 lets the command run, exit 2 blocks it (stderr
 goes to the agent), exit 1 reports a hook error to the user without blocking.
@@ -28,6 +30,8 @@ KUBECTL = {"kubectl", "oc", "kubecolor"}
 SHELLS = {"sh", "bash", "zsh", "dash", "ksh"}
 # Commands that run the rest of their arguments as another command.
 WRAPPERS = {"sudo", "command", "nohup", "time", "watch", "xargs", "exec", "nice", "env"}
+# Shell keywords that can stand in front of a command (`if ...; then kubectl ...; fi`).
+KEYWORDS = {"if", "then", "else", "elif", "fi", "do", "done", "while", "until", "{", "}"}
 # kubectl and helm flags that take a value as the next word.
 VALUE_FLAGS = {
     "-n", "--namespace", "--context", "--kube-context", "--kubeconfig", "--cluster",
@@ -104,7 +108,7 @@ def _strip_wrappers(words: list) -> list:
     wrapped = False
     while words:
         name = _program(words[0])
-        if ASSIGNMENT.match(words[0]):
+        if ASSIGNMENT.match(words[0]) or words[0] in KEYWORDS:
             words = words[1:]
         elif name in WRAPPERS or name == "timeout":
             wrapped = True
@@ -126,7 +130,11 @@ def _strip_wrappers(words: list) -> list:
 
 def _check_words(words: list, remote: bool) -> "str | None":
     if remote:
-        if _program(words[0]) in {"env", "printenv"}:
+        # `env` and `printenv` print the environment, also behind `sudo` or `nohup`.
+        first = next(
+            (w for w in words if _program(w) not in WRAPPERS - {"env"} and w[:1] != "-"), ""
+        )
+        if _program(first) in {"env", "printenv"}:
             return "it prints a container's environment, which holds Secret values"
         if any("/run/secrets" in word for word in words):
             return "it reads a Secret mounted into a container"
@@ -139,12 +147,17 @@ def _check_words(words: list, remote: bool) -> "str | None":
     if program in SHELLS:
         script = _shell_script(args)
         return _check_line(script, remote) if script is not None else None
+    if program == "eval":
+        return _check_line(" ".join(args), remote)
     if program in KUBECTL:
         return _check_kubectl(args)
     if program == "helm":
         positional, _ = _parse(args)
-        if positional[:1] == ["get"] and positional[1:2] and positional[1] in HELM_SECRET_VIEWS:
-            return "helm get " + positional[1] + " prints values from the release's Secret"
+        # `get` need not come first: an unknown flag's value can stand before it.
+        if "get" in positional:
+            view = positional[positional.index("get") + 1 :][:1]
+            if view and view[0] in HELM_SECRET_VIEWS:
+                return f"helm get {view[0]} prints values from the release's Secret"
     # Global flags and their values can come before the subcommand
     # (`aws --profile my-profile secretsmanager ...`), so match the words in order.
     plain = [word for word in args if not word.startswith("-")]

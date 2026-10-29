@@ -71,6 +71,13 @@ _spec.loader.exec_module(secret_guard)
         "kubectl exec my-pod env",
         "kubectl cp my-namespace/my-pod:/var/run/secrets/kubernetes.io/serviceaccount/token token",
         "oc extract secret/my-secret --to=-",
+        # Shell keywords and eval in front of the command.
+        "if true; then kubectl get secret my-secret; fi",
+        "for i in 1; do kubectl get secret my-secret; done",
+        "{ kubectl get secret my-secret; }",
+        "eval 'kubectl get secret my-secret'",
+        "kubectl exec my-pod -- sudo env",
+        "helm --burst-limit 5 get values my-release",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
