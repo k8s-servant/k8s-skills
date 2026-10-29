@@ -240,7 +240,10 @@ def _check_kubectl(args: list) -> "str | None":
 
 def _copies_secret_mount(word: str) -> bool:
     """Whether a `kubectl cp` pod path is, holds or lies under a Secret mount."""
-    _, colon, path = word.rpartition(":")
+    if any(mount in word for mount in SECRET_MOUNTS):
+        return True
+    # kubectl splits `pod:path` at the first colon; the path may hold more.
+    _, colon, path = word.partition(":")
     if not colon:
         return False
     path = posixpath.normpath("/" + path.lstrip("/"))

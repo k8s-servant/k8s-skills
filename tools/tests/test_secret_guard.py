@@ -87,6 +87,7 @@ _spec.loader.exec_module(secret_guard)
         "kubectl exec my-pod -- sh -c 'cat < /run/secrets/my-secret'",
         "kubectl exec my-pod -- sudo -u root env",
         "helm get --unknown-flag 1 values my-release",
+        "kubectl cp my-pod:/var/run/secrets/my-dir:with-colon ./out",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
