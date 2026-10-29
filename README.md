@@ -235,11 +235,13 @@ commands, as whatever Azure login the agent's shell has: give that identity the
 For Claude Code there is also an optional hook, `k8s-secret-guard`, as a second layer: it
 blocks shell commands that read Secrets before they run (`kubectl get`, `describe` or
 `edit` on Secrets, `env` or `printenv` through `exec`, files under `/var/run/secrets`,
-`helm get values`, and reads from Key Vault, AWS Secrets Manager and Google Secret
-Manager), and tells the agent to carry on without them. Install it with `/plugin install
-k8s-secret-guard@k8s-skills`; it needs `python3` (3.9 or newer). It is a best-effort
-filter, not a lock: a shell can always find another way, and if the hook itself fails it
-lets the command run, so RBAC stays the guarantee.
+calls to the Secrets API such as `curl` through `kubectl proxy`, `helm get values`, and
+reads from Key Vault, AWS Secrets Manager and Google Secret Manager), and tells the agent
+to carry on without them. Install it with `/plugin install k8s-secret-guard@k8s-skills`;
+it needs `python3` (3.9 or newer). It is a best-effort filter, not a lock: a shell can
+always find another way, and if the hook itself fails it lets the command run, so RBAC
+stays the guarantee. The hook is kept small on purpose: a new way around it is listed as
+a known gap, not patched, since RBAC already stops it.
 
 ## Contributing
 

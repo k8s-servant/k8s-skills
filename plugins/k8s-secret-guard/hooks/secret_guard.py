@@ -8,7 +8,9 @@ runs, and tells the agent why. A shell can always find another way, so the Kuber
 RBAC of the agent's credentials stays the real guarantee.
 
 Known gaps, among others: a script that prints a variable (`sh -c 'echo $PASSWORD'`),
-`kubectl proxy` followed by `curl`, and a kubeconfig or token copied out of a pod. It
+a Secrets API URL put together at run time, and a kubeconfig or token copied out of a
+pod. The hook is kept small on purpose: a new bypass goes on this list, not into the
+parser, since RBAC already covers it. It
 errs towards blocking: `kubectl get configmap secrets` is refused too, since every word
 after the verb is checked.
 
@@ -55,6 +57,8 @@ PROGRAMS = KUBECTL | SHELLS | {"helm", "az", "aws", "gcloud"}
 SECRET_KINDS = {"secret", "secrets"}
 SECRET_MOUNTS = ("/run/secrets", "/var/run/secrets")
 HELM_SECRET_VIEWS = {"values", "manifest", "all", "hooks"}
+# The Secrets API path, whatever sends the request (`kubectl proxy` plus `curl`).
+SECRETS_API = re.compile(r"/api/v1/(?:watch/)?(?:namespaces/[^/\s]+/)?secrets(?![\w-])")
 # Words that, in a command the hook cannot parse, are reason enough to block it.
 WATCHED = re.compile(r"secret|environ|printenv|\benv\b|helm\s+get", re.IGNORECASE)
 
@@ -131,6 +135,8 @@ def _strip_wrappers(words: list) -> list:
 
 
 def _check_words(words: list, remote: bool) -> "str | None":
+    if any(SECRETS_API.search(word) for word in words):
+        return "it calls the Secrets API"
     if remote:
         # `env` and `printenv` print the environment, also behind `sudo -u root` or `nohup`.
         if any(w in {"env", "printenv"} or w.endswith(("bin/env", "bin/printenv")) for w in words):

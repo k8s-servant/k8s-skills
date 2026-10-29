@@ -88,6 +88,12 @@ _spec.loader.exec_module(secret_guard)
         "kubectl exec my-pod -- sudo -u root env",
         "helm get --unknown-flag 1 values my-release",
         "kubectl cp my-pod:/var/run/secrets/my-dir:with-colon ./out",
+        # The Secrets API path, whatever sends the request (kubectl proxy plus curl).
+        "curl http://127.0.0.1:8001/api/v1/namespaces/my-namespace/secrets/my-secret",
+        "kubectl proxy & curl -s localhost:8001/api/v1/secrets",
+        "wget -qO- http://localhost:8001/api/v1/namespaces/my-namespace/secrets?limit=1",
+        "curl localhost:8001/api/v1/watch/namespaces/my-namespace/secrets",
+        "python3 -c 'import urllib.request as u; print(u.urlopen(\"http://localhost:8001/api/v1/secrets\").read())'",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
@@ -112,6 +118,9 @@ def test_blocks_commands_that_read_secrets(command):
         "kubectl exec my-pod -- cat /app/env",
         "kubectl get pods -n my-namespace > secret-report.txt",
         "kubectl logs my-pod -n my-namespace --tail=50",
+        "kubectl proxy --port=8001",
+        "curl localhost:8001/api/v1/namespaces/my-namespace/pods",
+        "curl localhost:8001/apis/external-secrets.io/v1/namespaces/my-namespace/secretstores",
         "kubectl exec my-pod -- cat /etc/my-app/config.yaml",
         "kubectl exec my-pod -- nslookup my-svc",
         "kubectl get events -n my-namespace --field-selector involvedObject.name=my-secret",
