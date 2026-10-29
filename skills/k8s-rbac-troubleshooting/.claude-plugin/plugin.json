@@ -1,6 +1,6 @@
 {
   "name": "k8s-rbac-troubleshooting",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Use when a Kubernetes request is refused by RBAC: \"Error from server (Forbidden)\", \"User ... cannot list resource ... in the namespace\" or \"at the cluster scope\", a ServiceAccount, controller, CI job or person getting 403, a RoleBinding that does not seem to apply (wrong namespace, wrong subject, a ClusterRole bound with a RoleBinding), \"is attempting to grant RBAC permissions not currently held\", \"roleRef ... field is immutable\", 401 Unauthorized versus 403 Forbidden, or a custom resource that `view` cannot read. Investigates with kubectl auth can-i, get and describe, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
