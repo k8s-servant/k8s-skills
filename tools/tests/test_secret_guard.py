@@ -63,6 +63,14 @@ _spec.loader.exec_module(secret_guard)
         "nice -n 5 kubectl get secret my-secret",
         "timeout -s KILL 10 kubectl get secret my-secret",
         "kubectl exec my-pod -- cat /proc/1/environ",
+        # Cloud CLI global flags before the subcommand.
+        "aws --profile my-profile --region eu-west-1 secretsmanager get-secret-value --secret-id x",
+        "az --subscription my-sub keyvault secret show --vault-name my-vault -n my-secret",
+        "gcloud --project my-project secrets versions access latest --secret=my-secret",
+        # exec without --, copying a mounted Secret out, and oc extract.
+        "kubectl exec my-pod env",
+        "kubectl cp my-namespace/my-pod:/var/run/secrets/kubernetes.io/serviceaccount/token token",
+        "oc extract secret/my-secret --to=-",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
@@ -81,6 +89,9 @@ def test_blocks_commands_that_read_secrets(command):
         "kubectl auth can-i get secrets -n my-namespace",
         "kubectl -v 6 auth can-i get secrets",
         "sudo -u root kubectl get pods",
+        "aws --profile my-profile secretsmanager list-secrets",
+        "kubectl cp my-namespace/my-pod:/tmp/my-app.log my-app.log",
+        "kubectl exec my-pod -- ls /tmp",
         "kubectl logs my-pod -n my-namespace --tail=50",
         "kubectl exec my-pod -- cat /etc/my-app/config.yaml",
         "kubectl exec my-pod -- nslookup my-svc",
@@ -102,6 +113,18 @@ def test_allows_commands_that_do_not_read_secrets(command):
 
 def test_unparseable_command_mentioning_secrets_is_blocked():
     assert secret_guard.reason("kubectl get secret 'my-secret") is not None
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "kubectl exec my-pod -- env 'unbalanced",
+        "helm get values my-release 'unbalanced",
+        "kubectl exec my-pod -- cat /proc/1/environ 'unbalanced",
+    ],
+)
+def test_unparseable_command_with_a_watched_word_is_blocked(command):
+    assert secret_guard.reason(command) is not None
 
 
 def test_unparseable_command_without_secrets_is_allowed():

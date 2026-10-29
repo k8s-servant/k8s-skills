@@ -44,11 +44,13 @@ KUBECTL_VERBS = {
     "apply", "create", "delete", "replace", "patch", "label", "annotate", "set", "scale",
     "autoscale", "rollout", "expose", "run", "wait", "diff", "debug", "attach", "cp",
     "port-forward", "proxy", "drain", "cordon", "uncordon", "taint", "certificate",
-    "kustomize", "plugin", "completion",
+    "kustomize", "plugin", "completion", "extract",
 }  # fmt: skip
 PROGRAMS = KUBECTL | SHELLS | {"helm", "az", "aws", "gcloud"}
 SECRET_KINDS = {"secret", "secrets"}
 HELM_SECRET_VIEWS = {"values", "manifest", "all", "hooks"}
+# Words that, in a command the hook cannot parse, are reason enough to block it.
+WATCHED = re.compile(r"secret|environ|printenv|\benv\b|helm\s+get", re.IGNORECASE)
 
 
 def reason(command: str) -> "str | None":
@@ -64,8 +66,8 @@ def _check_line(command: str, remote: bool) -> "str | None":
         lexer.whitespace_split = True
         tokens = list(lexer)
     except ValueError:
-        if re.search(r"secret", command, re.IGNORECASE):
-            return "the command could not be parsed and mentions secrets"
+        if WATCHED.search(command):
+            return "the command could not be parsed and may read a Secret"
         return None
     for words in _segments(tokens):
         found = _check_words(words, remote)
@@ -143,24 +145,31 @@ def _check_words(words: list, remote: bool) -> "str | None":
         positional, _ = _parse(args)
         if positional[:1] == ["get"] and positional[1:2] and positional[1] in HELM_SECRET_VIEWS:
             return "helm get " + positional[1] + " prints values from the release's Secret"
+    # Global flags and their values can come before the subcommand
+    # (`aws --profile my-profile secretsmanager ...`), so match the words in order.
     plain = [word for word in args if not word.startswith("-")]
-    if (
-        program == "az"
-        and plain[:2] == ["keyvault", "secret"]
-        and plain[2:3] in (["show"], ["download"], ["backup"])
+    if program == "az" and any(
+        _in_order(["keyvault", "secret", action], plain)
+        for action in ("show", "download", "backup")
     ):
         return "it reads a secret from Azure Key Vault"
     if program == "aws":
-        if plain[:2] in (
-            ["secretsmanager", "get-secret-value"],
-            ["secretsmanager", "batch-get-secret-value"],
+        if any(
+            _in_order(["secretsmanager", action], plain)
+            for action in ("get-secret-value", "batch-get-secret-value")
         ):
             return "it reads a secret from AWS Secrets Manager"
-        if plain[:1] == ["ssm"] and "--with-decryption" in args:
+        if "ssm" in plain and "--with-decryption" in args:
             return "it decrypts a SecureString from AWS Systems Manager"
-    if program == "gcloud" and plain[:3] == ["secrets", "versions", "access"]:
+    if program == "gcloud" and _in_order(["secrets", "versions", "access"], plain):
         return "it reads a secret from Google Secret Manager"
     return None
+
+
+def _in_order(wanted: list, words: list) -> bool:
+    """Whether `wanted` appears in `words` in this order, other words allowed in between."""
+    rest = iter(words)
+    return all(word in rest for word in wanted)
 
 
 def _shell_script(args: list) -> "str | None":
@@ -196,16 +205,19 @@ def _check_kubectl(args: list) -> "str | None":
         return "it reads Secrets through the raw API"
     at = next((i for i, word in enumerate(positional) if word in KUBECTL_VERBS), 0)
     verb = positional[at] if positional else ""
-    if verb in {"get", "describe", "edit"}:
+    if verb in {"get", "describe", "edit", "extract"}:
         # Every word after the verb, since an unknown flag's value can come before the kind.
         for word in positional[at + 1 :]:
             for kind in word.split(","):
                 if kind.split("/")[0].split(".")[0].lower() in SECRET_KINDS:
-                    return "kubectl " + verb + " on a Secret"
+                    return f"kubectl {verb} on a Secret"
     if verb == "view-secret":
         return "kubectl view-secret prints a Secret"
-    if verb == "exec" and "--" in args:
-        remote = args[args.index("--") + 1 :]
+    if verb == "cp" and any("/run/secrets" in word for word in positional):
+        return "it copies a Secret mounted into a container"
+    if verb == "exec":
+        # `exec POD -- CMD`, or the old form without `--`: everything after the pod name.
+        remote = args[args.index("--") + 1 :] if "--" in args else positional[at + 2 :]
         if remote:
             return _check_words(remote, remote=True)
     return None
