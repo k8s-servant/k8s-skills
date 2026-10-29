@@ -8,8 +8,9 @@ runs, and tells the agent why. A shell can always find another way, so the Kuber
 RBAC of the agent's credentials stays the real guarantee.
 
 Known gaps, among others: a script that prints a variable (`sh -c 'echo $PASSWORD'`),
-a Secrets API URL put together at run time, and a kubeconfig or token copied out of a
-pod. The hook is kept small on purpose: a new bypass goes on this list, not into the
+a kind or Secrets API URL put together at run time (`kubectl get $KIND my-secret`), a
+Secret named only inside a file (`kubectl get -f my-secret.yaml`), and a kubeconfig or
+token copied out of a pod. The hook is kept small on purpose: a new bypass goes on this list, not into the
 parser, since RBAC already covers it. It
 errs towards blocking: `kubectl get configmap secrets` is refused too, since every word
 after the verb is checked.
