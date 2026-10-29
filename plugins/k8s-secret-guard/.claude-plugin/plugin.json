@@ -1,0 +1,12 @@
+{
+  "name": "k8s-secret-guard",
+  "version": "0.5.0",
+  "description": "Optional hook for Claude Code that blocks shell commands reading Kubernetes Secrets or cloud secret stores (kubectl, helm, Key Vault, Secrets Manager, Secret Manager). A best-effort second layer: read-only RBAC stays the guarantee",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0"
+}

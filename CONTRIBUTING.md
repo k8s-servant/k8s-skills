@@ -250,8 +250,9 @@ A skill is merged only when:
   release-please builds the changelog and versions from them.
 - Never create or edit `CHANGELOG.md`, and never bump a version by hand.
 - The install manifests (`.claude-plugin/marketplace.json` and `plugin.json`, one
-  `skills/<name>/.claude-plugin/plugin.json` per skill, `gemini-extension.json`,
-  `plugin.json`) and the `extra-files` list in `release-please-config.json` are generated.
+  `skills/<name>/.claude-plugin/plugin.json` per skill, the `plugin.json` of the hook
+  plugins in `plugins/` (listed in `HOOK_PLUGINS` in `tools/skillcheck/manifests.py`),
+  `gemini-extension.json`, `plugin.json`) and the `extra-files` list in `release-please-config.json` are generated.
   After adding or renaming a skill run `python -m tools.skillcheck manifests --write` and
   commit the result. Each skill folder is its own Claude Code plugin, so
   `/plugin install <skill>@k8s-skills` installs only that skill.

@@ -53,7 +53,8 @@ namespace (see CONTRIBUTING.md, "Cloud scenarios").
 - **Never create or edit `CHANGELOG.md`** and never bump versions by hand: release-please
   does both.
 - **Manifests are generated** (`.claude-plugin/marketplace.json` and `plugin.json`,
-  `skills/*/.claude-plugin/plugin.json`, `gemini-extension.json`, `plugin.json`, and the
+  `skills/*/.claude-plugin/plugin.json`, `plugins/*/.claude-plugin/plugin.json`,
+  `gemini-extension.json`, `plugin.json`, and the
   `extra-files` in `release-please-config.json`). Run `manifests --write`, do not edit them
   by hand.
 - **One copy of each skill**, in `skills/`. No duplicated skill files.

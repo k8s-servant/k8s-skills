@@ -1,0 +1,16 @@
+{
+  "description": "Blocks shell commands that read Kubernetes Secrets or cloud secret stores",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/secret_guard.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

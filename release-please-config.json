@@ -73,6 +73,11 @@
         },
         {
           "type": "json",
+          "path": "plugins/k8s-secret-guard/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "skills/k8s-aks-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         },
