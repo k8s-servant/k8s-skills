@@ -7,6 +7,9 @@ ways to print a Secret (kubectl, helm, and the cloud secret stores) before the c
 runs, and tells the agent why. A shell can always find another way, so the Kubernetes
 RBAC of the agent's credentials stays the real guarantee.
 
+Known gaps, among others: a script that prints a variable (`sh -c 'echo $PASSWORD'`),
+`kubectl proxy` followed by `curl`, and a kubeconfig or token copied out of a pod.
+
 Input: the hook's JSON on stdin. Exit 0 lets the command run, exit 2 blocks it (stderr
 goes to the agent), exit 1 reports a hook error to the user without blocking.
 Standard library only, Python 3.9 or newer.
@@ -33,6 +36,17 @@ VALUE_FLAGS = {
     "--template", "--raw", "--request-timeout", "--tail", "--since", "--sort-by",
     "--chunk-size", "-p", "--revision",
 }  # fmt: skip
+# kubectl's own commands, so the verb is found even after a flag value the hook does not
+# know (`kubectl -v 6 get ...`).
+KUBECTL_VERBS = {
+    "get", "describe", "edit", "exec", "view-secret", "auth", "logs", "events", "top",
+    "explain", "api-resources", "api-versions", "config", "cluster-info", "version",
+    "apply", "create", "delete", "replace", "patch", "label", "annotate", "set", "scale",
+    "autoscale", "rollout", "expose", "run", "wait", "diff", "debug", "attach", "cp",
+    "port-forward", "proxy", "drain", "cordon", "uncordon", "taint", "certificate",
+    "kustomize", "plugin", "completion",
+}  # fmt: skip
+PROGRAMS = KUBECTL | SHELLS | {"helm", "az", "aws", "gcloud"}
 SECRET_KINDS = {"secret", "secrets"}
 HELM_SECRET_VIEWS = {"values", "manifest", "all", "hooks"}
 
@@ -85,11 +99,13 @@ def _program(word: str) -> str:
 
 
 def _strip_wrappers(words: list) -> list:
+    wrapped = False
     while words:
         name = _program(words[0])
         if ASSIGNMENT.match(words[0]):
             words = words[1:]
         elif name in WRAPPERS or name == "timeout":
+            wrapped = True
             words = words[1:]
             while words and words[0].startswith("-"):
                 words = words[1:]
@@ -97,6 +113,12 @@ def _strip_wrappers(words: list) -> list:
                 words = words[1:]
         else:
             break
+    # A wrapper flag's value (`sudo -u root`, `nice -n 5`) is still in front: skip ahead
+    # to the first program the hook knows.
+    if wrapped and words and _program(words[0]) not in PROGRAMS:
+        for index, word in enumerate(words):
+            if _program(word) in PROGRAMS:
+                return words[index:]
     return words
 
 
@@ -106,6 +128,8 @@ def _check_words(words: list, remote: bool) -> "str | None":
             return "it prints a container's environment, which holds Secret values"
         if any("/run/secrets" in word for word in words):
             return "it reads a Secret mounted into a container"
+        if any(word.endswith("/environ") for word in words):
+            return "it reads a process environment, which holds Secret values"
     words = _strip_wrappers(words)
     if not words:
         return None
@@ -170,11 +194,14 @@ def _check_kubectl(args: list) -> "str | None":
     positional, values = _parse(args)
     if "/secrets" in values.get("--raw", ""):
         return "it reads Secrets through the raw API"
-    verb = positional[0] if positional else ""
-    if verb in {"get", "describe", "edit"} and len(positional) > 1:
-        for kind in positional[1].split(","):
-            if kind.split("/")[0].split(".")[0].lower() in SECRET_KINDS:
-                return "kubectl " + verb + " on a Secret"
+    at = next((i for i, word in enumerate(positional) if word in KUBECTL_VERBS), 0)
+    verb = positional[at] if positional else ""
+    if verb in {"get", "describe", "edit"}:
+        # Every word after the verb, since an unknown flag's value can come before the kind.
+        for word in positional[at + 1 :]:
+            for kind in word.split(","):
+                if kind.split("/")[0].split(".")[0].lower() in SECRET_KINDS:
+                    return "kubectl " + verb + " on a Secret"
     if verb == "view-secret":
         return "kubectl view-secret prints a Secret"
     if verb == "exec" and "--" in args:

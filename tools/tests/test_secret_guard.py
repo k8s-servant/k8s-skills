@@ -52,6 +52,17 @@ _spec.loader.exec_module(secret_guard)
         "aws secretsmanager get-secret-value --secret-id my-secret",
         "aws ssm get-parameter --name my-param --with-decryption",
         "gcloud secrets versions access latest --secret=my-secret",
+        # Flags whose value the hook does not know must not hide the verb or the kind.
+        "kubectl -v 6 get secret my-secret",
+        "kubectl get -L app secret my-secret",
+        "kubectl --cache-dir my-dir get secrets",
+        "kubectl --profile cpu describe secret my-secret",
+        # Wrapper flags with values must not hide the command.
+        "sudo -u root kubectl get secret my-secret",
+        "env -u MY_VAR kubectl get secret my-secret",
+        "nice -n 5 kubectl get secret my-secret",
+        "timeout -s KILL 10 kubectl get secret my-secret",
+        "kubectl exec my-pod -- cat /proc/1/environ",
     ],
 )
 def test_blocks_commands_that_read_secrets(command):
@@ -68,6 +79,8 @@ def test_blocks_commands_that_read_secrets(command):
         "kubectl describe externalsecret my-secret -n my-namespace",
         "kubectl get pod my-secret-reader -o yaml",
         "kubectl auth can-i get secrets -n my-namespace",
+        "kubectl -v 6 auth can-i get secrets",
+        "sudo -u root kubectl get pods",
         "kubectl logs my-pod -n my-namespace --tail=50",
         "kubectl exec my-pod -- cat /etc/my-app/config.yaml",
         "kubectl exec my-pod -- nslookup my-svc",
