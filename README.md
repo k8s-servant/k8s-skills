@@ -18,8 +18,8 @@ words.</sub>
 k8s-skills is a set of [Agent Skills](https://agentskills.io) that teach an AI agent to
 investigate Kubernetes problems the way an experienced SRE does: what to look at, in
 which order, what each finding means, and what to propose. The skills work in Claude
-Code, Codex, Gemini CLI, GitHub Copilot and any other agent that reads `SKILL.md`
-files and can run `kubectl`.
+Code, Codex, Gemini CLI, Antigravity, GitHub Copilot and any other agent that reads
+`SKILL.md` files and can run `kubectl`.
 
 How it works, how each skill is tested, and what breaking a kind cluster 76 ways showed
 about the docs: [k8s-skills: Teaching AI Agents to Troubleshoot Kubernetes Without
@@ -193,8 +193,8 @@ For one project only, copy into the project instead, from its root folder:
 mkdir -p .claude/skills && cp -R ~/k8s-skills/skills/* .claude/skills/
 ```
 
-In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot) or
-`.github/skills` (GitHub Copilot).
+In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot,
+Antigravity) or `.github/skills` (GitHub Copilot).
 
 ### Other ways
 
@@ -205,6 +205,13 @@ In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copi
   by name, pinned with `@vX.Y.Z`.
 - **Gemini CLI:** `gemini extensions install https://github.com/k8s-servant/k8s-skills`
   for all skills. Gemini reads project skills only in a folder you have trusted.
+- **Antigravity:** copy the skills into `~/.gemini/config/skills/`, the one global folder
+  that both the Antigravity CLI (`agy`) and the IDE read, or into `.agents/skills` for one
+  project:
+
+  ```bash
+  mkdir -p ~/.gemini/config/skills && cp -R ~/k8s-skills/skills/* ~/.gemini/config/skills/
+  ```
 
 Skills that hand over to each other still work alone: a hand-off to a skill that is not
 installed tells the agent to continue with the steps it has and name the skill that would
