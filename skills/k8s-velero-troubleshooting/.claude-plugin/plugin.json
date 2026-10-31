@@ -1,0 +1,15 @@
+{
+  "name": "k8s-velero-troubleshooting",
+  "version": "0.8.0",
+  "description": "Use when Velero backups or restores in Kubernetes fail or do not happen: a BackupStorageLocation that is Unavailable (\"is unavailable\", NoSuchBucket, AccessDenied, a wrong endpoint or region), a Backup in FailedValidation, Failed or PartiallyFailed, or stuck in New, Queued or InProgress, a Schedule in FailedValidation (\"invalid schedule\") or that makes no backups, a Restore that is Completed with warnings but did not bring objects back (\"already exists\", \"the in-cluster version is different than the backed-up version\"), a PartiallyFailed restore, volume data from File System Backup (PodVolumeBackup, node-agent) or the CSI data mover (DataUpload) that fails, and backups missing from a cluster. Investigates with kubectl get, describe and the Velero server logs, never reading Secrets or backup contents, and proposes fixes. Reads first and asks before changing anything.",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0",
+  "skills": [
+    "./"
+  ]
+}

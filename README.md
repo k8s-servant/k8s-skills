@@ -6,7 +6,7 @@ anything.
 [![CI](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/releases)
 [![License](https://img.shields.io/github/license/k8s-servant/k8s-skills)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-28-326ce5)](#skills)
+[![Skills](https://img.shields.io/badge/skills-30-326ce5)](#skills)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/k8s-servant/k8s-skills/badge)](https://scorecard.dev/viewer/?uri=github.com/k8s-servant/k8s-skills)
 
 <p align="center">
@@ -59,7 +59,7 @@ kubectl context.
 
 ## Why you can trust it
 
-- **28 skills, 86 scenarios.** Each scenario breaks something on purpose in a kind
+- **30 skills, 92 scenarios.** Each scenario breaks something on purpose in a kind
   cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
   cause, point at the evidence and propose an acceptable fix, without changing anything.
 - **Quoted from a real cluster.** Every error message and log line a skill quotes was
@@ -111,6 +111,8 @@ Secrets are never read, in any tier. Every change, in either tier, comes with an
 | `k8s-gateway-api-troubleshooting` | Gateway API objects do not route, whatever the implementation: a GatewayClass `Waiting for controller`, Gateways and listeners not Programmed (missing certificates, conflicts), routes not attached (`sectionName`, `allowedRoutes`, hostnames), missing ReferenceGrants, ListenerSets, CRD versions and channels |
 | `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
 | `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
+| `k8s-velero-troubleshooting` | Velero backups and restores fail or do not happen: storage locations `Unavailable` (missing bucket, credentials, endpoint), backups in `FailedValidation` or `PartiallyFailed`, schedules with an invalid cron expression, restores that skip objects that already exist, File System Backup and CSI data mover failures; never reads Secrets or backup contents |
+| `k8s-cloudnative-pg-troubleshooting` | A CloudNativePG PostgreSQL cluster is not healthy: stuck in `Setting up primary` or `Creating a new replica`, PVCs Pending on a missing StorageClass, a missing bootstrap Secret, replicas that anti-affinity cannot place, WAL archiving and backups failing, failovers that hang; never reads Secrets or connects to PostgreSQL |
 | `k8s-upgrade-readiness` | Before a minor version upgrade: what would block the node drains (PDBs that allow no disruption, pods with no controller, webhooks that fail closed), deprecated APIs and CRD versions still in use, version skew, containerd 1.x and cgroup v1 nodes, add-ons; read-only, reports what to fix first |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 | `k8s-aks-troubleshooting` | A problem is specific to AKS: a cluster or node pool `Failed`, upgrades blocked by PDBs, quota and VM capacity, LoadBalancer Services `<pending>` (`SyncLoadBalancerFailed`), Azure Disk and Files PVCs, workload identity `AADSTS` errors, `coredns-custom`, `error dialing backend`, Azure Policy, API server access and Azure RBAC; uses read-only `az` commands |
@@ -147,6 +149,7 @@ A skill is merged only after four checks:
 | `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
 | `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
 | `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
+| `k8s-cloudnative-pg-troubleshooting` | kubernetes 1.37, cloudnative-pg 1.30 | `anti-affinity-required`, `bootstrap-secret-missing`, `storage-class-missing` |
 | `k8s-coredns-troubleshooting` | kubernetes 1.37, coredns 1.14 | `corefile-typo`, `forward-unreachable`, `rewrite-target-wrong` |
 | `k8s-envoy-troubleshooting` | kubernetes 1.37, envoy 1.40 | `bootstrap-typo`, `dns-name-wrong`, `upstream-port-wrong` |
 | `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |
@@ -168,6 +171,7 @@ A skill is merged only after four checks:
 | `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
 | `k8s-triage` | kubernetes 1.37 | `crashloop-somewhere`, `healthy-cluster`, `namespace-only-access`, `node-not-ready` |
 | `k8s-upgrade-readiness` | kubernetes 1.37 | `pdb-blocks-drain`, `unmanaged-pod-blocks-drain`, `webhook-fails-closed` |
+| `k8s-velero-troubleshooting` | kubernetes 1.37, velero 1.18, velero-plugin-for-aws 1.14 | `bsl-bucket-missing`, `restore-skips-existing`, `schedule-invalid-cron` |
 | `k8s-workload-troubleshooting` | kubernetes 1.37 | `image-pull-wrong-tag`, `oom-killed`, `readiness-probe-failing` |
 
 `verified-with` and `verified-on` in each `SKILL.md` record the same versions and the

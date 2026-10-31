@@ -230,6 +230,11 @@ def test_agent_kubeconfig_cluster_scope(tmp_path):
     assert "apiGroups: [cilium.io]" in yaml_text
     assert "networking.istio.io" in yaml_text and "security.istio.io" in yaml_text
     assert "gateway.networking.k8s.io" in yaml_text and "gateway.envoyproxy.io" in yaml_text
+    # Velero and CloudNativePG aggregate nothing to `view`.
+    assert "apiGroups: [velero.io]" in yaml_text
+    # A DownloadRequest's status is a signed URL to the backup, Secrets included.
+    assert "downloadrequests" not in yaml_text and "- backups" in yaml_text
+    assert "apiGroups: [postgresql.cnpg.io]" in yaml_text
     # RBAC sees a proxied service with its port in the name ("prometheus-operated:web").
     for name in (
         "prometheus-operated",
@@ -470,6 +475,7 @@ ADDONS = [
     ("prometheus-operator", "PROMETHEUS_OPERATOR_MANIFEST_SHA256", "bundle.yaml", "default"),
     ("envoy-gateway", "ENVOY_GATEWAY_MANIFEST_SHA256", "install.yaml", "envoy-gateway-system"),
     ("metrics-server", "METRICS_SERVER_MANIFEST_SHA256", "components.yaml", "kube-system"),
+    ("cloudnative-pg", "CNPG_MANIFEST_SHA256", "cnpg-1.30.1.yaml", "cnpg-system"),
 ]
 
 
@@ -623,6 +629,35 @@ def test_addon_istio_refuses_a_chart_with_the_wrong_checksum(tmp_path):
     result = run(tmp_path, repo, ["tests/addon.sh", "istio"])
     assert result.returncode != 0
     assert not [c for c in calls(tmp_path) if c.startswith("helm ")]
+
+
+def test_addon_velero_starts_an_object_store_then_installs_the_verified_chart(tmp_path):
+    """Velero needs somewhere to write backups: an S3 server in the velero namespace,
+    applied before the chart so the default BackupStorageLocation can become Available."""
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "VELERO_CHART_SHA256", fake_manifest_checksum())
+    result = run(tmp_path, repo, ["tests/addon.sh", "velero"])
+    assert result.returncode == 0, result.stderr
+    log = calls(tmp_path)
+    fetches = [c for c in log if c.startswith("curl ")]
+    assert len(fetches) == 1 and "helm-charts/releases/download/velero-" in fetches[0], log
+    stores = [c for c in log if c.startswith("kubectl apply ") and "-n velero" in c]
+    installs = [c for c in log if c.startswith("helm upgrade --install velero ")]
+    assert len(stores) == 1 and len(installs) == 1, log
+    assert log.index(stores[0]) < log.index(installs[0]), log
+    assert "https://" not in installs[0] and "-n velero" in installs[0], log
+    assert "--wait" in installs[0], log
+
+
+def test_addon_velero_refuses_a_chart_with_the_wrong_checksum(tmp_path):
+    repo = make_repo(tmp_path)
+    make_kubeconfig(repo)
+    pin_version(repo, "VELERO_CHART_SHA256", "0" * 64)
+    result = run(tmp_path, repo, ["tests/addon.sh", "velero"])
+    assert result.returncode != 0
+    assert "checksum" in result.stderr
+    assert not [c for c in calls(tmp_path) if c.startswith(("helm ", "kubectl apply"))]
 
 
 # Cloud scenarios (AKS, EKS, GKE): a case with a `platform` file runs only against the

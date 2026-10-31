@@ -9,7 +9,7 @@
 # the CSI objects, admission webhook configurations and cert-manager ClusterIssuers,
 # plus Argo CD's and Gatekeeper's objects, which no aggregated role covers,
 # ClusterExternalSecrets, ValidatingAdmissionPolicies, Prometheus Operator, Cilium,
-# Istio, Gateway API and Envoy Gateway objects, the RBAC objects, APIServices, CRDs,
+# Istio, Gateway API, Envoy Gateway, Velero and CloudNativePG objects, the RBAC objects, APIServices, CRDs,
 # API Priority and Fairness objects, and the
 # prometheus-operated, alertmanager-operated and my-envoy-admin service proxies.
 # With --namespace it has `view` in NS only, like a developer with access to one
@@ -180,6 +180,26 @@ rules:
     verbs: [get, list, watch]
   # The Gateway API and Envoy Gateway ship no read role at all.
   - apiGroups: [gateway.networking.k8s.io, gateway.envoyproxy.io]
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Velero and CloudNativePG aggregate nothing to `view`. Not DownloadRequests: their
+  # status holds a signed URL to a backup's files, which include the backed-up Secrets.
+  - apiGroups: [velero.io]
+    resources:
+      - backups
+      - restores
+      - schedules
+      - backupstoragelocations
+      - volumesnapshotlocations
+      - podvolumebackups
+      - podvolumerestores
+      - datauploads
+      - datadownloads
+      - backuprepositories
+      - deletebackuprequests
+      - serverstatusrequests
+    verbs: [get, list, watch]
+  - apiGroups: [postgresql.cnpg.io]
     resources: ["*"]
     verbs: [get, list, watch]
   # `view` leaves the RBAC objects out ("does not allow viewing roles or role bindings").

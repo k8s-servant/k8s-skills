@@ -43,6 +43,11 @@
       "description": "Use when networking fails on a Kubernetes cluster that runs Cilium as its CNI: traffic between pods dropped or timing out after a CiliumNetworkPolicy or CiliumClusterwideNetworkPolicy, \"Policy denied\" drops in Hubble, DNS that stops resolving after an egress policy, HTTP 403 \"Access denied\" from an L7 rule, toFQDNs rules that do not match, pods stuck ContainerCreating with \"unable to connect to Cilium agent\", Cilium agent or operator pods not ready, CiliumEndpoints not ready, or IPAM exhaustion. Investigates with kubectl get, describe, events and logs, asks before running cilium-dbg or hubble inside the agent, and proposes fixes. Reads first and asks before changing anything."
     },
     {
+      "name": "k8s-cloudnative-pg-troubleshooting",
+      "source": "./skills/k8s-cloudnative-pg-troubleshooting",
+      "description": "Use when a CloudNativePG (CNPG) PostgreSQL Cluster in Kubernetes is not healthy: a Cluster stuck in \"Setting up primary\", \"Creating a new replica\" or \"Waiting for the instances to become active\", fewer ready instances than requested, an initdb or join pod that is Pending or in CreateContainerConfigError, PVCs that stay Pending, a bootstrap Secret that is missing, a replica that cannot be scheduled (pod anti-affinity, nodeSelector, taints), \"Not enough disk space\", failing WAL archiving or backups (ContinuousArchiving, LastBackupSucceeded False), a failover or switchover that does not finish, \"Invalid cluster definition\" or \"Cluster is unrecoverable\", and operator errors. Investigates with kubectl get, describe, events and logs, never reading Secrets, and proposes fixes. Reads first and asks before changing anything."
+    },
+    {
       "name": "k8s-coredns-troubleshooting",
       "source": "./skills/k8s-coredns-troubleshooting",
       "description": "Use when cluster DNS itself misbehaves on Kubernetes: CoreDNS pods in CrashLoopBackOff (\"Error during parsing: Unknown directive\", \"plugin/loop: Loop ... detected\"), \"reload failed\" after a Corefile edit, external names failing while Service names resolve (\";; connection timed out; no servers could be reached\", SERVFAIL, \"plugin/errors: 2 ... i/o timeout\"), one domain or stub domain failing, rewrite or hosts entries that do not work, \"Plugins not ready: \\\"kubernetes\\\"\", REFUSED or \"concurrent queries exceeded maximum\", slow lookups (ndots, 5 s delays), NodeLocal DNSCache (169.254.20.10), or the AKS coredns-custom, EKS add-on and GKE kube-dns ConfigMaps. Investigates with kubectl get and logs, and proposes fixes. Reads first and asks before changing anything."
@@ -146,6 +151,11 @@
       "name": "k8s-upgrade-readiness",
       "source": "./skills/k8s-upgrade-readiness",
       "description": "Use when a Kubernetes cluster is about to be upgraded to its next minor version, or someone asks \"is the cluster ready to upgrade?\", \"what will break when we upgrade?\" or why a node drain hangs during an upgrade: PodDisruptionBudgets with ALLOWED DISRUPTIONS 0, pods with no controller (\"cannot delete Pods that declare no controller\"), admission webhooks with failurePolicy Fail and no endpoints, deprecated or removed APIs still in use (apiserver_requested_deprecated_apis, CRD versions marked deprecated), kubelet and control plane version skew, nodes on cgroup v1 or containerd 1.x, and add-ons that do not support the target version. Reports what to fix first. Read-only: never upgrades, drains or changes anything itself."
+    },
+    {
+      "name": "k8s-velero-troubleshooting",
+      "source": "./skills/k8s-velero-troubleshooting",
+      "description": "Use when Velero backups or restores in Kubernetes fail or do not happen: a BackupStorageLocation that is Unavailable (\"is unavailable\", NoSuchBucket, AccessDenied, a wrong endpoint or region), a Backup in FailedValidation, Failed or PartiallyFailed, or stuck in New, Queued or InProgress, a Schedule in FailedValidation (\"invalid schedule\") or that makes no backups, a Restore that is Completed with warnings but did not bring objects back (\"already exists\", \"the in-cluster version is different than the backed-up version\"), a PartiallyFailed restore, volume data from File System Backup (PodVolumeBackup, node-agent) or the CSI data mover (DataUpload) that fails, and backups missing from a cluster. Investigates with kubectl get, describe and the Velero server logs, never reading Secrets or backup contents, and proposes fixes. Reads first and asks before changing anything."
     },
     {
       "name": "k8s-workload-troubleshooting",

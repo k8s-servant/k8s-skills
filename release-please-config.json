@@ -108,6 +108,11 @@
         },
         {
           "type": "json",
+          "path": "skills/k8s-cloudnative-pg-troubleshooting/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "skills/k8s-coredns-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         },
@@ -209,6 +214,11 @@
         {
           "type": "json",
           "path": "skills/k8s-upgrade-readiness/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "skills/k8s-velero-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         },
         {
