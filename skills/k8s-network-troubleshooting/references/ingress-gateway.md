@@ -34,7 +34,8 @@ Ingress:
 - **A `404` from the controller**: no rule matched the host or path; check `host`,
   `path` and `pathType`.
 
-Gateway API (route status is reported per parent Gateway):
+Gateway API (route status is reported per parent Gateway; for the listeners, the
+GatewayClass, ListenerSets and the CRDs, continue with `k8s-gateway-api-troubleshooting`):
 
 - **`Accepted: False`** on the HTTPRoute, reasons:
   - `NotAllowedByListeners`: the listener's `allowedRoutes` does not allow the route's

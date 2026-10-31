@@ -57,7 +57,7 @@ would help:
 - The Service has no endpoints, or the pods are not Ready: `k8s-network-troubleshooting`
   and `k8s-workload-troubleshooting`.
 - A Kubernetes Gateway API route that Istio does not accept:
-  `k8s-network-troubleshooting` (the Gateway API part) and the reference here.
+  `k8s-gateway-api-troubleshooting` (the objects' status) and the reference here.
 - What an Envoy response flag, reset reason or cluster statistic means in general:
   `k8s-envoy-troubleshooting` (the proxy itself; Istio writes its config).
 
