@@ -192,6 +192,22 @@ tests/run.sh --cleanup <skill> <case>     # undo the scenario
 tests/cluster.sh down                     # delete the cluster
 ```
 
+### From a report to a scenario
+
+A report from the "The agent got it wrong" issue form is turned into a scenario before
+the skill is fixed, so the fix is tested against the miss:
+
+1. Reproduce the cause on kind (or in one namespace of a cloud test cluster) as a new
+   case: `setup.sh` builds what the reporter had, `break.sh` adds the cause.
+2. Write `expected.md` from the report: the reporter's question as the Prompt (with
+   placeholders), the real cause and its evidence, and the agent's wrong conclusion
+   under Wrong answers.
+3. Run an agent with the current skill and confirm it misses, then fix the skill and
+   run it again until it passes. Record both runs in the PR, and link the issue.
+
+A report that the agent changed something without asking, or read a Secret, is fixed
+first; such a report may also show a gap in the checker or the allow-list.
+
 ### Cloud scenarios
 
 A cloud skill (`k8s-aks-*`, `k8s-eks-*`, `k8s-gke-*`) can have scenarios that run on a

@@ -1,42 +1,71 @@
-name: Skill problem
-description: A skill led an agent the wrong way, missed a cause, or is out of date.
+name: The agent got it wrong
+description: A skill led an agent to the wrong cause, missed the real one, ran something it should not have, or is out of date.
 title: "fix(skills): "
 labels: ["skill-quality", "triage"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks: reports like this become new test scenarios, so the same miss does not happen again.
+        This is a public issue. Replace every real name with a placeholder (`my-namespace`, `my-app`,
+        `example.com`) and leave out tokens, certificates, Secret values, IP addresses and cluster names.
   - type: input
     id: skill
     attributes:
       label: Skill
+      description: The skill the agent used, if you know it.
       placeholder: k8s-workload-troubleshooting
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What you asked the agent
+      placeholder: my-app in my-namespace keeps restarting. Find out why.
     validations:
       required: true
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened
-      description: What the agent concluded or proposed, and why it was wrong. Use placeholders such as my-namespace and my-app, never real names, hosts or Secrets.
+      label: What the agent concluded or proposed
+      description: Its answer, shortened. Why it was wrong, if you know.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
       label: What the real cause was
+      description: And the evidence that shows it, for example the status condition, event or log line.
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands the agent ran
+      description: Optional, but the most useful part. The kubectl commands from the transcript, with names replaced by placeholders.
+      render: shell
+  - type: dropdown
+    id: changed
+    attributes:
+      label: Did the agent change anything, or read a Secret?
+      options:
+        - "No: it only read"
+        - "It changed something after I approved it"
+        - "It changed something without asking, or read a Secret"
     validations:
       required: true
   - type: input
     id: agent
     attributes:
       label: Agent and model
-      placeholder: Claude Code / Codex / Copilot / Cursor / Gemini CLI, and the model
+      placeholder: Claude Code / Codex / Copilot / Cursor / Gemini CLI / Antigravity, and the model
   - type: input
     id: versions
     attributes:
       label: Kubernetes and component versions
-      placeholder: Kubernetes 1.37, ...
+      placeholder: Kubernetes 1.37, cert-manager 1.21, ...
   - type: checkboxes
     id: no-private-data
     attributes:
       label: Public issue
       options:
-        - label: I removed real cluster names, hosts, tokens and other private data.
+        - label: I replaced real names with placeholders and removed tokens, Secret values, hosts and other private data.
           required: true
