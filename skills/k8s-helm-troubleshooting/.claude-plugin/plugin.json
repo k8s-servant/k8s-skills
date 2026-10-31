@@ -1,6 +1,6 @@
 {
   "name": "k8s-helm-troubleshooting",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Use when a Helm install, upgrade or rollback fails or a release is stuck: \"UPGRADE FAILED\" or \"INSTALLATION FAILED\", \"context deadline exceeded\" or \"resource ... not ready\" after --wait, \"another operation (install/upgrade/rollback) is in progress\", a release in pending-install, pending-upgrade or failed state, \"exists and cannot be imported into the current release: invalid ownership metadata\", \"cannot reuse a name that is still in use\", \"has no deployed releases\", hook failures, \"field is immutable\", or \"ensure CRDs are installed first\". Investigates the release's objects with kubectl, gives helm commands to the user to run, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
