@@ -6,8 +6,8 @@
 #
 # Usage: tests/addon.sh <name>
 # Names: cert-manager, flux, argocd, kyverno, gatekeeper, external-secrets,
-# prometheus-operator, istio (Helm charts, so it needs helm), envoy-gateway, keda,
-# metrics-server
+# prometheus-operator, istio and velero (Helm charts, so they need helm), envoy-gateway,
+# keda, metrics-server, cloudnative-pg
 set -euo pipefail
 # shellcheck source-path=SCRIPTDIR
 
@@ -17,7 +17,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/versions.env"
 
 usage() {
-  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio|envoy-gateway|keda|metrics-server" >&2
+  echo "usage: tests/addon.sh cert-manager|flux|argocd|kyverno|gatekeeper|external-secrets|prometheus-operator|istio|velero|envoy-gateway|keda|metrics-server|cloudnative-pg" >&2
   exit 64
 }
 
@@ -82,7 +82,12 @@ case "$1" in
     sum="$METRICS_SERVER_MANIFEST_SHA256"
     namespace="kube-system"
     ;;
-  istio) ;;
+  cloudnative-pg)
+    url="https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v${CNPG_VERSION}/cnpg-${CNPG_VERSION}.yaml"
+    sum="$CNPG_MANIFEST_SHA256"
+    namespace="cnpg-system"
+    ;;
+  istio | velero) ;;
   *) usage ;;
 esac
 
@@ -103,6 +108,111 @@ if [[ "$1" == "istio" ]]; then
   helm upgrade --install istio-base "$base_chart" -n istio-system --create-namespace \
     --set defaultRevision=default >&2
   helm upgrade --install istiod "$manifest" -n istio-system --set profile=demo --wait >&2
+  exit 0
+fi
+
+if [[ "$1" == "velero" ]]; then
+  # Velero ships a Helm chart only. It backs up to an S3 server in its own namespace: a
+  # Versity S3 Gateway serving an emptyDir, with the bucket `velero` made at start. The
+  # keys are test values for this throwaway store only.
+  manifest="$(mktemp)"
+  fetch_verified "https://github.com/vmware-tanzu/helm-charts/releases/download/velero-${VELERO_CHART_VERSION}/velero-${VELERO_CHART_VERSION}.tgz" \
+    "$VELERO_CHART_SHA256" "$manifest"
+  if ! kubectl get namespace velero >/dev/null 2>&1; then
+    kubectl create namespace velero >&2
+  fi
+  kubectl apply -n velero -f - >&2 <<YAML
+apiVersion: v1
+kind: Secret
+metadata:
+  name: object-store-credentials
+stringData:
+  cloud: |
+    [default]
+    aws_access_key_id=velero-test
+    aws_secret_access_key=velero-test-key
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: object-store
+spec:
+  selector:
+    matchLabels:
+      app: object-store
+  template:
+    metadata:
+      labels:
+        app: object-store
+    spec:
+      initContainers:
+        - name: bucket
+          image: ${BUSYBOX_IMAGE}
+          command: ["mkdir", "-p", "/data/velero"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      containers:
+        - name: versitygw
+          image: ${VERSITYGW_IMAGE}
+          args: ["--port", ":7070", "posix", "/data"]
+          env:
+            - name: ROOT_ACCESS_KEY
+              value: velero-test
+            - name: ROOT_SECRET_KEY
+              value: velero-test-key
+          ports:
+            - containerPort: 7070
+          readinessProbe:
+            tcpSocket:
+              port: 7070
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: object-store
+spec:
+  selector:
+    app: object-store
+  ports:
+    - port: 7070
+YAML
+  kubectl rollout status deployment/object-store -n velero --timeout=300s >&2
+  values="$(mktemp)"
+  trap 'rm -f "$manifest" "$values"' EXIT
+  cat > "$values" <<YAML
+image:
+  repository: ${VELERO_IMAGE%%:*}
+  tag: ${VELERO_IMAGE#*:}
+initContainers:
+  - name: velero-plugin-for-aws
+    image: ${VELERO_PLUGIN_AWS_IMAGE}
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+# The chart's crds/ folder installs the CRDs; the upgrade job would pull another image.
+upgradeCRDs: false
+snapshotsEnabled: false
+credentials:
+  existingSecret: object-store-credentials
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: velero
+      default: true
+      config:
+        region: us-east-1
+        s3ForcePathStyle: "true"
+        s3Url: http://object-store.velero.svc:7070
+YAML
+  helm upgrade --install velero "$manifest" -n velero -f "$values" --wait >&2
   exit 0
 fi
 

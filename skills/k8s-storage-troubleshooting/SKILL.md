@@ -50,6 +50,11 @@ would help:
 - On AKS, Azure refuses the disk or share (an Azure error code in `ProvisioningFailed` or
   `FailedAttachVolume`, a disk zone conflict, Azure Files mount errors):
   `k8s-aks-troubleshooting`.
+- The PVC belongs to a CloudNativePG Cluster (named after an instance, `my-db-1`, with
+  the label `cnpg.io/cluster`) and the Cluster's own status matters:
+  `k8s-cloudnative-pg-troubleshooting`.
+- The volume data is missing after a Velero restore, or a Velero volume backup failed:
+  `k8s-velero-troubleshooting`.
 
 ## Investigate
 
