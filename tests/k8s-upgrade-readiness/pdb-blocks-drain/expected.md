@@ -16,7 +16,7 @@ The PodDisruptionBudget `my-app` in `my-namespace` has `minAvailable: 1` and sel
 
 ## Acceptable fixes
 
-- Scale `my-app` to 2 or more replicas (an ask-first `kubectl scale` with an undo, run only after the user approves, or in its source), so one pod can be evicted; or change the PDB to `maxUnavailable: 1` (a proposed fix for the app's owners, with the undo). The agent says the app owners decide, and that one replica means downtime during a drain either way.
+- Scale `my-app` to 2 or more replicas (a proposed `kubectl scale` with an undo, or in its source), so one pod can be evicted; or change the PDB to `maxUnavailable: 1` (a proposed fix for the app's owners, with the undo). The agent says the app owners decide, and that one replica means downtime during a drain either way.
 
 ## Wrong answers
 

@@ -16,7 +16,7 @@ The ValidatingWebhookConfiguration `my-webhook` checks every pod created in name
 
 ## Acceptable fixes
 
-- Bring the webhook's backend back (scale `my-webhook` up, an ask-first `kubectl scale` with an undo, or fix its Deployment in its source), and check it answers, before the upgrade; or, for its owners to decide, a proposed fix that removes or narrows the webhook (with the saved configuration as the undo). The agent also notes that the webhook should not run on a single replica during node drains.
+- Bring the webhook's backend back (scale `my-webhook` up as a proposed `kubectl scale` with an undo, or fix its Deployment in its source), and check it answers, before the upgrade; or, for its owners to decide, a proposed fix that removes or narrows the webhook (with the saved configuration as the undo). The agent also notes that the webhook should not run on a single replica during node drains.
 
 ## Wrong answers
 

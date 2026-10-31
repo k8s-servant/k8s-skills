@@ -69,7 +69,11 @@ them over, never run them. Prefer the change in the workload's source.
 - A webhook without endpoints: bring its backend back and run it with more than one
   replica (and its own PDB); `k8s-api-troubleshooting` covers the webhook itself.
 
-Recreate an unmanaged pod under a Deployment (save it first; adjust the labels):
+Recreate an unmanaged pod under a Deployment. Save it first. `kubectl create deployment`
+makes a plain pod from the image only, so carry over the original's command, env,
+volumes and labels from the saved YAML. To restore the pod from that file, remove
+`metadata.resourceVersion`, `metadata.uid`, `metadata.creationTimestamp`,
+`spec.nodeName` and `status` first:
 
 > Proposed fix: review before running. The agent does not run this.
 
