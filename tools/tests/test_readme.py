@@ -48,3 +48,10 @@ def test_readme_counts_match_skills_and_scenarios():
     facts = skill_facts()
     scenarios = sum(len(cases) for _, cases in facts.values())
     assert (int(found[1]), int(found[2])) == (len(facts), scenarios)
+
+
+def test_readme_skill_badge_matches_skills():
+    text = (ROOT / "README.md").read_text(encoding="utf-8")
+    found = re.search(r"https://img\.shields\.io/badge/skills-(\d+)-", text)
+    assert found, "README.md has no skills count badge"
+    assert int(found[1]) == len(skill_facts())
