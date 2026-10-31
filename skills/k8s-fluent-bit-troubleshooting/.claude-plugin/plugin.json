@@ -1,6 +1,6 @@
 {
   "name": "k8s-fluent-bit-troubleshooting",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Use when Fluent Bit on Kubernetes does not deliver logs: the DaemonSet crashes on a config error (\"tried to instance a plugin name that doesn't exist\", \"unknown configuration property\", \"configuration file contains errors\"), an output fails (\"failed to flush chunk\", \"cannot be retried\", \"no upstream connections available\", \"getaddrinfo\", \"Connection refused\"), records arrive without Kubernetes metadata (\"could not get meta for POD\"), lines arrive unparsed or not at all (tail path, parser, CRI versus Docker format), or inputs pause (\"paused (mem buf overlimit\"). Covers the Helm chart and the Fluent Operator. Investigates with kubectl get, logs and Fluent Bit's read-only HTTP endpoints, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

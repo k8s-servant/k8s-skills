@@ -1,6 +1,6 @@
 {
   "name": "k8s-external-secrets-troubleshooting",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Use when External Secrets Operator does not create or update a Kubernetes Secret: an ExternalSecret with SecretSyncedError (\"could not get secret data from provider\"), SecretOwnedByOther (\"target is owned by another ExternalSecret\"), SecretMissing or SecretImmutable, a SecretStore or ClusterSecretStore that is not Ready (InvalidProviderConfig, \"unable to validate store\"), a ClusterSecretStore not allowed from a namespace, a ClusterExternalSecret with failed namespaces, a value that does not refresh, or manifests on the removed v1beta1 API. Investigates with kubectl get, describe, events and controller logs, never reading the Secrets themselves, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

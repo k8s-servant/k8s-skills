@@ -1,6 +1,6 @@
 {
   "name": "k8s-storage-troubleshooting",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Use when Kubernetes storage blocks a workload: a PersistentVolumeClaim stuck in Pending, ProvisioningFailed events, a StorageClass that does not exist or a provisioner that cannot provide the access mode, pods Pending with \"unbound immediate PersistentVolumeClaims\", FailedAttachVolume, FailedMount or Multi-Attach errors, a PVC or PV stuck Terminating or Released, or a volume that is full or will not expand. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

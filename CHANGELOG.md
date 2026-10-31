@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/k8s-servant/k8s-skills/compare/v0.6.0...v0.6.1) (2026-10-31)
+
+
+### Documentation
+
+* add Antigravity install paths to the README ([#84](https://github.com/k8s-servant/k8s-skills/issues/84)) ([fee0569](https://github.com/k8s-servant/k8s-skills/commit/fee05697aeb6bcafb7cd894aa218883047fc7cc9))
+
 ## [0.6.0](https://github.com/k8s-servant/k8s-skills/compare/v0.5.0...v0.6.0) (2026-10-29)
 
 
