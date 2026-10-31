@@ -55,6 +55,7 @@ echo "helm $*" >> "$FAKE_LOG"
 """
 FAKE_KIND = """#!/usr/bin/env bash
 echo "kind $*" >> "$FAKE_LOG"
+if [[ "$1 $2" == "get clusters" ]]; then echo "${FAKE_KIND_CLUSTERS:-}"; exit 0; fi
 if [[ -n "${FAKE_KIND_FAIL:-}" ]]; then exit 1; fi
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "--config" ]]; then cat "$2" >> "$FAKE_LOG"; fi

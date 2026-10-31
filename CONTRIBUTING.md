@@ -189,6 +189,7 @@ tests/addon.sh cert-manager               # install a pinned add-on (setup.sh sc
 tests/run.sh <skill> <case>               # set up and break the scenario, print the prompt and KUBECONFIG
 # Give the agent the prompt and the printed KUBECONFIG, then compare its answer with expected.md.
 tests/run.sh --cleanup <skill> <case>     # undo the scenario
+tests/try.sh [<skill> <case>]             # for users: cluster if needed, break, print how to point an agent at it
 tests/cluster.sh down                     # delete the cluster
 ```
 
