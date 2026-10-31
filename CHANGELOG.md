@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/k8s-servant/k8s-skills/compare/v0.7.0...v0.8.0) (2026-10-31)
+
+
+### Features
+
+* add tests/try.sh to try a scenario with your own agent ([#94](https://github.com/k8s-servant/k8s-skills/issues/94)) ([fd96723](https://github.com/k8s-servant/k8s-skills/commit/fd96723bab3536b9056caa1679b55c6b01c12121))
+* turn the skill problem form into a report-a-miss form ([#95](https://github.com/k8s-servant/k8s-skills/issues/95)) ([d4c77a6](https://github.com/k8s-servant/k8s-skills/commit/d4c77a6384b1886bb3c1cc1e7f4552e2d35766c0))
+
 ## [0.7.0](https://github.com/k8s-servant/k8s-skills/compare/v0.6.1...v0.7.0) (2026-10-31)
 
 

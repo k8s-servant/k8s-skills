@@ -1,6 +1,6 @@
 {
   "name": "k8s-argocd-troubleshooting",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Use when Argo CD does not deploy or update an application in Kubernetes: an Application that is OutOfSync, Unknown, Degraded, Missing or Progressing, a ComparisonError (\"app path does not exist\", \"unable to resolve ... to a commit SHA\"), an InvalidSpecError (\"do not match any of the allowed destinations in project\"), a sync that fails (\"one or more objects failed to apply\"), auto-sync that never runs, resources that stay OutOfSync after a sync, or ApplicationSets that generate nothing. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
