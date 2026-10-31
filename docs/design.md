@@ -93,7 +93,7 @@ Order: the most used tools first, and those easy to run on kind before the heavy
 | 1. Delivery | `k8s-cert-manager-troubleshooting`, `k8s-flux-troubleshooting`, `k8s-argocd-troubleshooting`, `k8s-helm-troubleshooting` |
 | 2. Policy and secrets | `k8s-kyverno-troubleshooting`, `k8s-gatekeeper-troubleshooting`, `k8s-external-secrets-troubleshooting` |
 | 3. Observability | `k8s-prometheus-troubleshooting` (Operator, Alertmanager, rules), `k8s-grafana-troubleshooting` |
-| 4. Networking | `k8s-cilium-troubleshooting`, `k8s-istio-troubleshooting`, `k8s-envoy-gateway-troubleshooting` |
+| 4. Networking | `k8s-cilium-troubleshooting`, `k8s-istio-troubleshooting`, `k8s-envoy-gateway-troubleshooting`, `k8s-gateway-api-troubleshooting` (the API objects, whatever the implementation) |
 | 5. Access, scaling, telemetry | `k8s-rbac-troubleshooting`, `k8s-autoscaling-troubleshooting` (HPA, metrics-server, KEDA, VPA), `k8s-fluent-bit-troubleshooting`, `k8s-opentelemetry-collector-troubleshooting`, `k8s-loki-troubleshooting`, `k8s-envoy-troubleshooting` |
 | 6. Core API and DNS | `k8s-api-troubleshooting`, `k8s-coredns-troubleshooting` |
 | 7. Clouds | `k8s-aks-troubleshooting` (EKS and GKE to follow) |

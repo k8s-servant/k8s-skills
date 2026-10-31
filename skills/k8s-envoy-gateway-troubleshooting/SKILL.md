@@ -58,7 +58,10 @@ would help:
 - The listener's certificate comes from cert-manager and is not issued:
   `k8s-cert-manager-troubleshooting`.
 - Another Gateway API implementation (Istio, Cilium, a cloud controller) owns the
-  GatewayClass: `k8s-network-troubleshooting` and that implementation's skill.
+  GatewayClass, or no controller claims it (`Waiting for controller`):
+  `k8s-gateway-api-troubleshooting` and that implementation's skill.
+- A listener, ListenerSet or Gateway API CRD problem that is not specific to Envoy
+  Gateway: `k8s-gateway-api-troubleshooting`.
 - What an Envoy response flag, reset reason or cluster statistic means in general:
   `k8s-envoy-troubleshooting` (the proxy itself; Envoy Gateway writes its config).
 

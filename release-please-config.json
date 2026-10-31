@@ -143,6 +143,11 @@
         },
         {
           "type": "json",
+          "path": "skills/k8s-gateway-api-troubleshooting/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "skills/k8s-grafana-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         },
