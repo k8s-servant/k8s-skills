@@ -39,7 +39,7 @@ are under [Install](#install).
 
 ## Why you can trust it
 
-- **27 skills, 82 scenarios.** Each scenario breaks something on purpose in a kind
+- **28 skills, 86 scenarios.** Each scenario breaks something on purpose in a kind
   cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
   cause, point at the evidence and propose an acceptable fix, without changing anything.
 - **Quoted from a real cluster.** Every error message and log line a skill quotes was
@@ -88,6 +88,7 @@ Secrets are never read, in any tier. Every change, in either tier, comes with an
 | `k8s-istio-troubleshooting` | Requests fail in an Istio mesh: Envoy access logs and response flags (UH, NR, filter_chain_not_found), AuthorizationPolicy 403s, subsets without pods, STRICT mTLS, injection, ambient |
 | `k8s-envoy-troubleshooting` | An Envoy proxy fails requests: 503 `no healthy upstream` or `upstream connect error`, 404 with an empty body, 504, response flags (UH, UF, NR, UT, UO), crashes on bootstrap errors, read-only admin endpoints; standalone or under Contour, Emissary, Gloo |
 | `k8s-envoy-gateway-troubleshooting` | Envoy Gateway does not route: Gateways not Programmed, HTTPRoutes not Accepted (hostnames, allowedRoutes), unresolved backends and missing ReferenceGrants, 404/500/503, policies |
+| `k8s-gateway-api-troubleshooting` | Gateway API objects do not route, whatever the implementation: a GatewayClass `Waiting for controller`, Gateways and listeners not Programmed (missing certificates, conflicts), routes not attached (`sectionName`, `allowedRoutes`, hostnames), missing ReferenceGrants, ListenerSets, CRD versions and channels |
 | `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
 | `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
 | `k8s-upgrade-readiness` | Before a minor version upgrade: what would block the node drains (PDBs that allow no disruption, pods with no controller, webhooks that fail closed), deprecated APIs and CRD versions still in use, version skew, containerd 1.x and cgroup v1 nodes, add-ons; read-only, reports what to fix first |
@@ -133,6 +134,7 @@ A skill is merged only after four checks:
 | `k8s-flux-troubleshooting` | kubernetes 1.37, flux 2.9 | `git-branch-missing`, `helm-chart-version-missing`, `kustomization-path-missing` |
 | `k8s-fluent-bit-troubleshooting` | kubernetes 1.37, fluent-bit 5.1 | `config-plugin-typo`, `kubernetes-filter-rbac`, `output-host-wrong` |
 | `k8s-gatekeeper-troubleshooting` | kubernetes 1.37, gatekeeper 3.23 | `constraint-denies-deployment`, `template-rego-error`, `webhook-down-fails-open` |
+| `k8s-gateway-api-troubleshooting` | kubernetes 1.37, gateway-api 1.6, envoy-gateway 1.9 | `allowed-routes-same-namespace`, `gatewayclass-controller-typo`, `listener-certificate-missing`, `section-name-mismatch` |
 | `k8s-grafana-troubleshooting` | kubernetes 1.37, grafana 13.2 | `dashboard-json-invalid`, `datasource-two-defaults`, `datasource-url-wrong` |
 | `k8s-helm-troubleshooting` | kubernetes 1.37, helm 4.3 | `ownership-conflict`, `release-stuck-pending`, `upgrade-timeout-bad-image` |
 | `k8s-istio-troubleshooting` | kubernetes 1.37, istio 1.31 | `authorizationpolicy-denies`, `strict-mtls-plaintext-client`, `subset-without-pods` |

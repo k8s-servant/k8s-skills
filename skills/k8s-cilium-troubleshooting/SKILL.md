@@ -55,6 +55,8 @@ would help:
   Ready: `k8s-network-troubleshooting` (Services and Kubernetes NetworkPolicies) and
   `k8s-workload-troubleshooting`.
 - A node is NotReady: `k8s-node-troubleshooting`.
+- Cilium's Gateway API support (the class `io.cilium/gateway-controller`) does not
+  accept a Gateway or a route: `k8s-gateway-api-troubleshooting`.
 
 ## Investigate
 

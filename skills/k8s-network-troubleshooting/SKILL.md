@@ -50,6 +50,9 @@ would help:
   domain fail for every client, a Corefile edit): `k8s-coredns-troubleshooting`.
 - On AKS, a LoadBalancer Service stays `<pending>` with `SyncLoadBalancerFailed`, or its
   IP does not take traffic: `k8s-aks-troubleshooting`.
+- A GatewayClass, Gateway, listener or route is not Accepted or Programmed (a class
+  waiting for its controller, a route that does not attach, a listener certificate that
+  does not resolve), or the Gateway API CRDs do not match: `k8s-gateway-api-troubleshooting`.
 
 ## Investigate
 
