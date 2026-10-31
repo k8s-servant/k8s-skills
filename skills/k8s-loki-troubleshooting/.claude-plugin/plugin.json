@@ -1,6 +1,6 @@
 {
   "name": "k8s-loki-troubleshooting",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Use when Grafana Loki on Kubernetes rejects, drops or cannot query logs: clients getting 400, 401 or 429 from /loki/api/v1/push, \"write operation failed\", \"has timestamp too old\", \"entry too far behind\", \"Per stream rate limit exceeded\", \"ingestion rate limit exceeded\", \"maximum active stream limit exceeded\", \"no org id\" (missing X-Scope-OrgID tenant), Loki crashing at start with \"validating config\" or \"invalid schema config\", \"failed to flush chunks\", ring or memberlist errors (\"empty ring\", \"too many unhealthy instances in the ring\"), or queries failing with \"the query time range exceeds the limit\" or timing out. Investigates with kubectl get, logs and read-only Loki endpoints, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

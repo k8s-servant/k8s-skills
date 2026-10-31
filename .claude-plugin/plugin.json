@@ -1,6 +1,6 @@
 {
   "name": "k8s-skills",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Kubernetes troubleshooting skills for any AI agent: read first, ask before changing anything",
   "author": {
     "name": "k8s-servant",

@@ -1,6 +1,6 @@
 {
   "name": "k8s-node-troubleshooting",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Use when a Kubernetes node is unhealthy or pods will not go onto it: a node NotReady or Unknown, MemoryPressure, DiskPressure or PIDPressure, pods Evicted, pods Pending with \"untolerated taint(s)\", \"Insufficient cpu\" or \"Insufficient memory\" while the node looks idle, a node cordoned (SchedulingDisabled), or the cluster autoscaler not adding or removing nodes. Investigates with kubectl get, describe and events, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
