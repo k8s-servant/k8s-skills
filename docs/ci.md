@@ -18,6 +18,7 @@ What runs on this repository, when, and why. The workflows live in
 | Security | `gitleaks` | Scans the full git history for secrets. False positives go in `.gitleaksignore`. |
 | Security | `zizmor` | Audits the workflows for security problems (injection, dangerous triggers, credentials). |
 | Security | `actionlint` | Lints the workflow files. |
+| CodeQL | `codeql (python)`, `codeql (actions)` | GitHub's static analysis of the Python tooling and the workflow files. Findings appear as code scanning alerts under the Security tab; it also runs on `main` and weekly. |
 | PR title | `pr-title` | The title follows Conventional Commits with a lowercase subject: PRs are squash-merged and the title becomes the commit message release-please reads. |
 | Claude review | `review` | An automatic review by Claude, against the rules in [AGENTS.md](../AGENTS.md): tiers, accuracy against upstream docs, no site data, scenario quality, CI. Skipped for drafts, forks and bot PRs. Its comments are input to verify, not orders. |
 
