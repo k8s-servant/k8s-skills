@@ -260,11 +260,11 @@ experimental channel):
   [HTTPRoute](https://gateway-api.sigs.k8s.io/reference/api-types/httproute/),
   [ReferenceGrant](https://gateway-api.sigs.k8s.io/reference/api-types/referencegrant/),
   [ListenerSet](https://gateway-api.sigs.k8s.io/reference/api-types/listenerset/) and
-  [BackendTLSPolicy](https://gateway-api.sigs.k8s.io/reference/api-types/backendtlspolicy/).
+  [BackendTLSPolicy](https://gateway-api.sigs.k8s.io/reference/api-types/policy/backendtlspolicy/).
 - [Cross-namespace routing](https://gateway-api.sigs.k8s.io/guides/multiple-ns/) and
   [Security model](https://gateway-api.sigs.k8s.io/concepts/security-model/): the roles,
   `allowedRoutes` and ReferenceGrants.
-- [Versioning](https://gateway-api.sigs.k8s.io/concepts/versioning/) and the
+- [Versioning](https://gateway-api.sigs.k8s.io/docs/concepts/versioning/) and the
   [v1.6.3 release](https://github.com/kubernetes-sigs/gateway-api/releases/tag/v1.6.3):
   channels, the `bundle-version` and `channel` CRD annotations, the
   `safe-upgrades.gateway.networking.k8s.io` admission policy in the install files.
