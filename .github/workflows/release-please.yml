@@ -59,7 +59,7 @@ jobs:
         with:
           python-version: "3.12"
           # No pip cache here: a cache written by another workflow must not feed a release.
-      - run: pip install -r requirements-dev.txt
+      - run: pip install --require-hashes -r requirements-dev.txt
       - run: python -m tools.skillcheck package --out dist
       - name: Upload the zips and checksums to the release
         env:

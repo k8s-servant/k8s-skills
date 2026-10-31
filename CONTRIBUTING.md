@@ -7,9 +7,16 @@ safe to follow, and tested against a real cluster.
 ## Setup
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements-dev.txt
 source .venv/bin/activate
 ```
+
+The dev dependencies are pinned by version in `requirements-dev.in` and by hash, with
+everything they pull in, in `requirements-dev.txt`, which CI installs with
+`--require-hashes`. To change one, edit `requirements-dev.in` and regenerate the lock
+file with the command at the top of `requirements-dev.txt` (it needs
+[uv](https://docs.astral.sh/uv/)). If a dependency update leaves a hash out of date,
+the install in CI fails, so a stale lock file cannot slip through.
 
 Before every commit:
 

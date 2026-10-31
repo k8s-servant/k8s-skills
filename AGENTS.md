@@ -12,7 +12,7 @@ checks them (`tools/skillcheck`) and a kind-based test kit (`tests/`).
 ## Commands
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # setup
+python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements-dev.txt   # setup
 .venv/bin/pytest                                         # tests
 .venv/bin/ruff check . && .venv/bin/ruff format --check .   # lint
 .venv/bin/python -m tools.skillcheck check               # check every skill
