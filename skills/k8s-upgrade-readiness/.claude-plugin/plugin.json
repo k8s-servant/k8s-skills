@@ -1,0 +1,15 @@
+{
+  "name": "k8s-upgrade-readiness",
+  "version": "0.6.1",
+  "description": "Use when a Kubernetes cluster is about to be upgraded to its next minor version, or someone asks \"is the cluster ready to upgrade?\", \"what will break when we upgrade?\" or why a node drain hangs during an upgrade: PodDisruptionBudgets with ALLOWED DISRUPTIONS 0, pods with no controller (\"cannot delete Pods that declare no controller\"), admission webhooks with failurePolicy Fail and no endpoints, deprecated or removed APIs still in use (apiserver_requested_deprecated_apis, CRD versions marked deprecated), kubelet and control plane version skew, nodes on cgroup v1 or containerd 1.x, and add-ons that do not support the target version. Reports what to fix first. Read-only: never upgrades, drains or changes anything itself.",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0",
+  "skills": [
+    "./"
+  ]
+}

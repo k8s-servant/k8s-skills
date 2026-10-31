@@ -39,7 +39,7 @@ are under [Install](#install).
 
 ## Why you can trust it
 
-- **27 skills, 83 scenarios.** Each scenario breaks something on purpose in a kind
+- **28 skills, 86 scenarios.** Each scenario breaks something on purpose in a kind
   cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
   cause, point at the evidence and propose an acceptable fix, without changing anything.
 - **Quoted from a real cluster.** Every error message and log line a skill quotes was
@@ -91,6 +91,7 @@ Secrets are never read, in any tier. Every change, in either tier, comes with an
 | `k8s-gateway-api-troubleshooting` | Gateway API objects do not route, whatever the implementation: a GatewayClass `Waiting for controller`, Gateways and listeners not Programmed (missing certificates, conflicts), routes not attached (`sectionName`, `allowedRoutes`, hostnames), missing ReferenceGrants, ListenerSets, CRD versions and channels |
 | `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
 | `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
+| `k8s-upgrade-readiness` | Before a minor version upgrade: what would block the node drains (PDBs that allow no disruption, pods with no controller, webhooks that fail closed), deprecated APIs and CRD versions still in use, version skew, containerd 1.x and cgroup v1 nodes, add-ons; read-only, reports what to fix first |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 | `k8s-aks-troubleshooting` | A problem is specific to AKS: a cluster or node pool `Failed`, upgrades blocked by PDBs, quota and VM capacity, LoadBalancer Services `<pending>` (`SyncLoadBalancerFailed`), Azure Disk and Files PVCs, workload identity `AADSTS` errors, `coredns-custom`, `error dialing backend`, Azure Policy, API server access and Azure RBAC; uses read-only `az` commands |
 
@@ -146,6 +147,7 @@ A skill is merged only after four checks:
 | `k8s-rbac-troubleshooting` | kubernetes 1.37 | `clusterrole-bound-in-namespace`, `role-missing-verb`, `subject-namespace-wrong` |
 | `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
 | `k8s-triage` | kubernetes 1.37 | `crashloop-somewhere`, `healthy-cluster`, `namespace-only-access`, `node-not-ready` |
+| `k8s-upgrade-readiness` | kubernetes 1.37 | `pdb-blocks-drain`, `unmanaged-pod-blocks-drain`, `webhook-fails-closed` |
 | `k8s-workload-troubleshooting` | kubernetes 1.37 | `image-pull-wrong-tag`, `oom-killed`, `readiness-probe-failing` |
 
 `verified-with` and `verified-on` in each `SKILL.md` record the same versions and the
