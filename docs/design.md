@@ -97,6 +97,7 @@ Order: the most used tools first, and those easy to run on kind before the heavy
 | 5. Access, scaling, telemetry | `k8s-rbac-troubleshooting`, `k8s-autoscaling-troubleshooting` (HPA, metrics-server, KEDA, VPA), `k8s-fluent-bit-troubleshooting`, `k8s-opentelemetry-collector-troubleshooting`, `k8s-loki-troubleshooting`, `k8s-envoy-troubleshooting` |
 | 6. Core API and DNS | `k8s-api-troubleshooting`, `k8s-coredns-troubleshooting` |
 | 7. Clouds | `k8s-aks-troubleshooting` (EKS and GKE to follow) |
+| 8. Lifecycle | `k8s-upgrade-readiness` (a read-only check before a minor version upgrade, not a troubleshooting skill) |
 | Later candidates | Velero, CloudNativePG, Strimzi, Karpenter (with the cloud skills), Crossplane, Linkerd, Traefik |
 
 Rules for every ecosystem skill (decided with the maintainer, after #42):

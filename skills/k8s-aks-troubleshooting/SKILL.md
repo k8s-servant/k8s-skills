@@ -66,6 +66,8 @@ would help:
   `k8s-rbac-troubleshooting`. Webhook or admission errors that are not Azure Policy:
   `k8s-api-troubleshooting`; Gatekeeper constraints themselves:
   `k8s-gatekeeper-troubleshooting`.
+- Before an upgrade, a check of everything in the cluster that would block or break it
+  (PDBs, unmanaged pods, webhooks, deprecated APIs, add-ons): `k8s-upgrade-readiness`.
 
 ## Investigate
 

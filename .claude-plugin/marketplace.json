@@ -138,6 +138,11 @@
       "description": "Use when something is wrong in a cluster and it is not yet clear where: \"the cluster is broken\", \"a lot of pods are failing\", \"users say the app is down\", \"something is off after the upgrade\", or any problem report that names no workload. Sweeps nodes, pods in every namespace, recent Warning events and CPU and memory use, ranks what it finds by severity, proposes a first fix for each issue and names the skill that goes deeper. Reads first and asks before changing anything."
     },
     {
+      "name": "k8s-upgrade-readiness",
+      "source": "./skills/k8s-upgrade-readiness",
+      "description": "Use when a Kubernetes cluster is about to be upgraded to its next minor version, or someone asks \"is the cluster ready to upgrade?\", \"what will break when we upgrade?\" or why a node drain hangs during an upgrade: PodDisruptionBudgets with ALLOWED DISRUPTIONS 0, pods with no controller (\"cannot delete Pods that declare no controller\"), admission webhooks with failurePolicy Fail and no endpoints, deprecated or removed APIs still in use (apiserver_requested_deprecated_apis, CRD versions marked deprecated), kubelet and control plane version skew, nodes on cgroup v1 or containerd 1.x, and add-ons that do not support the target version. Reports what to fix first. Read-only: never upgrades, drains or changes anything itself."
+    },
+    {
       "name": "k8s-workload-troubleshooting",
       "source": "./skills/k8s-workload-troubleshooting",
       "description": "Use when a pod or workload is unhealthy in Kubernetes: pods stuck in Pending, CrashLoopBackOff, ImagePullBackOff or ErrImagePull, containers OOMKilled (exit code 137), failing liveness, readiness or startup probes, pods Running but not Ready, a Deployment rollout that does not progress (ProgressDeadlineExceeded), or a Job or CronJob that fails. Investigates with kubectl get, describe, logs and events, and proposes fixes. Reads first and asks before changing anything."

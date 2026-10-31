@@ -203,6 +203,11 @@
         },
         {
           "type": "json",
+          "path": "skills/k8s-upgrade-readiness/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "skills/k8s-workload-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         }
