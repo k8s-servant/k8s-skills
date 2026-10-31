@@ -275,6 +275,11 @@ a known gap, not patched, since RBAC already stops it.
 
 ## Contributing
 
+**The agent got it wrong on your cluster?** Tell us with the
+[issue form](https://github.com/k8s-servant/k8s-skills/issues/new?template=skill_problem.yml):
+what you asked, what the agent said and what the real cause was. Each report becomes a
+new scenario, and the skill is fixed against it. Use placeholders for every name.
+
 New skills and fixes are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. What
 runs on each pull request is described in [docs/ci.md](docs/ci.md). Report
 security problems as described in [SECURITY.md](SECURITY.md).
