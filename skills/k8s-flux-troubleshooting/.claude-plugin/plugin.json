@@ -1,6 +1,6 @@
 {
   "name": "k8s-flux-troubleshooting",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Use when Flux does not deploy or update something in Kubernetes: a GitRepository, OCIRepository or HelmRepository that is not Ready (\"couldn't find remote ref\", \"authentication required\"), a Kustomization that is not Ready (\"kustomization path not found\", \"kustomize build failed\", \"dependency ... is not ready\", health check timeouts), a HelmRelease that is not Ready (HelmChart \"invalid chart reference\", InstallFailed, UpgradeFailed, RetriesExceeded), changes in Git that never reach the cluster, or suspended Flux objects. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

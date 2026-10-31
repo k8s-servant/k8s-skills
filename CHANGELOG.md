@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/k8s-servant/k8s-skills/compare/v0.6.1...v0.7.0) (2026-10-31)
+
+
+### Features
+
+* **skills:** add k8s-gateway-api-troubleshooting ([#90](https://github.com/k8s-servant/k8s-skills/issues/90)) ([7e95e4f](https://github.com/k8s-servant/k8s-skills/commit/7e95e4f054eaf3c3c4b7f548f4cad1a833584414))
+* **skills:** add k8s-upgrade-readiness ([#91](https://github.com/k8s-servant/k8s-skills/issues/91)) ([8d9def9](https://github.com/k8s-servant/k8s-skills/commit/8d9def95be427dc9e07ac274d1109df3e3be5eee))
+
+
+### Documentation
+
+* add a skill count badge to the README ([#93](https://github.com/k8s-servant/k8s-skills/issues/93)) ([a6e35b9](https://github.com/k8s-servant/k8s-skills/commit/a6e35b968d57daddf3b5608998ea5aa94ab6dcaa))
+
 ## [0.6.1](https://github.com/k8s-servant/k8s-skills/compare/v0.6.0...v0.6.1) (2026-10-31)
 
 
