@@ -110,7 +110,7 @@ spec:
 YAML
 kubectl patch gateway my-gateway -n my-namespace --type=merge -p '{"spec": {"gatewayClassName": "my-working-class"}}'
 # Undo: kubectl patch gateway my-gateway -n my-namespace --type=merge -p '{"spec": {"gatewayClassName": "my-class"}}'
-# Undo, then: kubectl delete gatewayclass my-working-class
+# Undo: kubectl delete gatewayclass my-working-class
 ```
 
 Let a Gateway accept ListenerSets from its own namespace:
