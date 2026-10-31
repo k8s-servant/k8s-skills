@@ -236,6 +236,11 @@ Antigravity) or `.github/skills` (GitHub Copilot).
   mkdir -p ~/.gemini/config/skills && cp -R ~/k8s-skills/skills/* ~/.gemini/config/skills/
   ```
 
+- **Release zips:** every [release](https://github.com/k8s-servant/k8s-skills/releases) has
+  one zip per skill and a `SHA256SUMS` file. Newer releases also carry signed build
+  provenance (`k8s-skills-provenance.sigstore.json`); check a zip with
+  `gh attestation verify k8s-triage.zip --repo k8s-servant/k8s-skills`.
+
 Skills that hand over to each other still work alone: a hand-off to a skill that is not
 installed tells the agent to continue with the steps it has and name the skill that would
 help.
