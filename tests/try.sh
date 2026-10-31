@@ -14,13 +14,6 @@ tests_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 skill=k8s-workload-troubleshooting
 case_name=oom-killed
 
-for tool in kind kubectl docker; do
-  if ! command -v "$tool" >/dev/null; then
-    echo "tests/try.sh needs $tool on PATH (kind, kubectl and Docker)" >&2
-    exit 1
-  fi
-done
-
 list() {
   local dir
   for dir in "$tests_dir"/k8s-*/*/; do
@@ -38,17 +31,29 @@ pick() {
     sed -n '6,9s/^# //p' "${BASH_SOURCE[0]}" >&2
     exit 64
   fi
+  if [[ ! -f "$tests_dir/$skill/$case_name/expected.md" ]]; then
+    echo "no such scenario: tests/$skill/$case_name (see tests/try.sh --list)" >&2
+    exit 64
+  fi
   if [[ -f "$tests_dir/$skill/$case_name/platform" ]]; then
     echo "tests/$skill/$case_name needs a real cloud cluster; tests/try.sh runs kind scenarios only" >&2
     exit 2
   fi
 }
 
+if [[ "${1:-}" == "--list" ]]; then
+  list
+  exit 0
+fi
+
+for tool in kind kubectl docker; do
+  if ! command -v "$tool" >/dev/null; then
+    echo "tests/try.sh needs $tool on PATH (kind, kubectl and Docker)" >&2
+    exit 1
+  fi
+done
+
 case "${1:-}" in
-  --list)
-    list
-    exit 0
-    ;;
   --down)
     exec "$tests_dir/cluster.sh" down
     ;;

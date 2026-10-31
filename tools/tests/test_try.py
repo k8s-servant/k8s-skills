@@ -122,3 +122,22 @@ def test_try_needs_kind_kubectl_and_docker(tmp_path):
     assert result.returncode != 0
     assert "kind" in result.stderr
     assert "setup.sh" not in calls(tmp_path)
+
+
+def test_try_refuses_an_unknown_scenario_before_creating_the_cluster(tmp_path):
+    repo = try_repo(tmp_path)
+    result = run(tmp_path, repo, ["tests/try.sh", "k8s-foo", "bar"])
+    assert result.returncode == 64
+    assert "no such scenario: tests/k8s-foo/bar" in result.stderr
+    assert not any(c.startswith("kind create cluster") for c in calls(tmp_path))
+
+
+def test_try_list_needs_no_tools(tmp_path):
+    repo = try_repo(tmp_path)
+    make_scenario(repo)
+    (tmp_path / "bin" / "kind").unlink()
+    result = run(
+        tmp_path, repo, ["tests/try.sh", "--list"], PATH=f"{tmp_path / 'bin'}:/usr/bin:/bin"
+    )
+    assert result.returncode == 0, result.stderr
+    assert f"{SKILL} {CASE}" in result.stdout
