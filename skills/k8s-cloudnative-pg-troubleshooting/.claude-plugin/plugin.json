@@ -1,0 +1,15 @@
+{
+  "name": "k8s-cloudnative-pg-troubleshooting",
+  "version": "0.8.0",
+  "description": "Use when a CloudNativePG (CNPG) PostgreSQL Cluster in Kubernetes is not healthy: a Cluster stuck in \"Setting up primary\", \"Creating a new replica\" or \"Waiting for the instances to become active\", fewer ready instances than requested, an initdb or join pod that is Pending or in CreateContainerConfigError, PVCs that stay Pending, a bootstrap Secret that is missing, a replica that cannot be scheduled (pod anti-affinity, nodeSelector, taints), \"Not enough disk space\", failing WAL archiving or backups (ContinuousArchiving, LastBackupSucceeded False), a failover or switchover that does not finish, \"Invalid cluster definition\" or \"Cluster is unrecoverable\", and operator errors. Investigates with kubectl get, describe, events and logs, never reading Secrets, and proposes fixes. Reads first and asks before changing anything.",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0",
+  "skills": [
+    "./"
+  ]
+}

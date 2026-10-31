@@ -47,6 +47,8 @@ would help:
 - A controller cannot create its pods at all (`FailedCreate` with `failed calling
   webhook` or `denied the request`), or a namespace stays `Terminating`:
   `k8s-api-troubleshooting`.
+- The pods belong to a CloudNativePG Cluster (label `cnpg.io/cluster`, or an `-initdb`
+  or `-join` job pod): `k8s-cloudnative-pg-troubleshooting`.
 
 ## Investigate
 
