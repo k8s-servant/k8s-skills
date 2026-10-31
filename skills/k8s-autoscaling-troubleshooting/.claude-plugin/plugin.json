@@ -1,6 +1,6 @@
 {
   "name": "k8s-autoscaling-troubleshooting",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Use when Kubernetes autoscaling does not scale as expected: a HorizontalPodAutoscaler whose TARGETS show \"<unknown>\", \"missing request for cpu\", \"unable to get metrics for resource cpu\" or \"FailedGetResourceMetric\", an HPA stuck at maxReplicas (\"TooManyReplicas\") or not scaling down, \"Metrics API not available\" from kubectl top, metrics-server not Ready, a KEDA ScaledObject that is not Ready (\"ScaledObjectCheckFailed\") or creates no HPA, KEDA scalers failing, two autoscalers on one workload, or a VerticalPodAutoscaler without recommendations. Investigates with kubectl get, describe, events, logs and top, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
