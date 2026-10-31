@@ -1,6 +1,6 @@
 {
   "name": "k8s-gatekeeper-troubleshooting",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Use when OPA Gatekeeper blocks, warns about or fails to police resources in Kubernetes: \"admission webhook \\\"validation.gatekeeper.sh\\\" denied the request: [constraint] message\", warnings from constraints in warn mode, a constraint that should block but only shows violations in audit (dryrun), a ConstraintTemplate that does not compile (ingest_error, rego_parse_error), \"no matches for kind\" when applying a constraint, referential policies that never fire (sync), mutations that do not apply, or Gatekeeper that stopped enforcing because its webhook is down. Investigates with kubectl get, describe and logs, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",

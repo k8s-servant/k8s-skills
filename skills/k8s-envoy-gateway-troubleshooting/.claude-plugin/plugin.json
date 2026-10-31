@@ -1,6 +1,6 @@
 {
   "name": "k8s-envoy-gateway-troubleshooting",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Use when Envoy Gateway (the Gateway API implementation by the Envoy project) does not route traffic in Kubernetes: a Gateway that is not Programmed (\"AddressNotAssigned\"), an HTTPRoute that is not Accepted (\"NoMatchingListenerHostname\", \"NotAllowedByListeners\") or whose ResolvedRefs is False (\"BackendNotFound\", \"RefNotPermitted\" without a ReferenceGrant), clients getting 404, 500 or 503 \"no healthy upstream\" from the gateway, a GatewayClass that is not Accepted, or BackendTrafficPolicy, ClientTrafficPolicy, SecurityPolicy and EnvoyProxy resources that do not apply. Investigates with kubectl get, describe, events and logs, and proposes fixes. Reads first and asks before changing anything.",
   "author": {
     "name": "k8s-servant",
