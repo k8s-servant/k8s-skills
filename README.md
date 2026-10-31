@@ -38,6 +38,24 @@ restarting. Find out why."* For an agent that can only look, give it a read-only
 kubeconfig ([Your agent, your decision](#your-agent-your-decision)). More ways to install
 are under [Install](#install).
 
+### Try it on a throwaway cluster first
+
+Not ready to point an agent at a real cluster? With Docker, [kind](https://kind.sigs.k8s.io)
+and kubectl, one command creates a local test cluster, breaks something on purpose and
+prints what to give your agent:
+
+```bash
+git clone https://github.com/k8s-servant/k8s-skills.git && cd k8s-skills
+tests/try.sh                # default: a pod that is OOMKilled; tests/try.sh --list for more
+```
+
+It prints a prompt and a view-only `KUBECONFIG`. Start your agent in an empty folder with
+that `KUBECONFIG`, ask the prompt, then compare the answer with the scenario's
+`expected.md`. The identity can only read, so the agent cannot change anything. When you
+are done, `tests/try.sh --down` deletes the cluster. The cluster is called
+`k8s-skills-test`, and the script never touches your other clusters or your current
+kubectl context.
+
 ## Why you can trust it
 
 - **28 skills, 86 scenarios.** Each scenario breaks something on purpose in a kind

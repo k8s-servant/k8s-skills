@@ -23,6 +23,7 @@ tests/cluster.sh up [--cni calico|cilium] | down          # throwaway kind clust
 tests/addon.sh <name>                                    # install a pinned add-on (names: see the script)
 tests/run.sh <skill> <case>                              # run a scenario
 tests/run.sh --cleanup <skill> <case>                    # undo a scenario
+tests/try.sh [<skill> <case>] | --list | --down          # try a scenario with your own agent
 npx --yes markdownlint-cli2@0.24.0 "**/*.md" "#.venv" "#node_modules"   # markdown lint
 ```
 
