@@ -7,6 +7,7 @@ anything.
 [![Release](https://img.shields.io/github/v/release/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/releases)
 [![License](https://img.shields.io/github/license/k8s-servant/k8s-skills)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-28-326ce5)](#skills)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/k8s-servant/k8s-skills/badge)](https://scorecard.dev/viewer/?uri=github.com/k8s-servant/k8s-skills)
 
 <p align="center">
   <img src="docs/assets/demo.svg" alt="An agent with the k8s-workload-troubleshooting skill finds that my-app is OOMKilled with a 32Mi limit, and proposes kubectl set resources with an undo line, asking before it runs it" width="820">
