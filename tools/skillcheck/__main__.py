@@ -9,6 +9,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from tools.skillcheck.bundle import BundleError, build_bundle
 from tools.skillcheck.commands import check_commands, load_allowlist
 from tools.skillcheck.discovery import hidden_skill_dirs, skill_dirs
 from tools.skillcheck.findings import Finding
@@ -81,7 +82,21 @@ def main(argv: list[str] | None = None) -> int:
     package = sub.add_parser("package", help="zip every skill for a release")
     package.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root")
     package.add_argument("--out", type=Path, required=True, help="output directory")
+    bundle = sub.add_parser(
+        "bundle", help="write the plugin as the Claude plugin directory takes it"
+    )
+    bundle.add_argument("--repo", type=Path, default=Path.cwd(), help="repository root")
+    bundle.add_argument("--out", type=Path, required=True, help="empty output directory")
     args = parser.parse_args(argv)
+    if args.command == "bundle":
+        try:
+            files = build_bundle(args.repo.resolve(), args.out)
+        except BundleError as exc:
+            for problem in exc.problems:
+                print(problem)
+            return 1
+        print(f"wrote {len(files)} files into {args.out}")
+        return 0
     if args.command == "package":
         zips = package_skills(args.repo.resolve(), args.out)
         print(f"packaged {len(zips)} skills into {args.out}")
