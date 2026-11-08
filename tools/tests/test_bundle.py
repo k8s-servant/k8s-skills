@@ -107,3 +107,10 @@ def test_bundle_points_readme_links_at_the_repository(tmp_path):
         f'<img src="{blob}docs/assets/demo.svg?raw=true">\n'
         f"[guide]({blob}CONTRIBUTING.md#cloud-scenarios), [site](https://example.com), [up](#top)\n"
     )
+
+
+def test_bundle_refuses_a_symlink_in_a_skill(tmp_path):
+    repo = make_repo(tmp_path / "repo")
+    (repo / "skills" / "k8s-a-x" / "references" / "kit.md").symlink_to(repo / "README.md")
+    with pytest.raises(BundleError, match="references/kit.md: symlink"):
+        build_bundle(repo, tmp_path / "bundle")

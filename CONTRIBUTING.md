@@ -287,7 +287,8 @@ A skill is merged only when:
   each release replaces. It holds only the plugin manifest, icon, README, LICENSE and
   skills, because the directory refuses the scripts in `tests/` and `tools/`. Build it with
   `python -m tools.skillcheck bundle --out <empty-dir>`; CI fails if a skill holds a file
-  the directory refuses (anything but Markdown, text, JSON, YAML or an image).
+  the directory refuses (anything but Markdown, text, JSON, YAML or an image). The release
+  force-pushes `plugin`, so keep it out of any branch ruleset that blocks force pushes.
 - To release, merge the release PR that release-please keeps open. It is opened with a
   GitHub App token so the required checks run on it. If the Release run fails at the
   token step, check the `RELEASE_APP_CLIENT_ID` variable and the

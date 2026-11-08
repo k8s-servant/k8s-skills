@@ -35,6 +35,8 @@ class BundleError(Exception):
 
 def _refusal(path: Path) -> str | None:
     """Why the directory would refuse this skill file, or None if it accepts it."""
+    if path.is_symlink():
+        return "symlink: the plugin directory does not follow it"
     suffix = path.suffix.lower()
     if suffix in IMAGE_SUFFIXES:
         return None
