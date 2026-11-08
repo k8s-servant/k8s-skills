@@ -76,3 +76,37 @@ jobs:
         run: |
           cp "${BUNDLE}" dist/k8s-skills-provenance.sigstore.json
           gh release upload "${TAG}" dist/* --clobber
+
+  # The Claude plugin directory reads the plugin from the `plugin` branch: the k8s-skills
+  # plugin with only its manifest, icon, README, LICENSE and skills. The marketplace entry
+  # has the repository root as its source, which carries the test kit and tooling scripts
+  # that the directory refuses. Each release replaces the branch with one new commit.
+  plugin-branch:
+    name: publish the plugin branch
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the plugin branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: pip install --require-hashes -r requirements-dev.txt
+      - run: python -m tools.skillcheck bundle --out "${RUNNER_TEMP}/plugin"
+      - name: Push the plugin branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        working-directory: ${{ runner.temp }}/plugin
+        run: |
+          git init -q -b plugin
+          git add -A
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore: k8s-skills plugin ${TAG}"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" plugin

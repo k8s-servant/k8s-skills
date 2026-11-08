@@ -64,6 +64,7 @@ jobs:
       - run: python -m tools.skillcheck manifests --check
       # The release builds the zips the same way; exercise that path on every PR.
       - run: python -m tools.skillcheck package --out dist
+      - run: python -m tools.skillcheck bundle --out "${RUNNER_TEMP}/plugin"
 
   shell:
     name: shell
