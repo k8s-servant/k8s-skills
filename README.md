@@ -1,0 +1,299 @@
+# k8s-skills
+
+Kubernetes troubleshooting skills for any AI agent: read first, ask before changing
+anything.
+
+[![CI](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/releases)
+[![License](https://img.shields.io/github/license/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/blob/main/LICENSE)
+[![Skills](https://img.shields.io/badge/skills-30-326ce5)](#skills)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/k8s-servant/k8s-skills/badge)](https://scorecard.dev/viewer/?uri=github.com/k8s-servant/k8s-skills)
+
+<p align="center">
+  <img src="https://github.com/k8s-servant/k8s-skills/blob/main/docs/assets/demo.svg?raw=true" alt="An agent with the k8s-workload-troubleshooting skill finds that my-app is OOMKilled with a 32Mi limit, and proposes kubectl set resources with an undo line, asking before it runs it" width="820">
+</p>
+
+<sub>A real run of the <code>oom-killed</code> scenario on a kind cluster, with a view-only
+kubeconfig. The commands and output are shortened, and the answer is the agent's own
+words.</sub>
+
+k8s-skills is a set of [Agent Skills](https://agentskills.io) that teach an AI agent to
+investigate Kubernetes problems the way an experienced SRE does: what to look at, in
+which order, what each finding means, and what to propose. The skills work in Claude
+Code, Codex, Gemini CLI, Antigravity, GitHub Copilot and any other agent that reads
+`SKILL.md` files and can run `kubectl`.
+
+How it works, how each skill is tested, and what breaking a kind cluster 76 ways showed
+about the docs: [k8s-skills: Teaching AI Agents to Troubleshoot Kubernetes Without
+Breaking It](https://sysadminas.eu/K8s-Skills-Read-First-Ask-Before-Changing/).
+
+## Quick start
+
+```bash
+npx skills add k8s-servant/k8s-skills -a claude-code   # or -a codex, ...
+gemini extensions install https://github.com/k8s-servant/k8s-skills   # Gemini CLI
+```
+
+Then describe the problem to your agent, for example *"my-app in my-namespace keeps
+restarting. Find out why."* For an agent that can only look, give it a read-only
+kubeconfig ([Your agent, your decision](#your-agent-your-decision)). More ways to install
+are under [Install](#install).
+
+### Try it on a throwaway cluster first
+
+Not ready to point an agent at a real cluster? With Docker, [kind](https://kind.sigs.k8s.io)
+and kubectl, one command creates a local test cluster, breaks something on purpose and
+prints what to give your agent:
+
+```bash
+git clone https://github.com/k8s-servant/k8s-skills.git && cd k8s-skills
+tests/try.sh                # default: a pod that is OOMKilled; tests/try.sh --list for more
+```
+
+It prints a prompt and a view-only `KUBECONFIG`. Start your agent in an empty folder with
+that `KUBECONFIG`, ask the prompt, then compare the answer with the scenario's
+`expected.md`. The identity can only read, so the agent cannot change anything. When you
+are done, `tests/try.sh --down` deletes the cluster. The cluster is called
+`k8s-skills-test`, and the script never touches your other clusters or your current
+kubectl context.
+
+## Why you can trust it
+
+- **30 skills, 92 scenarios.** Each scenario breaks something on purpose in a kind
+  cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
+  cause, point at the evidence and propose an acceptable fix, without changing anything.
+- **Quoted from a real cluster.** Every error message and log line a skill quotes was
+  reproduced on kind, at a pinned version. Where the cluster said something different
+  from the docs, the skill quotes the cluster.
+- **Checked on every change.** CI checks each command against its tier, requires an
+  `# Undo:` line for every change, and rejects any command that reads Secrets.
+
+## Read first, ask before changing
+
+Every command in a skill falls into one of three tiers. CI checks each one against the
+allow-lists in `tools/skillcheck/allowlist.yaml`.
+
+| Tier | What | What the agent does |
+|---|---|---|
+| Run freely | Read-only commands: `get`, `describe`, `logs`, `events`, `top` and a short list of others, plus read-only `az ... show`/`list` for the AKS skill | Runs them while it investigates |
+| Ask first | Reversible changes (`set image`, `set resources`, `rollout undo`, `scale`, `patch`, `cordon`, `uncordon` and a few more) and one read-only program run in a container with `exec` (`nslookup`, `curl`, `cat`, ...) | Shows the command, what it changes and how to undo it, under `> Ask first: the agent runs this only after the user approves it.`, and runs it only after you say yes |
+| Never run | Anything destructive or hard to undo (`delete`, `drain`, `replace`, `apply`, ...) | Proposes it under `> Proposed fix: review before running. The agent does not run this.`, with an `# Undo:` line, for you to review and run |
+
+Secrets are never read, in any tier. Every change, in either tier, comes with an
+`# Undo:` line.
+
+## Skills
+
+| Skill | Use it when |
+|---|---|
+| `k8s-triage` | Something is wrong in the cluster and it is not clear where: a ranked first look at nodes, pods, events and resource use, with a first fix and the skill that goes deeper |
+| `k8s-workload-troubleshooting` | A pod or workload is unhealthy: Pending, CrashLoopBackOff, image pull errors, OOMKilled, failing probes, stuck rollouts, failing Jobs |
+| `k8s-loki-troubleshooting` | Loki rejects, drops or cannot query logs: pushes refused with 400, 401 or 429 (old timestamps, missing tenant, rate and stream limits), crashes on schema errors, storage flushes, rings, query limits |
+| `k8s-network-troubleshooting` | Traffic does not reach running pods: Services without endpoints, wrong selectors or ports, DNS, NetworkPolicies, Ingress and Gateway routes |
+| `k8s-coredns-troubleshooting` | Cluster DNS itself fails: CoreDNS crashing on Corefile errors or loops, reloads that fail, upstream timeouts and SERVFAIL, stub domains, rewrites and hosts, NodeLocal DNSCache, the AKS, EKS and GKE DNS ConfigMaps |
+| `k8s-storage-troubleshooting` | Storage blocks a workload: PVCs stuck Pending, missing StorageClasses or unsupported access modes, attach and mount errors, full volumes |
+| `k8s-autoscaling-troubleshooting` | Autoscaling does not scale: HPA targets `<unknown>` (missing requests, no metrics), stuck at `maxReplicas`, metrics-server and `kubectl top`, KEDA ScaledObjects not Ready or without an HPA, the VPA |
+| `k8s-cert-manager-troubleshooting` | cert-manager does not issue or renew: Certificates not Ready, issuers not Ready, a wrong `issuerRef`, ACME challenges stuck, the cert-manager webhook unreachable |
+| `k8s-flux-troubleshooting` | Flux does not deploy: sources not Ready (missing branch, credentials, chart version), Kustomizations with a wrong path or failed build, HelmReleases stalled, suspended objects |
+| `k8s-argocd-troubleshooting` | Argo CD does not deploy: comparison errors (wrong path or revision), destinations not allowed by the project, no automated sync, failed syncs, drift, health |
+| `k8s-helm-troubleshooting` | Helm installs or upgrades fail or a release is stuck: `--wait` timeouts, ownership conflicts, `another operation is in progress`, hooks, immutable fields; helm commands are left to the user |
+| `k8s-kyverno-troubleshooting` | Kyverno denies or fails to police resources: Enforce denials, Audit-only policies and PolicyReports, ClusterPolicy and CEL ValidatingPolicy, mutate and generate rules, webhooks down |
+| `k8s-fluent-bit-troubleshooting` | Fluent Bit does not deliver logs: config errors that crash the DaemonSet, outputs that cannot connect or drop chunks, records without Kubernetes metadata, tail paths and CRI parsers, backpressure, the Fluent Operator |
+| `k8s-gatekeeper-troubleshooting` | OPA Gatekeeper denies or fails to police resources: constraint denials and actions, templates that do not compile, a webhook that fails open, exemptions, sync, mutation |
+| `k8s-external-secrets-troubleshooting` | External Secrets does not create or update a Secret: sync errors from the controller log, stores not Ready, targets owned by another ExternalSecret, refresh; never reads the Secrets |
+| `k8s-opentelemetry-collector-troubleshooting` | Telemetry does not get through the OpenTelemetry Collector: config errors that crash it, receivers on localhost or outside every pipeline, exporters that cannot reach the backend, queues, memory_limiter, k8s_attributes RBAC, the Operator and auto-instrumentation |
+| `k8s-prometheus-troubleshooting` | Prometheus does not scrape or alert: ServiceMonitors not selected, wrong port names, targets down, rules not loaded, alerts not reaching Alertmanager, memory and disk |
+| `k8s-grafana-troubleshooting` | Grafana fails: provisioning errors that crash the pod, dashboards that do not load, datasources pointing at the wrong Service, database locks, login, grafana-operator selectors |
+| `k8s-cilium-troubleshooting` | Traffic fails on a Cilium cluster: CiliumNetworkPolicy drops and default deny, DNS blocked by egress policies, L7 403s, Hubble flows, agent, endpoint and IPAM problems |
+| `k8s-istio-troubleshooting` | Requests fail in an Istio mesh: Envoy access logs and response flags (UH, NR, filter_chain_not_found), AuthorizationPolicy 403s, subsets without pods, STRICT mTLS, injection, ambient |
+| `k8s-envoy-troubleshooting` | An Envoy proxy fails requests: 503 `no healthy upstream` or `upstream connect error`, 404 with an empty body, 504, response flags (UH, UF, NR, UT, UO), crashes on bootstrap errors, read-only admin endpoints; standalone or under Contour, Emissary, Gloo |
+| `k8s-envoy-gateway-troubleshooting` | Envoy Gateway does not route: Gateways not Programmed, HTTPRoutes not Accepted (hostnames, allowedRoutes), unresolved backends and missing ReferenceGrants, 404/500/503, policies |
+| `k8s-gateway-api-troubleshooting` | Gateway API objects do not route, whatever the implementation: a GatewayClass `Waiting for controller`, Gateways and listeners not Programmed (missing certificates, conflicts), routes not attached (`sectionName`, `allowedRoutes`, hostnames), missing ReferenceGrants, ListenerSets, CRD versions and channels |
+| `k8s-rbac-troubleshooting` | A request is refused: `Forbidden`, `cannot list resource ... in the namespace` or `at the cluster scope`, bindings in the wrong namespace or for the wrong subject, ClusterRoles bound with RoleBindings, 401 versus 403, escalation and `roleRef` errors |
+| `k8s-api-troubleshooting` | The API server refuses a request: `failed calling webhook` and ReplicaSets with no pods, webhook and ValidatingAdmissionPolicy denials, APIServices not Available, namespaces stuck `Terminating`, `no matches for kind`, unknown fields, 401, 429, etcd and size limits |
+| `k8s-velero-troubleshooting` | Velero backups and restores fail or do not happen: storage locations `Unavailable` (missing bucket, credentials, endpoint), backups in `FailedValidation` or `PartiallyFailed`, schedules with an invalid cron expression, restores that skip objects that already exist, File System Backup and CSI data mover failures; never reads Secrets or backup contents |
+| `k8s-cloudnative-pg-troubleshooting` | A CloudNativePG PostgreSQL cluster is not healthy: stuck in `Setting up primary` or `Creating a new replica`, PVCs Pending on a missing StorageClass, a missing bootstrap Secret, replicas that anti-affinity cannot place, WAL archiving and backups failing, failovers that hang; never reads Secrets or connects to PostgreSQL |
+| `k8s-upgrade-readiness` | Before a minor version upgrade: what would block the node drains (PDBs that allow no disruption, pods with no controller, webhooks that fail closed), deprecated APIs and CRD versions still in use, version skew, containerd 1.x and cgroup v1 nodes, add-ons; read-only, reports what to fix first |
+| `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
+| `k8s-aks-troubleshooting` | A problem is specific to AKS: a cluster or node pool `Failed`, upgrades blocked by PDBs, quota and VM capacity, LoadBalancer Services `<pending>` (`SyncLoadBalancerFailed`), Azure Disk and Files PVCs, workload identity `AADSTS` errors, `coredns-custom`, `error dialing backend`, Azure Policy, API server access and Azure RBAC; uses read-only `az` commands |
+
+Planned: EKS and GKE skills, and more ecosystem skills.
+
+## How each skill is verified
+
+A skill is merged only after four checks:
+
+1. **Official sources.** Facts come from the project's own documentation and, where the
+   docs are silent, its source code at the release named below. Each skill lists the
+   pages and files in its `Sources` section.
+2. **A real cluster.** Every status message, log line and response a skill quotes was
+   reproduced on a throwaway [kind](https://kind.sigs.k8s.io) cluster, with the tool
+   installed at a pinned version whose checksum is verified first (`tests/versions.env`).
+   Where the cluster printed something different from the docs, the skill quotes the
+   cluster.
+3. **Scenarios run by an agent.** Each scenario in `tests/<skill>/<case>/` breaks
+   something on purpose, and its `expected.md` names the cause, the evidence, the
+   acceptable fixes and the wrong answers. A fresh agent gets the skill, the prompt and a
+   view-only kubeconfig, and passes only if it names the cause, points at the evidence,
+   proposes an acceptable fix and changes nothing. The runs are recorded in the skill's
+   pull request.
+4. **CI on every change.** `skillcheck` checks each command against its tier, the
+   ask-first and fix blocks, the `# Undo:` lines and that no command reads Secrets; tests,
+   linters and a link check run as well.
+
+| Skill | Verified with | Scenarios |
+|---|---|---|
+| `k8s-aks-troubleshooting` | aks, kubernetes 1.33 | `azure-disk-too-large`, `internal-lb-subnet-missing`, `workload-identity-unknown-client-id` |
+| `k8s-api-troubleshooting` | kubernetes 1.37 | `apiservice-unavailable`, `crd-version-not-served`, `webhook-backend-down` |
+| `k8s-argocd-troubleshooting` | kubernetes 1.37, argo-cd 3.5 | `app-path-missing`, `auto-sync-off`, `project-destination-denied` |
+| `k8s-autoscaling-troubleshooting` | kubernetes 1.37, metrics-server 0.9, keda 2.21 | `keda-target-wrong`, `max-replicas-reached`, `missing-cpu-request` |
+| `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
+| `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
+| `k8s-cloudnative-pg-troubleshooting` | kubernetes 1.37, cloudnative-pg 1.30 | `anti-affinity-required`, `bootstrap-secret-missing`, `storage-class-missing` |
+| `k8s-coredns-troubleshooting` | kubernetes 1.37, coredns 1.14 | `corefile-typo`, `forward-unreachable`, `rewrite-target-wrong` |
+| `k8s-envoy-troubleshooting` | kubernetes 1.37, envoy 1.40 | `bootstrap-typo`, `dns-name-wrong`, `upstream-port-wrong` |
+| `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |
+| `k8s-external-secrets-troubleshooting` | kubernetes 1.37, external-secrets 2.14 | `provider-key-missing`, `store-name-wrong`, `target-owned-by-other` |
+| `k8s-flux-troubleshooting` | kubernetes 1.37, flux 2.9 | `git-branch-missing`, `helm-chart-version-missing`, `kustomization-path-missing` |
+| `k8s-fluent-bit-troubleshooting` | kubernetes 1.37, fluent-bit 5.1 | `config-plugin-typo`, `kubernetes-filter-rbac`, `output-host-wrong` |
+| `k8s-gatekeeper-troubleshooting` | kubernetes 1.37, gatekeeper 3.23 | `constraint-denies-deployment`, `template-rego-error`, `webhook-down-fails-open` |
+| `k8s-gateway-api-troubleshooting` | kubernetes 1.37, gateway-api 1.6, envoy-gateway 1.9 | `allowed-routes-same-namespace`, `gatewayclass-controller-typo`, `listener-certificate-missing`, `section-name-mismatch` |
+| `k8s-grafana-troubleshooting` | kubernetes 1.37, grafana 13.2 | `dashboard-json-invalid`, `datasource-two-defaults`, `datasource-url-wrong` |
+| `k8s-helm-troubleshooting` | kubernetes 1.37, helm 4.3 | `ownership-conflict`, `release-stuck-pending`, `upgrade-timeout-bad-image` |
+| `k8s-istio-troubleshooting` | kubernetes 1.37, istio 1.31 | `authorizationpolicy-denies`, `strict-mtls-plaintext-client`, `subset-without-pods` |
+| `k8s-kyverno-troubleshooting` | kubernetes 1.37, kyverno 1.19 | `audit-does-not-block`, `enforce-blocks-deployment`, `validatingpolicy-denies` |
+| `k8s-loki-troubleshooting` | kubernetes 1.37, loki 3.7 | `missing-tenant`, `old-timestamps`, `schema-tsdb-period` |
+| `k8s-network-troubleshooting` | kubernetes 1.37, gateway-api 1.6 | `networkpolicy-blocks-namespace`, `selector-mismatch`, `wrong-target-port` |
+| `k8s-node-troubleshooting` | kubernetes 1.37 | `node-not-ready`, `requests-full`, `untolerated-taint` |
+| `k8s-opentelemetry-collector-troubleshooting` | kubernetes 1.37, opentelemetry-collector 0.163 | `exporter-endpoint-wrong`, `pipeline-receiver-undefined`, `receiver-localhost` |
+| `k8s-prometheus-troubleshooting` | kubernetes 1.37, prometheus-operator 0.94, prometheus 3.14 | `servicemonitor-not-selected`, `servicemonitor-port-name-wrong`, `target-path-404` |
+| `k8s-rbac-troubleshooting` | kubernetes 1.37 | `clusterrole-bound-in-namespace`, `role-missing-verb`, `subject-namespace-wrong` |
+| `k8s-storage-troubleshooting` | kubernetes 1.37 | `missing-storageclass`, `unsupported-access-mode`, `waiting-for-first-consumer` |
+| `k8s-triage` | kubernetes 1.37 | `crashloop-somewhere`, `healthy-cluster`, `namespace-only-access`, `node-not-ready` |
+| `k8s-upgrade-readiness` | kubernetes 1.37 | `pdb-blocks-drain`, `unmanaged-pod-blocks-drain`, `webhook-fails-closed` |
+| `k8s-velero-troubleshooting` | kubernetes 1.37, velero 1.18, velero-plugin-for-aws 1.14 | `bsl-bucket-missing`, `restore-skips-existing`, `schedule-invalid-cron` |
+| `k8s-workload-troubleshooting` | kubernetes 1.37 | `image-pull-wrong-tag`, `oom-killed`, `readiness-probe-failing` |
+
+`verified-with` and `verified-on` in each `SKILL.md` record the same versions and the
+date. Other versions usually behave the same, but messages and defaults can change
+between releases. kind cannot reproduce cloud-only behaviour (load balancers, cloud
+storage, managed node pools). The cloud skills' scenarios run on a real managed test
+cluster instead, in one namespace and only when you name its context (see [Cloud
+scenarios](https://github.com/k8s-servant/k8s-skills/blob/main/CONTRIBUTING.md#cloud-scenarios)); the rest of their content is checked
+against the provider's docs. To run
+a scenario yourself, see [Scenarios and the test kit](https://github.com/k8s-servant/k8s-skills/blob/main/CONTRIBUTING.md#scenarios-and-the-test-kit).
+
+## Install
+
+Install with the [`skills` CLI](https://github.com/vercel-labs/skills), or copy the
+folders yourself. Both work for one skill or all of them.
+
+**All skills or one?** We recommend installing all of them. The skills hand off to each
+other by name (`k8s-triage` to the workload, network or node skill, a tool's skill to
+`k8s-network-troubleshooting` or `k8s-cert-manager-troubleshooting`), and a hand-off
+works best when the target is installed. It costs little: agents load only each skill's
+name and description at startup and read the rest when a skill is used ([progressive
+disclosure](https://agentskills.io/specification#progressive-disclosure)); a description
+is at most 1,024 characters, so the whole set costs a few thousand tokens. Install one
+skill when you only run that tool, or when your agent limits how many skills it loads.
+
+```bash
+# All skills, for Claude Code (use -a codex, ... for other agents)
+npx skills add k8s-servant/k8s-skills -a claude-code
+
+# One skill
+npx skills add k8s-servant/k8s-skills -s k8s-triage -a claude-code
+```
+
+The CLI sends anonymous usage telemetry; set `DISABLE_TELEMETRY=1` to turn it off.
+
+Or copy from a clone of this repository. Into your home directory, the skills are
+available in every project:
+
+```bash
+git clone https://github.com/k8s-servant/k8s-skills.git ~/k8s-skills
+mkdir -p ~/.claude/skills && cp -R ~/k8s-skills/skills/* ~/.claude/skills/
+```
+
+For one project only, copy into the project instead, from its root folder:
+
+```bash
+mkdir -p .claude/skills && cp -R ~/k8s-skills/skills/* .claude/skills/
+```
+
+In a project, other agents read `.agents/skills` (Codex, Gemini CLI, GitHub Copilot,
+Antigravity) or `.github/skills` (GitHub Copilot).
+
+### Other ways
+
+- **Claude Code plugin:** `/plugin marketplace add k8s-servant/k8s-skills`, then
+  `/plugin install k8s-skills@k8s-skills` for all skills or
+  `/plugin install k8s-triage@k8s-skills` for one.
+- **GitHub CLI** (preview): `gh skill install k8s-servant/k8s-skills --all`, or one skill
+  by name, pinned with `@vX.Y.Z`.
+- **Gemini CLI:** `gemini extensions install https://github.com/k8s-servant/k8s-skills`
+  for all skills. Gemini reads project skills only in a folder you have trusted.
+- **Antigravity:** copy the skills into `~/.gemini/config/skills/`, the one global folder
+  that both the Antigravity CLI (`agy`) and the IDE read, or into `.agents/skills` for one
+  project:
+
+  ```bash
+  mkdir -p ~/.gemini/config/skills && cp -R ~/k8s-skills/skills/* ~/.gemini/config/skills/
+  ```
+
+- **Release zips:** every [release](https://github.com/k8s-servant/k8s-skills/releases) has
+  one zip per skill and a `SHA256SUMS` file. Newer releases also carry signed build
+  provenance (`k8s-skills-provenance.sigstore.json`); check a zip with
+  `gh attestation verify k8s-triage.zip --repo k8s-servant/k8s-skills`.
+
+Skills that hand over to each other still work alone: a hand-off to a skill that is not
+installed tells the agent to continue with the steps it has and name the skill that would
+help.
+
+## Your agent, your decision
+
+How you run your agent, and with which permissions, is your decision and your risk. The
+skills are written and checked to keep to these tiers, but that is not a 100% guarantee:
+"ask first" is an instruction the agent follows, not a lock, and an agent in an
+auto-approve mode may not stop to ask. What actually limits an agent is the Kubernetes
+RBAC of the credentials you give it. If you want it to only investigate, give it a
+read-only identity: [docs/read-only-agent.yaml](https://github.com/k8s-servant/k8s-skills/blob/main/docs/read-only-agent.yaml) is a
+ServiceAccount with everything listed here, ready to apply. It is bound to the built-in
+`view` ClusterRole. `view`
+cannot read cluster-scoped objects, so for `k8s-triage` on a whole cluster and for the
+node and storage skills also allow `get`, `list` and `watch` on `nodes`,
+`persistentvolumes`, and in `storage.k8s.io` on `storageclasses`, `csidrivers`,
+`csinodes` and `volumeattachments`. `view` cannot read RBAC objects either, so for
+`k8s-rbac-troubleshooting` allow `get` and `list` on `roles`, `rolebindings`,
+`clusterroles` and `clusterrolebindings`, and for `k8s-api-troubleshooting` on
+`validatingwebhookconfigurations`, `mutatingwebhookconfigurations`,
+`validatingadmissionpolicies`, `apiservices`, `customresourcedefinitions`, `flowschemas`
+and `prioritylevelconfigurations`. `k8s-aks-troubleshooting` also runs read-only `az`
+commands, as whatever Azure login the agent's shell has: give that identity the
+**Reader** role on the cluster's resource groups, nothing more. Give it more only if you want it to apply the changes you approve (see [Using RBAC Authorization](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)).
+
+For Claude Code there is also an optional hook, `k8s-secret-guard`, as a second layer: it
+blocks shell commands that read Secrets before they run (`kubectl get`, `describe` or
+`edit` on Secrets, `env` or `printenv` through `exec`, files under `/var/run/secrets`,
+calls to the Secrets API such as `curl` through `kubectl proxy`, `helm get values`, and
+reads from Key Vault, AWS Secrets Manager and Google Secret Manager), and tells the agent
+to carry on without them. Install it with `/plugin install k8s-secret-guard@k8s-skills`;
+it needs `python3` (3.9 or newer). It is a best-effort filter, not a lock: a shell can
+always find another way, and if the hook itself fails it lets the command run, so RBAC
+stays the guarantee. The hook is kept small on purpose: a new way around it is listed as
+a known gap, not patched, since RBAC already stops it.
+
+## Contributing
+
+**The agent got it wrong on your cluster?** Tell us with the
+[issue form](https://github.com/k8s-servant/k8s-skills/issues/new?template=skill_problem.yml):
+what you asked, what the agent said and what the real cause was. Each report becomes a
+new scenario, and the skill is fixed against it. Use placeholders for every name.
+
+New skills and fixes are welcome. Read [CONTRIBUTING.md](https://github.com/k8s-servant/k8s-skills/blob/main/CONTRIBUTING.md) first. What
+runs on each pull request is described in [docs/ci.md](https://github.com/k8s-servant/k8s-skills/blob/main/docs/ci.md). Report
+security problems as described in [SECURITY.md](https://github.com/k8s-servant/k8s-skills/blob/main/SECURITY.md).
+
+## License
+
+[Apache-2.0](https://github.com/k8s-servant/k8s-skills/blob/main/LICENSE)
