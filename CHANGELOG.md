@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/k8s-servant/k8s-skills/compare/v0.9.0...v0.10.0) (2026-11-08)
+
+
+### Features
+
+* **release:** publish the plugin on a plugin branch for the Claude plugin directory ([#106](https://github.com/k8s-servant/k8s-skills/issues/106)) ([7ba28cc](https://github.com/k8s-servant/k8s-skills/commit/7ba28cc823e26303900125281a8228337f8083e6)), closes [#21](https://github.com/k8s-servant/k8s-skills/issues/21)
+
 ## [0.9.0](https://github.com/k8s-servant/k8s-skills/compare/v0.8.0...v0.9.0) (2026-10-31)
 
 
