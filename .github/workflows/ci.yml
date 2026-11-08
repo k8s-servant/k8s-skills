@@ -122,7 +122,7 @@ jobs:
           LYCHEE_SHA256: 1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a
         run: |
           tarball="lychee-x86_64-unknown-linux-gnu.tar.gz"
-          curl -fsSLO "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${tarball}"
+          curl -fsSLO --retry 5 --retry-all-errors "https://github.com/lycheeverse/lychee/releases/download/lychee-v${LYCHEE_VERSION}/${tarball}"
           echo "${LYCHEE_SHA256}  ${tarball}" | sha256sum -c -
           tar -xzf "${tarball}" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
       # Retries ride out the occasional 503 or dropped connection; the token lets lychee

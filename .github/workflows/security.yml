@@ -30,8 +30,8 @@ jobs:
         run: |
           base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
           tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -fsSLO "${base}/${tarball}"
-          curl -fsSLO "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          curl -fsSLO --retry 5 --retry-all-errors "${base}/${tarball}"
+          curl -fsSLO --retry 5 --retry-all-errors "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
           grep " ${tarball}$" "gitleaks_${GITLEAKS_VERSION}_checksums.txt" | sha256sum -c -
           tar -xzf "${tarball}" gitleaks
       - name: Scan full git history
@@ -66,8 +66,8 @@ jobs:
         run: |
           base="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
           tarball="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-          curl -fsSLO "${base}/${tarball}"
-          curl -fsSLO "${base}/actionlint_${ACTIONLINT_VERSION}_checksums.txt"
+          curl -fsSLO --retry 5 --retry-all-errors "${base}/${tarball}"
+          curl -fsSLO --retry 5 --retry-all-errors "${base}/actionlint_${ACTIONLINT_VERSION}_checksums.txt"
           grep " ${tarball}$" "actionlint_${ACTIONLINT_VERSION}_checksums.txt" | sha256sum -c -
           tar -xzf "${tarball}" actionlint
       - name: Lint the workflows
