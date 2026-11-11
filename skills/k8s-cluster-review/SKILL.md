@@ -72,7 +72,7 @@ add-ons installed with the cluster (for example `local-path-storage`, `cert-mana
 ```bash
 kubectl get namespaces --show-labels
 kubectl get nodes -L topology.kubernetes.io/zone
-kubectl get daemonsets -n kube-system -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.template.spec.containers[*].image}{"\n"}{end}'
+kubectl get daemonsets -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{" "}{.spec.template.spec.containers[*].image}{"\n"}{end}'
 ```
 
 **1. Reliability**: replicas, probes, requests, PodDisruptionBudgets and spread.
@@ -88,7 +88,7 @@ kubectl get pods -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.metad
 and image tags.
 
 ```bash
-kubectl get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.ownerReferences[0].name}{" pod.runAsNonRoot="}{.spec.securityContext.runAsNonRoot}{" pod.runAsUser="}{.spec.securityContext.runAsUser}{" hostNetwork="}{.spec.hostNetwork}{" hostPID="}{.spec.hostPID}{" hostIPC="}{.spec.hostIPC}{" hostPath="}{.spec.volumes[*].hostPath.path}{"\n"}{range .spec.containers[*]}{"  "}{.name}{" image="}{.image}{" privileged="}{.securityContext.privileged}{" allowPrivilegeEscalation="}{.securityContext.allowPrivilegeEscalation}{" runAsNonRoot="}{.securityContext.runAsNonRoot}{" runAsUser="}{.securityContext.runAsUser}{"\n"}{end}{end}'
+kubectl get pods -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{" owner="}{.metadata.ownerReferences[0].kind}/{.metadata.ownerReferences[0].name}{" pod.runAsNonRoot="}{.spec.securityContext.runAsNonRoot}{" pod.runAsUser="}{.spec.securityContext.runAsUser}{" hostNetwork="}{.spec.hostNetwork}{" hostPID="}{.spec.hostPID}{" hostIPC="}{.spec.hostIPC}{" hostPath="}{.spec.volumes[*].hostPath.path}{"\n"}{range .spec.containers[*]}{"  "}{.name}{" image="}{.image}{" privileged="}{.securityContext.privileged}{" allowPrivilegeEscalation="}{.securityContext.allowPrivilegeEscalation}{" runAsNonRoot="}{.securityContext.runAsNonRoot}{" runAsUser="}{.securityContext.runAsUser}{"\n"}{end}{end}'
 kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{" enforce="}{.metadata.labels.pod-security\.kubernetes\.io/enforce}{" warn="}{.metadata.labels.pod-security\.kubernetes\.io/warn}{"\n"}{end}'
 kubectl get clusterrolebindings -o jsonpath='{range .items[*]}{.metadata.name}{" role="}{.roleRef.name}{" subjects="}{.subjects}{"\n"}{end}'
 kubectl get rolebindings -A -o jsonpath='{range .items[?(@.roleRef.name=="cluster-admin")]}{.metadata.namespace}/{.metadata.name}{" subjects="}{.subjects}{"\n"}{end}'
@@ -120,7 +120,9 @@ kubectl get cronjobs -A -o custom-columns='NAMESPACE:.metadata.namespace,NAME:.m
 
 Each check, what it means, and when it is fine (Kubernetes 1.37). Report a finding
 once per workload (Deployment, StatefulSet, DaemonSet, CronJob), not once per pod: group
-pods by their owner, and for a ReplicaSet name the Deployment it belongs to.
+pods by their owner, and for a ReplicaSet name the Deployment it belongs to. A pod with
+no owner (a debug pod someone started by hand, for example) is reported by its own name, as
+a bare pod: nothing recreates it, which is a finding of its own.
 
 ### Reliability
 
@@ -156,15 +158,20 @@ pods by their owner, and for a ReplicaSet name the Deployment it belongs to.
 - **A namespace without `pod-security.kubernetes.io/enforce`**: nothing stops a
   privileged pod from being created there. Fine for system namespaces; a label `warn`
   or `audit` only reports.
-- **`cluster-admin`, or a ClusterRole with `*` verbs on `*` resources, bound to a user,
-  a group or a ServiceAccount whose name does not start with `system:`**: that subject
-  can do anything, including read every Secret. Installer defaults (kubeadm's
-  `kubeadm:cluster-admins` group, a managed cloud's admin group) are fine if intended:
-  name them as such, not as a problem.
+- **`cluster-admin`, or a ClusterRole with `*` verbs on `*` resources, bound to a user or a
+  group whose name does not start with `system:`, or to a ServiceAccount outside the
+  system and add-on namespaces**: that subject can do anything, including read every
+  Secret. Installer defaults (kubeadm's `kubeadm:cluster-admins` group, a managed
+  cloud's admin group, a ServiceAccount of `kube-system` or of an add-on namespace) are
+  fine if intended: name them as such, not as a problem.
 - **A namespace with workloads and no NetworkPolicy**: every pod can reach every other
   pod. A finding only when the CNI enforces NetworkPolicy. Decide from the CNI's
-  DaemonSet in `kube-system` (step 0): kindnet, Cilium, Calico, Antrea and the managed
-  dataplanes built on them enforce; Flannel alone does not. If you cannot tell, report
+  DaemonSet (step 0; an operator-installed Calico runs in `calico-system`, Flannel in
+  `kube-flannel`): Cilium, Calico and Antrea enforce, and so does kindnet on current kind
+  releases (seen on the 1.37 node image; on an old kind cluster, treat it as unknown);
+  Flannel alone does not. On managed clusters it depends on an
+  option (EKS `aws-node` only with its network policy agent, AKS only with a policy
+  engine): unless you see that option, treat it as unknown. If you cannot tell, report
   "no NetworkPolicy; matters only if the CNI enforces them" in Skipped, not as a
   finding.
 - **An image with `:latest` or no tag** (a `@sha256:` digest is fine): which version
@@ -217,7 +224,9 @@ kubectl scale deployment my-app -n my-namespace --replicas=2
 # Undo: kubectl scale deployment my-app -n my-namespace --replicas=1
 ```
 
-Add a readiness probe and requests (use the app's real health path, port and usage):
+Add a readiness probe and requests (use the app's real health path, port and usage).
+A JSON patch `add` replaces the whole field: if the container already has some requests,
+put them in the value too:
 
 > Proposed fix: review before running. The agent does not run this.
 
@@ -236,7 +245,9 @@ kubectl patch pdb my-app -n my-namespace --type=json -p '[{"op": "remove", "path
 ```
 
 Drop privileges from a container (only once its owner confirms the app runs without
-them; a container that needs root fails to start):
+them; a container that needs root fails to start). The patch replaces the container's
+whole `securityContext`: copy the fields it already has into the value. A `hostPath`
+volume found with it is removed in the source, with its volume mount:
 
 > Proposed fix: review before running. The agent does not run this.
 
@@ -275,7 +286,7 @@ Delete leftovers once their owner confirms nobody needs them:
 kubectl delete job my-job -n my-namespace
 kubectl get service my-app -n my-namespace -o yaml > my-app-service.yaml
 kubectl delete service my-app -n my-namespace
-# Undo: re-run the Job from its source; kubectl create -f my-app-service.yaml (a new ClusterIP is assigned)
+# Undo: re-run the Job from its source; kubectl create -f my-app-service.yaml (it asks for the same ClusterIP again, and fails if another Service took it: remove spec.clusterIP and spec.clusterIPs from the file to get a new one)
 ```
 
 > Proposed fix: review before running. The agent does not run this.

@@ -58,9 +58,11 @@ of the label: it lists the running pods that would violate it.
 **NetworkPolicies.** With no policy selecting a pod, all traffic to and from it is
 allowed. A namespace is covered when a policy with an empty `podSelector` denies by
 default, and other policies allow what the apps need. Policies are enforced by the CNI,
-not by the API server: kindnet, Cilium, Calico and Antrea enforce them, Flannel alone
-does not, and on managed clusters it depends on the option chosen at creation. Identify
-the CNI from the DaemonSets in `kube-system`.
+not by the API server: Cilium, Calico, Antrea and kindnet on current kind releases
+enforce them, Flannel alone does not, and on managed clusters it depends on the option
+chosen at creation (EKS `aws-node` needs its network policy agent, AKS a policy engine).
+Identify the CNI from its DaemonSet: in `kube-system`, or in its own namespace
+(`calico-system`, `kube-flannel`).
 
 A default-deny policy for one namespace, to give its owners with the allow rules they
 need (DNS egress to `kube-system` is the one most often forgotten):
