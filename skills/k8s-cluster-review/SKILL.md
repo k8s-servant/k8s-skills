@@ -139,7 +139,8 @@ pods by their owner, and for a ReplicaSet name the Deployment it belongs to.
   `k8s-upgrade-readiness`. **A PDB with `expected=0`**: it matches no pod; stale.
 - **All replicas of a workload with 2 or more replicas on one node** (or in one zone,
   when nodes carry `topology.kubernetes.io/zone`): one node or zone failure takes the
-  whole app down. Fine on a one-node cluster: say so instead of reporting it.
+  whole app down. On a one-node cluster this cannot be checked: put it in Skipped, not
+  in the findings or the counts.
 
 ### Security
 
@@ -149,8 +150,9 @@ pods by their owner, and for a ReplicaSet name the Deployment it belongs to.
   namespace.
 - **`allowPrivilegeEscalation` not `false`**, or **running as root** (`runAsNonRoot` not
   `true` at pod or container level and no non-zero `runAsUser`): a process that breaks
-  out of the app gets more rights than it needs. The image may still set a non-root
-  user; say that the field does not show it.
+  out of the app gets more rights than it needs. Name it in the evidence even when the
+  same container is privileged. The image may still set a non-root user; say that the
+  field does not show it.
 - **A namespace without `pod-security.kubernetes.io/enforce`**: nothing stops a
   privileged pod from being created there. Fine for system namespaces; a label `warn`
   or `audit` only reports.
