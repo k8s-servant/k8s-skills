@@ -6,7 +6,7 @@ anything.
 [![CI](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/k8s-servant/k8s-skills/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/k8s-servant/k8s-skills)](https://github.com/k8s-servant/k8s-skills/releases)
 [![License](https://img.shields.io/github/license/k8s-servant/k8s-skills)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-30-326ce5)](#skills)
+[![Skills](https://img.shields.io/badge/skills-31-326ce5)](#skills)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/k8s-servant/k8s-skills/badge)](https://scorecard.dev/viewer/?uri=github.com/k8s-servant/k8s-skills)
 
 <p align="center">
@@ -59,7 +59,7 @@ kubectl context.
 
 ## Why you can trust it
 
-- **30 skills, 92 scenarios.** Each scenario breaks something on purpose in a kind
+- **31 skills, 95 scenarios.** Each scenario breaks something on purpose in a kind
   cluster. A fresh agent with only the skill and a view-only kubeconfig has to name the
   cause, point at the evidence and propose an acceptable fix, without changing anything.
 - **Quoted from a real cluster.** Every error message and log line a skill quotes was
@@ -114,6 +114,7 @@ Secrets are never read, in any tier. Every change, in either tier, comes with an
 | `k8s-velero-troubleshooting` | Velero backups and restores fail or do not happen: storage locations `Unavailable` (missing bucket, credentials, endpoint), backups in `FailedValidation` or `PartiallyFailed`, schedules with an invalid cron expression, restores that skip objects that already exist, File System Backup and CSI data mover failures; never reads Secrets or backup contents |
 | `k8s-cloudnative-pg-troubleshooting` | A CloudNativePG PostgreSQL cluster is not healthy: stuck in `Setting up primary` or `Creating a new replica`, PVCs Pending on a missing StorageClass, a missing bootstrap Secret, replicas that anti-affinity cannot place, WAL archiving and backups failing, failovers that hang; never reads Secrets or connects to PostgreSQL |
 | `k8s-upgrade-readiness` | Before a minor version upgrade: what would block the node drains (PDBs that allow no disruption, pods with no controller, webhooks that fail closed), deprecated APIs and CRD versions still in use, version skew, containerd 1.x and cgroup v1 nodes, add-ons; read-only, reports what to fix first |
+| `k8s-cluster-review` | Nothing is broken and you want to know what drifted: a read-only review of reliability (replicas, probes, requests, PDBs, spread), security (privileged and root pods, Pod Security labels, cluster-admin bindings, NetworkPolicies, `:latest` images) and leftovers (unmounted PVCs, Released PVs, Services without endpoints, failed Jobs), with when each finding is fine |
 | `k8s-node-troubleshooting` | A node is NotReady or under pressure, or pods will not go onto it: taints, cordoned nodes, requests that do not fit, an autoscaler that does not scale |
 | `k8s-aks-troubleshooting` | A problem is specific to AKS: a cluster or node pool `Failed`, upgrades blocked by PDBs, quota and VM capacity, LoadBalancer Services `<pending>` (`SyncLoadBalancerFailed`), Azure Disk and Files PVCs, workload identity `AADSTS` errors, `coredns-custom`, `error dialing backend`, Azure Policy, API server access and Azure RBAC; uses read-only `az` commands |
 
@@ -150,6 +151,7 @@ A skill is merged only after four checks:
 | `k8s-cert-manager-troubleshooting` | kubernetes 1.37, cert-manager 1.21 | `ca-issuer-missing-key-pair`, `cluster-issuer-kind-missing`, `webhook-down` |
 | `k8s-cilium-troubleshooting` | kubernetes 1.37, cilium 1.20 | `egress-policy-blocks-dns`, `ingress-policy-wrong-label`, `l7-rule-denies-path` |
 | `k8s-cloudnative-pg-troubleshooting` | kubernetes 1.37, cloudnative-pg 1.30 | `anti-affinity-required`, `bootstrap-secret-missing`, `storage-class-missing` |
+| `k8s-cluster-review` | kubernetes 1.37 | `leftovers`, `reliability-gaps`, `security-drift` |
 | `k8s-coredns-troubleshooting` | kubernetes 1.37, coredns 1.14 | `corefile-typo`, `forward-unreachable`, `rewrite-target-wrong` |
 | `k8s-envoy-troubleshooting` | kubernetes 1.37, envoy 1.40 | `bootstrap-typo`, `dns-name-wrong`, `upstream-port-wrong` |
 | `k8s-envoy-gateway-troubleshooting` | kubernetes 1.37, envoy-gateway 1.9, gateway-api 1.6 | `backend-not-found`, `cross-namespace-no-referencegrant`, `hostname-mismatch` |

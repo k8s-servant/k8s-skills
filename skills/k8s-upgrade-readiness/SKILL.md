@@ -55,6 +55,8 @@ would help:
 - Pods are already failing today: `k8s-workload-troubleshooting`, or `k8s-triage` for a
   first look.
 - The Gateway API CRDs and their versions: `k8s-gateway-api-troubleshooting`.
+- Standing risks that are not about the upgrade (privileged pods, broad RBAC bindings,
+  leftovers), for a periodic review: `k8s-cluster-review`.
 
 ## Investigate
 
