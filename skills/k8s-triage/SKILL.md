@@ -39,6 +39,8 @@ keys, do not repeat them.
 
 When the user names one workload that is unhealthy, start with
 `k8s-workload-troubleshooting` instead.
+When nothing is broken and the user wants to know whether the cluster is in good shape
+(good practice, what drifted, leftovers), use `k8s-cluster-review` instead.
 
 Hand-offs, by skill name. For each issue you find, name the skill that goes deeper. If it
 is not installed, give the issue, its evidence, a first fix and the short first look

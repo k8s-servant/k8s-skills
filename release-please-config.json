@@ -113,6 +113,11 @@
         },
         {
           "type": "json",
+          "path": "skills/k8s-cluster-review/.claude-plugin/plugin.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "skills/k8s-coredns-troubleshooting/.claude-plugin/plugin.json",
           "jsonpath": "$.version"
         },

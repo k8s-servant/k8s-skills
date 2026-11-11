@@ -1,0 +1,15 @@
+{
+  "name": "k8s-cluster-review",
+  "version": "0.10.0",
+  "description": "Use when nothing is broken but someone wants to know whether a Kubernetes cluster, or one namespace, is still in good shape: \"review the cluster\", \"check it against best practices\", \"what drifted since we deployed it?\", after taking over a cluster, or before a busy period. Reviews the live objects, not manifests in a repository, in three groups. Reliability: workloads with one replica, no readiness probe or no requests, PodDisruptionBudgets that allow 0 disruptions or match no pod, all replicas on one node or zone. Security: privileged or root containers, hostPath and hostNetwork, namespaces without Pod Security labels, cluster-admin bound to users or ServiceAccounts, namespaces without NetworkPolicies, :latest images. Hygiene and cost: PVCs no pod mounts, Released PVs, Services without endpoints, LoadBalancers, workloads at 0 replicas, failed Jobs, stale CronJobs. Reports each finding once per workload, with why it matters and when it is fine. Read-only: never changes anything itself.",
+  "author": {
+    "name": "k8s-servant",
+    "url": "https://github.com/k8s-servant"
+  },
+  "homepage": "https://github.com/k8s-servant/k8s-skills",
+  "repository": "https://github.com/k8s-servant/k8s-skills",
+  "license": "Apache-2.0",
+  "skills": [
+    "./"
+  ]
+}
