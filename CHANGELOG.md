@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/k8s-servant/k8s-skills/compare/v0.10.0...v0.11.0) (2026-11-11)
+
+
+### Features
+
+* **skills:** add k8s-cluster-review ([#109](https://github.com/k8s-servant/k8s-skills/issues/109)) ([74d5a21](https://github.com/k8s-servant/k8s-skills/commit/74d5a211e1bf7cd3696b4a5ba2110d24a49f3ae7))
+
 ## [0.10.0](https://github.com/k8s-servant/k8s-skills/compare/v0.9.0...v0.10.0) (2026-11-08)
 
 
