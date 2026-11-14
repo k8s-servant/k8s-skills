@@ -127,6 +127,7 @@ jobs:
           tar -xzf "${tarball}" --strip-components=1 lychee-x86_64-unknown-linux-gnu/lychee
       # Retries ride out the occasional 503 or dropped connection; the token lets lychee
       # check github.com links through the API instead of hitting anonymous rate limits.
+      # Per-host limits for sites that rate-limit the runner are in lychee.toml.
       - name: Check links
         env:
           GITHUB_TOKEN: ${{ github.token }}
