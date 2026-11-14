@@ -1,0 +1,7 @@
+# Loaded by default by the `links` job in .github/workflows/ci.yml.
+
+# docs.cilium.io answers 429 Too Many Requests when the CI runner sends its links in
+# parallel, and the retries alone did not get past it: send them one at a time.
+[hosts."docs.cilium.io"]
+concurrency = 1
+request_interval = "1s"
