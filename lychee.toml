@@ -3,7 +3,8 @@
 # lychee's default codes plus 502, 503 and 504. github.com answers these to the CI
 # runner now and then, for dozens of links at once, and retries do not always get past
 # them. They say the server is struggling, not that the page is gone: a dead link still
-# fails with 404 or 410.
+# fails with 404 or 410. lychee's per-host settings cannot set accepted codes, so this
+# applies to every host: a site that stays down with a 5xx passes until it answers again.
 accept = ["100..=103", "200..=299", "502..=504"]
 
 # docs.cilium.io answers 429 Too Many Requests when the CI runner sends its links in
