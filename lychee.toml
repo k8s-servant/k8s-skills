@@ -5,3 +5,9 @@
 [hosts."docs.cilium.io"]
 concurrency = 1
 request_interval = "1s"
+
+# github.com answers 503 to file and blob pages when the runner sends a burst of them
+# (232 links here), most often when two merges start the link check back to back.
+[hosts."github.com"]
+concurrency = 2
+request_interval = "250ms"
